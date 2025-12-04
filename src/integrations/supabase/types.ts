@@ -113,6 +113,7 @@ export type Database = {
         Row: {
           aprovado_em: string | null
           aprovado_por: string | null
+          arquivo_pagamento_url: string | null
           centro_custo: string
           codigo_etapa: string | null
           created_at: string
@@ -142,12 +143,14 @@ export type Database = {
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
           status: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
+          tipo_leitura_pagamento: string | null
           updated_at: string
           valor_total: number
         }
         Insert: {
           aprovado_em?: string | null
           aprovado_por?: string | null
+          arquivo_pagamento_url?: string | null
           centro_custo: string
           codigo_etapa?: string | null
           created_at?: string
@@ -177,12 +180,14 @@ export type Database = {
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
+          tipo_leitura_pagamento?: string | null
           updated_at?: string
           valor_total: number
         }
         Update: {
           aprovado_em?: string | null
           aprovado_por?: string | null
+          arquivo_pagamento_url?: string | null
           centro_custo?: string
           codigo_etapa?: string | null
           created_at?: string
@@ -212,6 +217,7 @@ export type Database = {
           plano_financeiro?: Database["public"]["Enums"]["plano_financeiro"]
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento?: Database["public"]["Enums"]["tipo_documento"]
+          tipo_leitura_pagamento?: string | null
           updated_at?: string
           valor_total?: number
         }
@@ -229,6 +235,7 @@ export type Database = {
         Row: {
           aprovado_em: string | null
           aprovado_por: string | null
+          arquivo_pagamento_url: string | null
           centro_custo: string
           codigo_etapa: string | null
           created_at: string
@@ -254,12 +261,14 @@ export type Database = {
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
           status: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
+          tipo_leitura_pagamento: string | null
           updated_at: string
           valor_total: number
         }
         Insert: {
           aprovado_em?: string | null
           aprovado_por?: string | null
+          arquivo_pagamento_url?: string | null
           centro_custo: string
           codigo_etapa?: string | null
           created_at?: string
@@ -285,12 +294,14 @@ export type Database = {
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
+          tipo_leitura_pagamento?: string | null
           updated_at?: string
           valor_total: number
         }
         Update: {
           aprovado_em?: string | null
           aprovado_por?: string | null
+          arquivo_pagamento_url?: string | null
           centro_custo?: string
           codigo_etapa?: string | null
           created_at?: string
@@ -316,6 +327,7 @@ export type Database = {
           plano_financeiro?: Database["public"]["Enums"]["plano_financeiro"]
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento?: Database["public"]["Enums"]["tipo_documento"]
+          tipo_leitura_pagamento?: string | null
           updated_at?: string
           valor_total?: number
         }
