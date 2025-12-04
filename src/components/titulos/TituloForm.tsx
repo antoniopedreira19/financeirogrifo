@@ -157,17 +157,17 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
 
   const onSubmit = async (data: TituloFormData) => {
     if (!selectedObra || !user) return;
-    
+
     // Validate dadosBancarios only for manual payment type
     if (tipoPagamento === "manual" && !data.dadosBancarios?.trim()) {
       toast.error("Dados bancários são obrigatórios para pagamento manual");
       return;
     }
-    
+
     setIsUploading(true);
 
     // Find the etapa name if etapas exist
-    const selectedEtapa = etapas.find(e => e.codigo === data.etapaApropriada);
+    const selectedEtapa = etapas.find((e) => e.codigo === data.etapaApropriada);
     const etapaNome = selectedEtapa ? `${selectedEtapa.codigo} - ${selectedEtapa.nome}` : data.etapaApropriada;
 
     createTituloMutation.mutate(
@@ -199,17 +199,17 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         onSuccess: async (createdTitulo) => {
           if (createdTitulo?.id) {
             const updates: { documento_url?: string; arquivo_pagamento_url?: string } = {};
-            
+
             if (selectedFile) {
               const filePath = await uploadFile(createdTitulo.id, selectedFile, "doc");
               if (filePath) updates.documento_url = filePath;
             }
-            
+
             if (paymentFile && tipoPagamento !== "manual") {
               const paymentPath = await uploadFile(createdTitulo.id, paymentFile, "pagamento");
               if (paymentPath) updates.arquivo_pagamento_url = paymentPath;
             }
-            
+
             if (Object.keys(updates).length > 0) {
               await supabase.from("titulos_pendentes").update(updates).eq("id", createdTitulo.id);
             }
@@ -523,7 +523,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                   "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
                   tipoPagamento === "manual"
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                    : "border-border hover:border-primary/50 hover:bg-muted/50",
                 )}
               >
                 <FileEdit className="h-6 w-6" />
@@ -537,7 +537,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                   "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
                   tipoPagamento === "boleto"
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                    : "border-border hover:border-primary/50 hover:bg-muted/50",
                 )}
               >
                 <Receipt className="h-6 w-6" />
@@ -551,11 +551,11 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                   "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
                   tipoPagamento === "qrcode"
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                    : "border-border hover:border-primary/50 hover:bg-muted/50",
                 )}
               >
                 <QrCode className="h-6 w-6" />
-                <span className="text-sm font-medium">QR Code / Pix</span>
+                <span className="text-sm font-medium">QR Code</span>
                 <span className="text-xs text-muted-foreground">Upload + Texto</span>
               </button>
             </div>
@@ -564,9 +564,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
           {/* Upload de arquivo de pagamento (condicional) */}
           {tipoPagamento !== "manual" && (
             <div className="space-y-2">
-              <Label>
-                {tipoPagamento === "boleto" ? "Arquivo do Boleto" : "Imagem do QR Code / Pix"}
-              </Label>
+              <Label>{tipoPagamento === "boleto" ? "Arquivo do Boleto" : "Imagem do QR Code / Pix"}</Label>
               <input
                 type="file"
                 ref={paymentFileInputRef}
@@ -581,7 +579,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {tipoPagamento === "boleto" 
+                    {tipoPagamento === "boleto"
                       ? "Anexe o boleto para facilitar o pagamento"
                       : "Anexe a imagem do QR Code Pix"}
                   </p>
@@ -589,10 +587,11 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                 </div>
               ) : (
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
-                  {paymentFile.type === "application/pdf" 
-                    ? <FileText className="h-5 w-5 text-destructive" />
-                    : <Image className="h-5 w-5 text-primary" />
-                  }
+                  {paymentFile.type === "application/pdf" ? (
+                    <FileText className="h-5 w-5 text-destructive" />
+                  ) : (
+                    <Image className="h-5 w-5 text-primary" />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{paymentFile.name}</p>
                     <p className="text-xs text-muted-foreground">{(paymentFile.size / 1024 / 1024).toFixed(2)} MB</p>
@@ -609,17 +608,17 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
           <div className="space-y-2">
             <Label htmlFor="dadosBancarios">
               {tipoPagamento === "manual" && "Informações para pagamento"}
-              {tipoPagamento === "boleto" && "Código de barras ou informações adicionais"}
-              {tipoPagamento === "qrcode" && "Chave Pix ou informações adicionais"}
+              {tipoPagamento === "boleto" && "Informações adicionais"}
+              {tipoPagamento === "qrcode" && "Informações adicionais"}
             </Label>
             <Textarea
               id="dadosBancarios"
               placeholder={
-                tipoPagamento === "manual" 
+                tipoPagamento === "manual"
                   ? "PIX, dados da conta bancária, código de barras..."
                   : tipoPagamento === "boleto"
-                  ? "Cole o código de barras aqui ou adicione informações adicionais..."
-                  : "Cole a chave Pix aqui ou adicione informações adicionais..."
+                    ? "Cole o código de barras aqui ou adicione informações adicionais..."
+                    : "Cole a chave Pix aqui ou adicione informações adicionais..."
               }
               rows={4}
               {...register("dadosBancarios")}
