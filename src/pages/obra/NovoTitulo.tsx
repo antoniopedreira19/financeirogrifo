@@ -2,10 +2,13 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { TituloForm } from '@/components/titulos/TituloForm';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Titulo } from '@/types';
 
 export default function NovoTitulo() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const tituloToReplicate = (location.state as { tituloToReplicate?: Titulo })?.tituloToReplicate;
 
   return (
     <AppLayout>
@@ -21,16 +24,18 @@ export default function NovoTitulo() {
           </Button>
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Novo Título
+              {tituloToReplicate ? 'Replicar Título' : 'Novo Título'}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Preencha as informações do título financeiro
+              {tituloToReplicate 
+                ? 'Revise e ajuste as informações do título replicado'
+                : 'Preencha as informações do título financeiro'}
             </p>
           </div>
         </div>
 
         {/* Form */}
-        <TituloForm />
+        <TituloForm initialData={tituloToReplicate} />
       </div>
     </AppLayout>
   );

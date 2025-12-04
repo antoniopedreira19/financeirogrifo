@@ -17,16 +17,17 @@ import { useUpdateTituloStatus } from '@/hooks/useTitulosQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2, ExternalLink, Copy } from 'lucide-react';
+import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2, ExternalLink, Copy, CopyPlus } from 'lucide-react';
 
 interface TituloDetailModalProps {
   titulo: Titulo | null;
   open: boolean;
   onClose: () => void;
   showActions?: boolean;
+  onReplicate?: (titulo: Titulo) => void;
 }
 
-export function TituloDetailModal({ titulo, open, onClose, showActions = false }: TituloDetailModalProps) {
+export function TituloDetailModal({ titulo, open, onClose, showActions = false, onReplicate }: TituloDetailModalProps) {
   const updateStatusMutation = useUpdateTituloStatus();
   const { user } = useAuth();
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
@@ -199,6 +200,23 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false }
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
                 <p className="text-foreground">{titulo.motivoReprovacao}</p>
               </div>
+            </div>
+          )}
+
+          {/* Botão Replicar */}
+          {onReplicate && (
+            <div className="pt-4 border-t">
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => {
+                  onReplicate(titulo);
+                  onClose();
+                }}
+              >
+                <CopyPlus className="h-4 w-4" />
+                Replicar Título
+              </Button>
             </div>
           )}
 
