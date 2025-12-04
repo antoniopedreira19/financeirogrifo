@@ -542,7 +542,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
               >
                 <Receipt className="h-6 w-6" />
                 <span className="text-sm font-medium">Boleto</span>
-                <span className="text-xs text-muted-foreground">Upload + Texto</span>
+                <span className="text-xs text-muted-foreground">Upload</span>
               </button>
               <button
                 type="button"
@@ -556,7 +556,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
               >
                 <QrCode className="h-6 w-6" />
                 <span className="text-sm font-medium">QR Code</span>
-                <span className="text-xs text-muted-foreground">Upload + Texto</span>
+                <span className="text-xs text-muted-foreground">Upload</span>
               </button>
             </div>
           </div>
