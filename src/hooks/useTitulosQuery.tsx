@@ -221,6 +221,7 @@ export function useCreateTitulo() {
       dataVencimento: Date;
       planoFinanceiro: string;
       dadosBancarios: string;
+      tipoLeituraPagamento?: string;
       createdBy: string;
       criador: string;
       documentoUrl?: string;
@@ -245,6 +246,7 @@ export function useCreateTitulo() {
         data_vencimento: titulo.dataVencimento.toISOString().split('T')[0],
         plano_financeiro: titulo.planoFinanceiro as 'servicos_terceiros' | 'materiais_aplicados',
         dados_bancarios: titulo.dadosBancarios,
+        tipo_leitura_pagamento: titulo.tipoLeituraPagamento || null,
         created_by: titulo.createdBy,
         criador: titulo.criador,
         documento_url: titulo.documentoUrl,
@@ -316,6 +318,7 @@ export function useUpdateTituloStatus() {
             documento_numero: pendente.documento_numero,
             obra_id: pendente.obra_id,
             obra_codigo: pendente.obra_codigo,
+            grupo_id: pendente.grupo_id,
             centro_custo: pendente.centro_custo,
             etapa: pendente.etapa,
             codigo_etapa: pendente.codigo_etapa,
@@ -328,6 +331,8 @@ export function useUpdateTituloStatus() {
             data_vencimento: pendente.data_vencimento,
             plano_financeiro: pendente.plano_financeiro,
             dados_bancarios: pendente.dados_bancarios,
+            tipo_leitura_pagamento: pendente.tipo_leitura_pagamento,
+            arquivo_pagamento_url: pendente.arquivo_pagamento_url,
             documento_url: pendente.documento_url,
             status: 'pago',
             criador: pendente.criador,
