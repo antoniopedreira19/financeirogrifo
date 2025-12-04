@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useUpdateTituloStatus } from '@/hooks/useTitulosQuery';
 import { useAuth } from '@/contexts/AuthContext';
-import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2, ExternalLink, Copy } from 'lucide-react';
 
 interface TituloDetailModalProps {
   titulo: Titulo | null;
@@ -134,11 +135,56 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false }
             <p className="text-foreground">{tipoDocumentoLabels[titulo.tipoDocumentoFiscal] || titulo.tipoDocumentoFiscal}</p>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Dados Bancários</p>
-            <div className="bg-muted/50 rounded-lg p-4">
-              <p className="text-foreground whitespace-pre-wrap">{titulo.dadosBancarios}</p>
-            </div>
+          {/* Dados Bancários / Pagamento */}
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">Dados de Pagamento</p>
+            
+            {/* Tipo de Pagamento */}
+            {titulo.tipoLeituraPagamento && (
+              <div className="text-xs text-muted-foreground">
+                Tipo: {titulo.tipoLeituraPagamento === 'manual' ? 'Manual' : 
+                       titulo.tipoLeituraPagamento === 'boleto' ? 'Boleto' : 'QR Code / Pix'}
+              </div>
+            )}
+
+            {/* Link para arquivo de pagamento (Boleto/QR Code) */}
+            {titulo.arquivoPagamentoUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={() => window.open(titulo.arquivoPagamentoUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4" />
+                Visualizar Arquivo Original
+              </Button>
+            )}
+
+            {/* Código/Dados Bancários com botão de copiar */}
+            {titulo.dadosBancarios && titulo.dadosBancarios.trim() && (
+              <div className="space-y-2">
+                <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all">
+                  {titulo.dadosBancarios}
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(titulo.dadosBancarios);
+                    toast.success('Código copiado para a área de transferência');
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copiar Código
+                </Button>
+              </div>
+            )}
+
+            {/* Mensagem se não houver dados */}
+            {!titulo.arquivoPagamentoUrl && (!titulo.dadosBancarios || !titulo.dadosBancarios.trim()) && (
+              <p className="text-sm text-muted-foreground italic">Nenhum dado de pagamento informado</p>
+            )}
           </div>
 
           {titulo.motivoReprovacao && (

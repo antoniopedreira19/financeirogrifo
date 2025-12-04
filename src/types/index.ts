@@ -25,6 +25,8 @@ export interface Obra {
   createdAt: Date;
 }
 
+export type TipoPagamento = 'manual' | 'boleto' | 'qrcode';
+
 export interface Titulo {
   id: string;
   empresa: string;
@@ -43,6 +45,8 @@ export interface Titulo {
   dataVencimento: Date;
   planoFinanceiro: PlanoFinanceiro;
   dadosBancarios: string;
+  tipoLeituraPagamento?: TipoPagamento;
+  arquivoPagamentoUrl?: string;
   status: TituloStatus;
   criadoPor: string;
   criadoPorNome?: string;
