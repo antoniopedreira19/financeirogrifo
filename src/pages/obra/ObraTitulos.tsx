@@ -184,7 +184,12 @@ export default function ObraTitulos() {
         )}
       </div>
 
-      <TituloDetailModal titulo={selectedTitulo} open={!!selectedTitulo} onClose={() => setSelectedTitulo(null)} />
+      <TituloDetailModal 
+        titulo={selectedTitulo} 
+        open={!!selectedTitulo} 
+        onClose={() => setSelectedTitulo(null)}
+        onReplicate={(titulo) => navigate("/obra/novo-titulo", { state: { tituloToReplicate: titulo } })}
+      />
     </AppLayout>
   );
 }

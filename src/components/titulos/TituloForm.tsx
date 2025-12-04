@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateTitulo } from "@/hooks/useTitulosQuery";
 import { useNavigate } from "react-router-dom";
-import { DocumentoTipo } from "@/types";
+import { DocumentoTipo, Titulo } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
@@ -45,16 +45,17 @@ type TituloFormData = z.infer<typeof tituloSchema>;
 interface TituloFormProps {
   selectedObraOverride?: { id: string; codigo: string; nome: string };
   redirectPath?: string;
+  initialData?: Titulo;
 }
 
-export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos" }: TituloFormProps) {
+export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos", initialData }: TituloFormProps) {
   const { user, selectedObra: contextSelectedObra } = useAuth();
   const selectedObra = selectedObraOverride || contextSelectedObra;
   const createTituloMutation = useCreateTitulo();
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
-  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>("manual");
+  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>(initialData?.tipoLeituraPagamento || "manual");
   const [isUploading, setIsUploading] = useState(false);
   const [obraGrupoId, setObraGrupoId] = useState<string | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -142,12 +143,21 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   } = useForm<TituloFormData>({
     resolver: zodResolver(tituloSchema),
     defaultValues: {
-      tipoDocumento: "cnpj",
-      dataEmissao: new Date(),
-      parcelas: 1,
-      descontos: 0,
-      tipoDocumentoFiscal: "NF",
-      planoFinanceiro: "servicos_terceiros",
+      tipoDocumento: (initialData?.tipoDocumento as "cnpj" | "cpf") || "cnpj",
+      dataEmissao: initialData?.dataEmissao ? new Date(initialData.dataEmissao) : new Date(),
+      dataVencimento: initialData?.dataVencimento ? new Date(initialData.dataVencimento) : undefined,
+      parcelas: initialData?.parcelas || 1,
+      descontos: initialData?.descontos || 0,
+      tipoDocumentoFiscal: (initialData?.tipoDocumentoFiscal as "NF" | "BOL" | "REC" | "AD") || "NF",
+      planoFinanceiro: initialData?.planoFinanceiro || "servicos_terceiros",
+      empresa: initialData?.empresa ? Number(initialData.empresa) : undefined,
+      credor: initialData?.credor || "",
+      documento: initialData?.documento || "",
+      centroCusto: initialData?.centroCusto || "",
+      etapaApropriada: initialData?.codigoEtapa || "",
+      valorTotal: initialData?.valorTotal || undefined,
+      numeroDocumento: initialData?.numeroDocumento || "",
+      dadosBancarios: initialData?.dadosBancarios || "",
     },
   });
 

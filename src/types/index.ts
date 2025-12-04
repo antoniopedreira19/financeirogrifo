@@ -37,7 +37,9 @@ export interface Titulo {
   obraNome?: string;
   centroCusto: string;
   etapaApropriada: string;
+  codigoEtapa?: string;
   valorTotal: number;
+  descontos?: number;
   parcelas: number;
   tipoDocumentoFiscal: DocumentoTipo;
   numeroDocumento: string;
