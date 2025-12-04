@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useUpdateTituloStatus } from '@/hooks/useTitulosQuery';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2, ExternalLink, Copy } from 'lucide-react';
 
@@ -153,7 +154,12 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false }
                 variant="outline"
                 size="sm"
                 className="w-full justify-start gap-2"
-                onClick={() => window.open(titulo.arquivoPagamentoUrl, '_blank')}
+                onClick={() => {
+                  const { data } = supabase.storage
+                    .from('titulo-documentos')
+                    .getPublicUrl(titulo.arquivoPagamentoUrl!);
+                  window.open(data.publicUrl, '_blank');
+                }}
               >
                 <ExternalLink className="h-4 w-4" />
                 Visualizar Arquivo Original
