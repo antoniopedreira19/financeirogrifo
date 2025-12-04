@@ -37,7 +37,7 @@ const tituloSchema = z.object({
   dataEmissao: z.date(),
   dataVencimento: z.date(),
   planoFinanceiro: z.enum(["servicos_terceiros", "materiais_aplicados"]),
-  dadosBancarios: z.string().min(1, "Dados bancários são obrigatórios"),
+  dadosBancarios: z.string().optional().default(""),
 });
 
 type TituloFormData = z.infer<typeof tituloSchema>;
@@ -157,6 +157,13 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
 
   const onSubmit = async (data: TituloFormData) => {
     if (!selectedObra || !user) return;
+    
+    // Validate dadosBancarios only for manual payment type
+    if (tipoPagamento === "manual" && !data.dadosBancarios?.trim()) {
+      toast.error("Dados bancários são obrigatórios para pagamento manual");
+      return;
+    }
+    
     setIsUploading(true);
 
     // Find the etapa name if etapas exist
