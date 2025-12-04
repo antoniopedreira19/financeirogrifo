@@ -23,6 +23,8 @@ interface TituloRow {
   plano_financeiro: string;
   dados_bancarios: any;
   documento_url?: string;
+  tipo_leitura_pagamento?: string;
+  arquivo_pagamento_url?: string;
   status: string;
   created_by: string;
   criador: string;
@@ -58,6 +60,8 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     dadosBancarios: typeof row.dados_bancarios === 'string' 
       ? row.dados_bancarios 
       : JSON.stringify(row.dados_bancarios || ''),
+    tipoLeituraPagamento: row.tipo_leitura_pagamento as any,
+    arquivoPagamentoUrl: row.arquivo_pagamento_url || undefined,
     status: row.status as TituloStatus,
     criadoPor: row.created_by,
     criadoPorNome: row.criador,
