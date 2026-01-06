@@ -12,12 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useUpdateTituloStatus } from '@/hooks/useTitulosQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2, ExternalLink, Copy, CopyPlus } from 'lucide-react';
+import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2, ExternalLink, Copy, CopyPlus, RefreshCw } from 'lucide-react';
 
 interface TituloDetailModalProps {
   titulo: Titulo | null;
@@ -33,6 +33,36 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [syncingSienge, setSyncingSienge] = useState(false);
+
+  const handleSyncSienge = useCallback(async () => {
+    if (!titulo?.idSienge) return;
+    
+    setSyncingSienge(true);
+    try {
+      const response = await fetch('https://grifoworkspace.app.n8n.cloud/webhook/atualizar-sienge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id_sienge: titulo.idSienge,
+          documentIdentificationId: titulo.tipoDocumento,
+          documentNumber: titulo.documento,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Sincronizado com Sienge!');
+      } else {
+        toast.error('Erro ao sincronizar com Sienge');
+      }
+    } catch (error) {
+      toast.error('Erro ao sincronizar com Sienge');
+    } finally {
+      setSyncingSienge(false);
+    }
+  }, [titulo]);
 
   if (!titulo) return null;
 
@@ -120,7 +150,33 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             <InfoItem icon={Building2} label="Obra" value={titulo.obraNome || '-'} />
             <InfoItem icon={User} label="Credor" value={titulo.credor} />
             <InfoItem icon={FileText} label={titulo.tipoDocumento.toUpperCase()} value={titulo.documento} />
-            <InfoItem icon={FileText} label="Nº Documento" value={titulo.numeroDocumento} />
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-muted">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Nº Documento</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">{titulo.numeroDocumento}</p>
+                  {titulo.idSienge && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1"
+                      onClick={handleSyncSienge}
+                      disabled={syncingSienge}
+                    >
+                      {syncingSienge ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3" />
+                      )}
+                      Atualizar no Sienge
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
             <InfoItem icon={Calendar} label="Emissão" value={format(new Date(titulo.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })} />
             <InfoItem icon={Calendar} label="Vencimento" value={format(new Date(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })} />
             <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
