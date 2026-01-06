@@ -73,7 +73,7 @@ export function SiengeUpdateModal({
         const { error } = await supabase
           .from('titulos')
           .update({
-            documento_numero: documentNumber,
+            numero_documento: documentNumber,
           })
           .eq('id', tituloId);
 
