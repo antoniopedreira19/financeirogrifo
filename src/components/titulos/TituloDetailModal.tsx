@@ -333,6 +333,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
 
       {titulo.idSienge && (
         <SiengeUpdateModal
+          tituloId={titulo.id}
           open={showSiengeModal}
           onClose={() => setShowSiengeModal(false)}
           idSienge={titulo.idSienge}

@@ -18,8 +18,10 @@ import {
 } from '@/components/ui/select';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SiengeUpdateModalProps {
+  tituloId: string;
   open: boolean;
   onClose: () => void;
   idSienge: number;
@@ -36,6 +38,7 @@ const TIPOS_DOCUMENTO = [
 ];
 
 export function SiengeUpdateModal({ 
+  tituloId,
   open, 
   onClose, 
   idSienge, 
@@ -62,7 +65,21 @@ export function SiengeUpdateModal({
       });
 
       if (response.ok) {
-        toast.success('Sincronizado com Sienge!');
+        // Atualiza no Supabase também
+        const { error } = await supabase
+          .from('titulos')
+          .update({
+            documento_tipo: documentIdentificationId,
+            documento_numero: documentNumber,
+          })
+          .eq('id', tituloId);
+
+        if (error) {
+          console.error('Erro ao atualizar no Supabase:', error);
+          toast.error('Sincronizado com Sienge, mas erro ao salvar localmente');
+        } else {
+          toast.success('Sincronizado com Sienge!');
+        }
         onClose();
       } else {
         toast.error('Erro ao sincronizar com Sienge');
