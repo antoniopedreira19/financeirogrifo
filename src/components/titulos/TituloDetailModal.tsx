@@ -1,24 +1,34 @@
-import { Titulo } from '@/types';
-import { StatusBadge } from './StatusBadge';
-import { PaymentModal } from './PaymentModal';
-import { SiengeUpdateModal } from './SiengeUpdateModal';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Titulo } from "@/types";
+import { StatusBadge } from "./StatusBadge";
+import { PaymentModal } from "./PaymentModal";
+import { SiengeUpdateModal } from "./SiengeUpdateModal";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { useUpdateTituloStatus } from "@/hooks/useTitulosQuery";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { useUpdateTituloStatus } from '@/hooks/useTitulosQuery';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { CheckCircle, XCircle, Wallet, Building2, User, Calendar, FileText, CreditCard, Banknote, Loader2, ExternalLink, Copy, CopyPlus, RefreshCw } from 'lucide-react';
+  CheckCircle,
+  XCircle,
+  Wallet,
+  Building2,
+  User,
+  Calendar,
+  FileText,
+  CreditCard,
+  Banknote,
+  Loader2,
+  ExternalLink,
+  Copy,
+  CopyPlus,
+  RefreshCw,
+} from "lucide-react";
 
 interface TituloDetailModalProps {
   titulo: Titulo | null;
@@ -31,7 +41,7 @@ interface TituloDetailModalProps {
 export function TituloDetailModal({ titulo, open, onClose, showActions = false, onReplicate }: TituloDetailModalProps) {
   const updateStatusMutation = useUpdateTituloStatus();
   const { user } = useAuth();
-  const [motivoReprovacao, setMotivoReprovacao] = useState('');
+  const [motivoReprovacao, setMotivoReprovacao] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSiengeModal, setShowSiengeModal] = useState(false);
@@ -39,62 +49,59 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   if (!titulo) return null;
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
   const handleAprovar = () => {
     if (!user?.id) return;
-    
-    updateStatusMutation.mutate(
-      { id: titulo.id, status: 'aprovado', userId: user.id },
-      { onSuccess: () => onClose() }
-    );
+
+    updateStatusMutation.mutate({ id: titulo.id, status: "aprovado", userId: user.id }, { onSuccess: () => onClose() });
   };
 
   const handleReprovar = () => {
     if (!motivoReprovacao.trim() || !user?.id) return;
-    
+
     updateStatusMutation.mutate(
-      { id: titulo.id, status: 'reprovado', userId: user.id, motivoReprovacao },
+      { id: titulo.id, status: "reprovado", userId: user.id, motivoReprovacao },
       {
         onSuccess: () => {
           setShowRejectForm(false);
-          setMotivoReprovacao('');
+          setMotivoReprovacao("");
           onClose();
         },
-      }
+      },
     );
   };
 
   const handlePagar = (obs: string) => {
     if (!user?.id) return;
-    
+
     updateStatusMutation.mutate(
-      { id: titulo.id, status: 'pago', userId: user.id, obs },
-      { 
+      { id: titulo.id, status: "pago", userId: user.id, obs },
+      {
         onSuccess: () => {
           setShowPaymentModal(false);
           onClose();
-        }
-      }
+        },
+      },
     );
   };
 
   const planoFinanceiroLabels = {
-    servicos_terceiros: 'Serviços de Terceiros',
-    materiais_aplicados: 'Materiais Aplicados',
+    servicos_terceiros: "Serviços de Terceiros",
+    materiais_aplicados: "Materiais Aplicados",
   };
 
   const tipoDocumentoLabels: Record<string, string> = {
-    nota_fiscal: 'Nota Fiscal',
-    boleto: 'Boleto',
-    recibo: 'Recibo',
-    contrato: 'Contrato',
-    outros: 'Outros',
-    outro: 'Outros',
+    nota_fiscal: "Nota Fiscal",
+    boleto: "Boleto",
+    recibo: "Recibo",
+    contrato: "Contrato",
+    outros: "Outros",
+    outro: "Outros",
   };
 
   const isLoading = updateStatusMutation.isPending;
@@ -112,13 +119,9 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         <div className="space-y-6 mt-4">
           {/* Botão Atualizar no Sienge - no topo */}
           {titulo.idSienge && (
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={() => setShowSiengeModal(true)}
-            >
+            <Button variant="outline" className="w-full gap-2" onClick={() => setShowSiengeModal(true)}>
               <RefreshCw className="h-4 w-4" />
-              🔄 Atualizar no Sienge
+              Atualizar no Sienge
             </Button>
           )}
 
@@ -126,22 +129,30 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           <div className="bg-accent/10 rounded-xl p-6 text-center">
             <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
             <p className="text-3xl font-bold text-accent">{formatCurrency(titulo.valorTotal)}</p>
-            <p className="text-sm text-muted-foreground mt-1">{titulo.parcelas}x de {formatCurrency(titulo.valorTotal / titulo.parcelas)}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {titulo.parcelas}x de {formatCurrency(titulo.valorTotal / titulo.parcelas)}
+            </p>
           </div>
 
           {/* Grid de informações */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoItem icon={Building2} label="Obra" value={titulo.obraNome || '-'} />
+            <InfoItem icon={Building2} label="Obra" value={titulo.obraNome || "-"} />
             <InfoItem icon={User} label="Credor" value={titulo.credor} />
             <InfoItem icon={FileText} label={titulo.tipoDocumento.toUpperCase()} value={titulo.documento} />
             <InfoItem icon={FileText} label="Nº Documento" value={titulo.numeroDocumento} />
-            <InfoItem icon={Calendar} label="Emissão" value={format(new Date(titulo.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })} />
-            <InfoItem icon={Calendar} label="Vencimento" value={format(new Date(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })} />
+            <InfoItem
+              icon={Calendar}
+              label="Emissão"
+              value={format(new Date(titulo.dataEmissao), "dd/MM/yyyy", { locale: ptBR })}
+            />
+            <InfoItem
+              icon={Calendar}
+              label="Vencimento"
+              value={format(new Date(titulo.dataVencimento), "dd/MM/yyyy", { locale: ptBR })}
+            />
             <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
             <InfoItem icon={Banknote} label="Plano Financeiro" value={planoFinanceiroLabels[titulo.planoFinanceiro]} />
-            {titulo.idSienge && (
-              <InfoItem icon={RefreshCw} label="ID Sienge" value={titulo.idSienge.toString()} />
-            )}
+            {titulo.idSienge && <InfoItem icon={RefreshCw} label="ID Sienge" value={titulo.idSienge.toString()} />}
           </div>
 
           <div className="space-y-2">
@@ -151,18 +162,24 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
 
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Tipo de Documento</p>
-            <p className="text-foreground">{tipoDocumentoLabels[titulo.tipoDocumentoFiscal] || titulo.tipoDocumentoFiscal}</p>
+            <p className="text-foreground">
+              {tipoDocumentoLabels[titulo.tipoDocumentoFiscal] || titulo.tipoDocumentoFiscal}
+            </p>
           </div>
 
           {/* Dados Bancários / Pagamento */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Dados de Pagamento</p>
-            
+
             {/* Tipo de Pagamento */}
             {titulo.tipoLeituraPagamento && (
               <div className="text-xs text-muted-foreground">
-                Tipo: {titulo.tipoLeituraPagamento === 'manual' ? 'Manual' : 
-                       titulo.tipoLeituraPagamento === 'boleto' ? 'Boleto' : 'QR Code / Pix'}
+                Tipo:{" "}
+                {titulo.tipoLeituraPagamento === "manual"
+                  ? "Manual"
+                  : titulo.tipoLeituraPagamento === "boleto"
+                    ? "Boleto"
+                    : "QR Code / Pix"}
               </div>
             )}
 
@@ -173,10 +190,8 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                 size="sm"
                 className="w-full justify-start gap-2"
                 onClick={() => {
-                  const { data } = supabase.storage
-                    .from('titulo-documentos')
-                    .getPublicUrl(titulo.arquivoPagamentoUrl!);
-                  window.open(data.publicUrl, '_blank');
+                  const { data } = supabase.storage.from("titulo-documentos").getPublicUrl(titulo.arquivoPagamentoUrl!);
+                  window.open(data.publicUrl, "_blank");
                 }}
               >
                 <ExternalLink className="h-4 w-4" />
@@ -187,16 +202,14 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             {/* Código/Dados Bancários com botão de copiar */}
             {titulo.dadosBancarios && titulo.dadosBancarios.trim() && (
               <div className="space-y-2">
-                <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all">
-                  {titulo.dadosBancarios}
-                </div>
+                <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all">{titulo.dadosBancarios}</div>
                 <Button
                   variant="secondary"
                   size="sm"
                   className="w-full gap-2"
                   onClick={() => {
                     navigator.clipboard.writeText(titulo.dadosBancarios);
-                    toast.success('Código copiado para a área de transferência');
+                    toast.success("Código copiado para a área de transferência");
                   }}
                 >
                   <Copy className="h-4 w-4" />
@@ -240,14 +253,9 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           {/* Ações */}
           {showActions && (
             <>
-              {titulo.status === 'enviado' && !showRejectForm && (
+              {titulo.status === "enviado" && !showRejectForm && (
                 <div className="flex gap-3 pt-4 border-t">
-                  <Button
-                    variant="gold"
-                    className="flex-1"
-                    onClick={handleAprovar}
-                    disabled={isLoading}
-                  >
+                  <Button variant="gold" className="flex-1" onClick={handleAprovar} disabled={isLoading}>
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
@@ -286,7 +294,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                       className="flex-1"
                       onClick={() => {
                         setShowRejectForm(false);
-                        setMotivoReprovacao('');
+                        setMotivoReprovacao("");
                       }}
                       disabled={isLoading}
                     >
@@ -298,16 +306,14 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                       onClick={handleReprovar}
                       disabled={isLoading || !motivoReprovacao.trim()}
                     >
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
+                      {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                       Confirmar Reprovação
                     </Button>
                   </div>
                 </div>
               )}
 
-              {titulo.status === 'aprovado' && (
+              {titulo.status === "aprovado" && (
                 <div className="pt-4 border-t">
                   <Button
                     variant="success"
