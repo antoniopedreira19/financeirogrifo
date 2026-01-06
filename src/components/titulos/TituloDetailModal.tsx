@@ -1,6 +1,7 @@
 import { Titulo } from '@/types';
 import { StatusBadge } from './StatusBadge';
 import { PaymentModal } from './PaymentModal';
+import { SiengeUpdateModal } from './SiengeUpdateModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -12,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useUpdateTituloStatus } from '@/hooks/useTitulosQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,36 +34,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [syncingSienge, setSyncingSienge] = useState(false);
-
-  const handleSyncSienge = useCallback(async () => {
-    if (!titulo?.idSienge) return;
-    
-    setSyncingSienge(true);
-    try {
-      const response = await fetch('https://grifoworkspace.app.n8n.cloud/webhook/atualizar-sienge', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id_sienge: titulo.idSienge,
-          documentIdentificationId: titulo.tipoDocumento,
-          documentNumber: titulo.documento,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success('Sincronizado com Sienge!');
-      } else {
-        toast.error('Erro ao sincronizar com Sienge');
-      }
-    } catch (error) {
-      toast.error('Erro ao sincronizar com Sienge');
-    } finally {
-      setSyncingSienge(false);
-    }
-  }, [titulo]);
+  const [showSiengeModal, setShowSiengeModal] = useState(false);
 
   if (!titulo) return null;
 
@@ -138,6 +110,18 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
+          {/* Botão Atualizar no Sienge - no topo */}
+          {titulo.idSienge && (
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => setShowSiengeModal(true)}
+            >
+              <RefreshCw className="h-4 w-4" />
+              🔄 Atualizar no Sienge
+            </Button>
+          )}
+
           {/* Valor destacado */}
           <div className="bg-accent/10 rounded-xl p-6 text-center">
             <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
@@ -150,33 +134,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             <InfoItem icon={Building2} label="Obra" value={titulo.obraNome || '-'} />
             <InfoItem icon={User} label="Credor" value={titulo.credor} />
             <InfoItem icon={FileText} label={titulo.tipoDocumento.toUpperCase()} value={titulo.documento} />
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">Nº Documento</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{titulo.numeroDocumento}</p>
-                  {titulo.idSienge && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-xs gap-1"
-                      onClick={handleSyncSienge}
-                      disabled={syncingSienge}
-                    >
-                      {syncingSienge ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-3 w-3" />
-                      )}
-                      Atualizar no Sienge
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <InfoItem icon={FileText} label="Nº Documento" value={titulo.numeroDocumento} />
             <InfoItem icon={Calendar} label="Emissão" value={format(new Date(titulo.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })} />
             <InfoItem icon={Calendar} label="Vencimento" value={format(new Date(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })} />
             <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
@@ -372,6 +330,16 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         credorName={titulo.credor}
         valorTotal={titulo.valorTotal}
       />
+
+      {titulo.idSienge && (
+        <SiengeUpdateModal
+          open={showSiengeModal}
+          onClose={() => setShowSiengeModal(false)}
+          idSienge={titulo.idSienge}
+          tipoDocumento={titulo.tipoDocumento}
+          numeroDocumento={titulo.numeroDocumento}
+        />
+      )}
     </Dialog>
   );
 }
