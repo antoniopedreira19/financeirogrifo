@@ -30,11 +30,13 @@ interface SiengeUpdateModalProps {
 }
 
 const TIPOS_DOCUMENTO = [
-  { value: 'NF', label: 'Nota Fiscal (NF)' },
-  { value: 'BOL', label: 'Boleto (BOL)' },
-  { value: 'REC', label: 'Recibo (REC)' },
-  { value: 'CTR', label: 'Contrato (CTR)' },
-  { value: 'OUT', label: 'Outros (OUT)' },
+  { value: 'nf', label: 'Nota Fiscal (NF)' },
+  { value: 'boleto', label: 'Boleto' },
+  { value: 'recibo', label: 'Recibo' },
+  { value: 'cpf', label: 'CPF' },
+  { value: 'cnpj', label: 'CNPJ' },
+  { value: 'contrato', label: 'Contrato' },
+  { value: 'outros', label: 'Outros' },
 ];
 
 export function SiengeUpdateModal({ 
