@@ -29,16 +29,6 @@ interface SiengeUpdateModalProps {
   numeroDocumento: string;
 }
 
-const TIPOS_DOCUMENTO = [
-  { value: 'nf', label: 'Nota Fiscal (NF)' },
-  { value: 'boleto', label: 'Boleto' },
-  { value: 'recibo', label: 'Recibo' },
-  { value: 'cpf', label: 'CPF' },
-  { value: 'cnpj', label: 'CNPJ' },
-  { value: 'contrato', label: 'Contrato' },
-  { value: 'outros', label: 'Outros' },
-];
-
 export function SiengeUpdateModal({ 
   tituloId,
   open, 
@@ -47,7 +37,6 @@ export function SiengeUpdateModal({
   tipoDocumento, 
   numeroDocumento 
 }: SiengeUpdateModalProps) {
-  const [documentIdentificationId, setDocumentIdentificationId] = useState(tipoDocumento);
   const [documentNumber, setDocumentNumber] = useState(numeroDocumento);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -61,7 +50,7 @@ export function SiengeUpdateModal({
         },
         body: JSON.stringify({
           id_sienge: idSienge,
-          documentIdentificationId,
+          documentIdentificationId: tipoDocumento,
           documentNumber,
         }),
       });
@@ -71,7 +60,6 @@ export function SiengeUpdateModal({
         const { error } = await supabase
           .from('titulos')
           .update({
-            documento_tipo: documentIdentificationId,
             documento_numero: documentNumber,
           })
           .eq('id', tituloId);
@@ -112,22 +100,6 @@ export function SiengeUpdateModal({
               disabled
               className="bg-muted"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tipoDocumento">Tipo de Documento</Label>
-            <Select value={documentIdentificationId} onValueChange={setDocumentIdentificationId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                {TIPOS_DOCUMENTO.map((tipo) => (
-                  <SelectItem key={tipo.value} value={tipo.value}>
-                    {tipo.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
