@@ -340,7 +340,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           open={showSiengeModal}
           onClose={() => setShowSiengeModal(false)}
           idSienge={titulo.idSienge}
-          tipoDocumento={titulo.tipoDocumento}
+          tipoDocumento={titulo.tipoDocumentoFiscal}
           numeroDocumento={titulo.numeroDocumento}
         />
       )}

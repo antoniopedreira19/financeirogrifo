@@ -29,6 +29,16 @@ interface SiengeUpdateModalProps {
   numeroDocumento: string;
 }
 
+// Mapeia os tipos do banco para os códigos do Sienge
+const TIPO_TO_SIENGE: Record<string, string> = {
+  nota_fiscal: 'NF',
+  boleto: 'BOL',
+  recibo: 'REC',
+  contrato: 'CTR',
+  outros: 'OUT',
+  outro: 'OUT',
+};
+
 export function SiengeUpdateModal({ 
   tituloId,
   open, 
@@ -40,6 +50,9 @@ export function SiengeUpdateModal({
   const [documentNumber, setDocumentNumber] = useState(numeroDocumento);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Converte o tipo do banco para o código do Sienge
+  const siengeDocType = TIPO_TO_SIENGE[tipoDocumento] || tipoDocumento.toUpperCase();
+
   const handleUpdate = async () => {
     setIsLoading(true);
     try {
@@ -50,7 +63,7 @@ export function SiengeUpdateModal({
         },
         body: JSON.stringify({
           id_sienge: idSienge,
-          documentIdentificationId: tipoDocumento,
+          documentIdentificationId: siengeDocType,
           documentNumber,
         }),
       });
