@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useTitulosRealtime } from "@/hooks/useTitulosRealtime";
 
 // Pages
 import Auth from "./pages/Auth";
@@ -83,6 +84,9 @@ function ObraProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { user } = useAuth();
+  
+  // Enable realtime subscriptions for titulos
+  useTitulosRealtime();
 
   return (
     <Routes>
