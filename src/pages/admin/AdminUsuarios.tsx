@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { useObrasQuery } from '@/hooks/useObrasQuery';
 import { UserRole, Obra } from '@/types';
-import { Plus, Users, Building2, Mail, Shield, Loader2 } from 'lucide-react';
+import { Plus, Users, Building2, Mail, Shield, Loader2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -38,9 +38,16 @@ export default function AdminUsuarios() {
   const { data: obras = [], isLoading: loadingObras } = useObrasQuery();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserDisplay | null>(null);
   const [newUser, setNewUser] = useState({
     nome: '',
     email: '',
+    role: 'obra' as UserRole,
+    obraIds: [] as string[],
+  });
+  const [editUser, setEditUser] = useState({
+    nome: '',
     role: 'obra' as UserRole,
     obraIds: [] as string[],
   });
@@ -96,7 +103,6 @@ export default function AdminUsuarios() {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: { nome: string; email: string; role: UserRole; obraIds: string[] }) => {
-      // Try admin API first, fallback to regular signup
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: userData.email,
         password: DEFAULT_PASSWORD,
@@ -153,12 +159,95 @@ export default function AdminUsuarios() {
     },
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, userData }: { userId: string; userData: { nome: string; role: UserRole; obraIds: string[] } }) => {
+      // Update profile name
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ nome: userData.nome })
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      // Update role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ role: userData.role })
+        .eq('user_id', userId);
+
+      if (roleError) throw roleError;
+
+      // Get current obras
+      const { data: currentObras } = await supabase
+        .from('user_obras')
+        .select('obra_id')
+        .eq('user_id', userId);
+
+      const currentObraIds = (currentObras || []).map(o => o.obra_id);
+      const newObraIds = userData.obraIds;
+
+      // Delete removed obras
+      const obrasToRemove = currentObraIds.filter(id => !newObraIds.includes(id));
+      if (obrasToRemove.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('user_obras')
+          .delete()
+          .eq('user_id', userId)
+          .in('obra_id', obrasToRemove);
+
+        if (deleteError) throw deleteError;
+      }
+
+      // Add new obras
+      const obrasToAdd = newObraIds.filter(id => !currentObraIds.includes(id));
+      if (obrasToAdd.length > 0) {
+        const obraInserts = obrasToAdd.map(obraId => ({
+          user_id: userId,
+          obra_id: obraId,
+        }));
+
+        const { error: insertError } = await supabase.from('user_obras').insert(obraInserts);
+        if (insertError) throw insertError;
+      }
+
+      return { userId, userData };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      toast.success('Usuário atualizado com sucesso!');
+    },
+    onError: (error: any) => {
+      console.error('Error updating user:', error);
+      toast.error('Erro ao atualizar usuário');
+    },
+  });
+
   const handleCreateUser = () => {
     if (!newUser.nome || !newUser.email) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     createUserMutation.mutate(newUser);
+  };
+
+  const handleEditUser = (user: UserDisplay) => {
+    setEditingUser(user);
+    setEditUser({
+      nome: user.nome,
+      role: user.role,
+      obraIds: user.obras.map(o => o.id),
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (!editingUser || !editUser.nome) {
+      toast.error('Preencha o nome do usuário');
+      return;
+    }
+    updateUserMutation.mutate({ userId: editingUser.id, userData: editUser });
   };
 
   const isLoading = loadingUsers || loadingObras;
@@ -290,6 +379,101 @@ export default function AdminUsuarios() {
           </Dialog>
         </div>
 
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+            </DialogHeader>
+            {editingUser && (
+              <div className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nome">Nome</Label>
+                  <Input
+                    id="edit-nome"
+                    value={editUser.nome}
+                    onChange={(e) => setEditUser({ ...editUser, nome: e.target.value })}
+                    className="input-field"
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    value={editingUser.email}
+                    disabled
+                    className="input-field bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">O email não pode ser alterado.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo de Usuário</Label>
+                  <Select
+                    value={editUser.role}
+                    onValueChange={(value: UserRole) => setEditUser({ ...editUser, role: value })}
+                  >
+                    <SelectTrigger className="input-field">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                      <SelectItem value="obra">Equipe de Obra</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editUser.role === 'obra' && (
+                  <div className="space-y-2">
+                    <Label>Obras Vinculadas</Label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {obras.map((obra) => (
+                        <label
+                          key={obra.id}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={editUser.obraIds.includes(obra.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditUser({ ...editUser, obraIds: [...editUser.obraIds, obra.id] });
+                              } else {
+                                setEditUser({
+                                  ...editUser,
+                                  obraIds: editUser.obraIds.filter((id) => id !== obra.id),
+                                });
+                              }
+                            }}
+                            className="rounded border-border"
+                          />
+                          <div>
+                            <p className="font-medium text-sm">{obra.nome}</p>
+                            <p className="text-xs text-muted-foreground">{obra.codigo}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <Button 
+                  variant="gold" 
+                  className="w-full" 
+                  onClick={handleUpdateUser}
+                  disabled={updateUserMutation.isPending}
+                >
+                  {updateUserMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar Alterações'
+                  )}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {users.map((user) => (
             <div key={user.id} className="card-elevated p-5">
@@ -306,14 +490,24 @@ export default function AdminUsuarios() {
                         <span>{user.email}</span>
                       </div>
                     </div>
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${
-                        user.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'
-                      }`}
-                    >
-                      <Shield className="h-3 w-3" />
-                      {user.role === 'admin' ? 'Admin' : 'Obra'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditUser(user)}
+                        className="h-8 w-8"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${
+                          user.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'
+                        }`}
+                      >
+                        <Shield className="h-3 w-3" />
+                        {user.role === 'admin' ? 'Admin' : 'Obra'}
+                      </span>
+                    </div>
                   </div>
                   {user.role === 'obra' && user.obras.length > 0 && (
                     <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
