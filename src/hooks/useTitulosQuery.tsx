@@ -231,6 +231,7 @@ export function useCreateTitulo() {
       createdBy: string;
       criador: string;
       documentoUrl?: string;
+      arquivoPagamentoUrl?: string;
     }) => {
       const insertData = {
         empresa: titulo.empresa,
@@ -256,6 +257,7 @@ export function useCreateTitulo() {
         created_by: titulo.createdBy,
         criador: titulo.criador,
         documento_url: titulo.documentoUrl,
+        arquivo_pagamento_url: titulo.arquivoPagamentoUrl,
       };
 
       const { data, error } = await supabase
