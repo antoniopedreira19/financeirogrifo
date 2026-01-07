@@ -49,6 +49,7 @@ export interface Titulo {
   dadosBancarios: string;
   tipoLeituraPagamento?: TipoPagamento;
   arquivoPagamentoUrl?: string;
+  documentoUrl?: string;
   status: TituloStatus;
   criadoPor: string;
   criadoPorNome?: string;
