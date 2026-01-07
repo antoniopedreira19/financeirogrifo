@@ -118,11 +118,12 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     }
   };
 
-  const uploadFile = async (tituloId: string, file: File, prefix: string): Promise<string | null> => {
+  const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
     if (!file || !user) return null;
 
+    const uniqueId = crypto.randomUUID();
     const fileExt = file.name.split(".").pop();
-    const fileName = `${prefix}_${tituloId}.${fileExt}`;
+    const fileName = `${prefix}_${uniqueId}.${fileExt}`;
     const filePath = `${user.id}/${fileName}`;
 
     const { error } = await supabase.storage.from("titulo-documentos").upload(filePath, file, { upsert: true });
@@ -178,6 +179,26 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
 
     setIsUploading(true);
 
+    // Upload files FIRST before creating titulo
+    let documentoUrl: string | undefined;
+    let arquivoPagamentoUrl: string | undefined;
+
+    try {
+      if (selectedFile) {
+        const filePath = await uploadFile(selectedFile, "doc");
+        if (filePath) documentoUrl = filePath;
+      }
+
+      if (paymentFile && tipoPagamento !== "manual") {
+        const paymentPath = await uploadFile(paymentFile, "pagamento");
+        if (paymentPath) arquivoPagamentoUrl = paymentPath;
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setIsUploading(false);
+      return;
+    }
+
     // Find the etapa name if etapas exist
     const selectedEtapa = etapas.find((e) => e.codigo === data.etapaApropriada);
     const etapaNome = selectedEtapa ? `${selectedEtapa.codigo} - ${selectedEtapa.nome}` : data.etapaApropriada;
@@ -206,26 +227,11 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         tipoLeituraPagamento: tipoPagamento,
         createdBy: user.id,
         criador: user.nome,
+        documentoUrl,
+        arquivoPagamentoUrl,
       },
       {
-        onSuccess: async (createdTitulo) => {
-          if (createdTitulo?.id) {
-            const updates: { documento_url?: string; arquivo_pagamento_url?: string } = {};
-
-            if (selectedFile) {
-              const filePath = await uploadFile(createdTitulo.id, selectedFile, "doc");
-              if (filePath) updates.documento_url = filePath;
-            }
-
-            if (paymentFile && tipoPagamento !== "manual") {
-              const paymentPath = await uploadFile(createdTitulo.id, paymentFile, "pagamento");
-              if (paymentPath) updates.arquivo_pagamento_url = paymentPath;
-            }
-
-            if (Object.keys(updates).length > 0) {
-              await supabase.from("titulos_pendentes").update(updates).eq("id", createdTitulo.id);
-            }
-          }
+        onSuccess: () => {
           setIsUploading(false);
           navigate(redirectPath);
         },
