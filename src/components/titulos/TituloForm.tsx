@@ -55,7 +55,9 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
-  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>((initialData?.tipoLeituraPagamento === "boleto" ? "boleto" : "manual"));
+  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>(
+    initialData?.tipoLeituraPagamento === "boleto" ? "boleto" : "manual",
+  );
   const [isUploading, setIsUploading] = useState(false);
   const [obraGrupoId, setObraGrupoId] = useState<string | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -574,9 +576,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                   className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Anexe o boleto para facilitar o pagamento
-                  </p>
+                  <p className="text-sm text-muted-foreground">Anexe o boleto para facilitar o pagamento</p>
                   <p className="text-xs text-muted-foreground mt-1">PDF, JPEG ou PNG (máx. 10MB)</p>
                 </div>
               ) : (
@@ -624,13 +624,17 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         <h2 className="text-lg font-semibold mb-4">Documento Anexo</h2>
         <div className="space-y-4">
           <Label>Anexar Arquivo. (PDF, JPEG ou PNG)</Label>
-          
+
           {/* Aviso informativo */}
           <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
             <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
             <div className="text-sm text-amber-800 dark:text-amber-200">
-              <p className="font-medium">Envie o arquivo de comprovação do título para ser salvo na pasta financeira da obra.</p>
-              <p className="mt-1 text-amber-700 dark:text-amber-300">Se anexou o boleto acima, anexe aqui também.</p>
+              <p className="font-medium">
+                Envie o arquivo de comprovação do título para ser salvo na pasta financeira da obra.
+              </p>
+              <p className="mt-1 text-amber-700 dark:text-amber-300">
+                Se anexou o boleto acima, anexe aqui também, se servir como comprovante.
+              </p>
             </div>
           </div>
 
