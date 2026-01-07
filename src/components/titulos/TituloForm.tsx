@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Upload, X, FileText, Image, QrCode, Receipt, FileEdit } from "lucide-react";
+import { CalendarIcon, Loader2, Upload, X, FileText, Image, Receipt, FileEdit, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
 
-type TipoPagamento = "manual" | "boleto" | "qrcode";
+type TipoPagamento = "manual" | "boleto";
 
 const tituloSchema = z.object({
   empresa: z.number().min(1, "Código da empresa é obrigatório"),
@@ -55,7 +55,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
-  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>(initialData?.tipoLeituraPagamento || "manual");
+  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>((initialData?.tipoLeituraPagamento === "boleto" ? "boleto" : "manual"));
   const [isUploading, setIsUploading] = useState(false);
   const [obraGrupoId, setObraGrupoId] = useState<string | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -525,7 +525,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
           {/* Tipo de Pagamento */}
           <div className="space-y-2">
             <Label>Tipo de Leitura para Pagamento</Label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setTipoPagamento("manual")}
@@ -554,27 +554,13 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                 <span className="text-sm font-medium">Boleto</span>
                 <span className="text-xs text-muted-foreground">Upload</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setTipoPagamento("qrcode")}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
-                  tipoPagamento === "qrcode"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50",
-                )}
-              >
-                <QrCode className="h-6 w-6" />
-                <span className="text-sm font-medium">QR Code</span>
-                <span className="text-xs text-muted-foreground">Upload</span>
-              </button>
             </div>
           </div>
 
           {/* Upload de arquivo de pagamento (condicional) */}
           {tipoPagamento !== "manual" && (
             <div className="space-y-2">
-              <Label>{tipoPagamento === "boleto" ? "Arquivo do Boleto" : "Imagem do QR Code / Pix"}</Label>
+              <Label>Arquivo do Boleto</Label>
               <input
                 type="file"
                 ref={paymentFileInputRef}
@@ -589,9 +575,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {tipoPagamento === "boleto"
-                      ? "Anexe o boleto para facilitar o pagamento"
-                      : "Anexe a imagem do QR Code Pix"}
+                    Anexe o boleto para facilitar o pagamento
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">PDF, JPEG ou PNG (máx. 10MB)</p>
                 </div>
@@ -617,18 +601,14 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
           {/* Campo de texto para dados bancários */}
           <div className="space-y-2">
             <Label htmlFor="dadosBancarios">
-              {tipoPagamento === "manual" && "Informações para pagamento"}
-              {tipoPagamento === "boleto" && "Informações adicionais"}
-              {tipoPagamento === "qrcode" && "Informações adicionais"}
+              {tipoPagamento === "manual" ? "Informações para pagamento" : "Informações adicionais"}
             </Label>
             <Textarea
               id="dadosBancarios"
               placeholder={
                 tipoPagamento === "manual"
                   ? "PIX, dados da conta bancária, código de barras..."
-                  : tipoPagamento === "boleto"
-                    ? "Cole o código de barras aqui ou adicione informações adicionais..."
-                    : "Cole a chave Pix aqui ou adicione informações adicionais..."
+                  : "Cole o código de barras aqui ou adicione informações adicionais..."
               }
               rows={4}
               {...register("dadosBancarios")}
@@ -644,6 +624,15 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         <h2 className="text-lg font-semibold mb-4">Documento Anexo</h2>
         <div className="space-y-4">
           <Label>Anexar Arquivo. (PDF, JPEG ou PNG)</Label>
+          
+          {/* Aviso informativo */}
+          <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+            <div className="text-sm text-amber-800 dark:text-amber-200">
+              <p className="font-medium">Envie o arquivo de comprovação do título para ser salvo na pasta financeira da obra.</p>
+              <p className="mt-1 text-amber-700 dark:text-amber-300">Se anexou o boleto acima, anexe aqui também.</p>
+            </div>
+          </div>
 
           <input
             type="file"
