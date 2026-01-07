@@ -64,6 +64,7 @@ function mapTituloFromDB(row: TituloRow): Titulo {
       : JSON.stringify(row.dados_bancarios || ''),
     tipoLeituraPagamento: row.tipo_leitura_pagamento as any,
     arquivoPagamentoUrl: row.arquivo_pagamento_url || undefined,
+    documentoUrl: row.documento_url || undefined,
     status: row.status as TituloStatus,
     criadoPor: row.created_by,
     criadoPorNome: row.criador,
