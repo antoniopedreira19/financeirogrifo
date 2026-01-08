@@ -34,6 +34,7 @@ export interface Titulo {
   documento: string; // CNPJ ou CPF
   tipoDocumento: 'cnpj' | 'cpf';
   obraId: string;
+  obraCodigo?: string;
   obraNome?: string;
   centroCusto: string;
   etapaApropriada: string;

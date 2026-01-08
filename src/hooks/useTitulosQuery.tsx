@@ -10,6 +10,7 @@ interface TituloRow {
   documento_tipo: string;
   documento_numero: string;
   obra_id: string;
+  obra_codigo: string;
   centro_custo: string;
   etapa: string;
   codigo_etapa?: string;
@@ -47,6 +48,7 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     documento: row.documento_numero,
     tipoDocumento: row.documento_tipo as 'cnpj' | 'cpf',
     obraId: row.obra_id,
+    obraCodigo: row.obra_codigo,
     obraNome: row.obras?.nome || '',
     centroCusto: row.centro_custo,
     etapaApropriada: row.etapa,
