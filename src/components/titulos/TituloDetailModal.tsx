@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useUpdateTituloStatus } from "@/hooks/useTitulosQuery";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle,
   XCircle,
@@ -28,6 +29,7 @@ import {
   Copy,
   CopyPlus,
   RefreshCw,
+  Upload,
 } from "lucide-react";
 
 interface TituloDetailModalProps {
@@ -41,10 +43,13 @@ interface TituloDetailModalProps {
 export function TituloDetailModal({ titulo, open, onClose, showActions = false, onReplicate }: TituloDetailModalProps) {
   const updateStatusMutation = useUpdateTituloStatus();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [motivoReprovacao, setMotivoReprovacao] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSiengeModal, setShowSiengeModal] = useState(false);
+  const [isUploadingComprovante, setIsUploadingComprovante] = useState(false);
+  const comprovanteInputRef = useRef<HTMLInputElement>(null);
 
   if (!titulo) return null;
 
@@ -106,6 +111,60 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
 
   const isLoading = updateStatusMutation.isPending;
 
+  const handleComprovanteUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id || !titulo) return;
+
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formato não suportado. Use PDF, JPEG ou PNG.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 10MB.");
+      return;
+    }
+
+    setIsUploadingComprovante(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `comprovante_${titulo.id}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("titulo-documentos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        toast.error("Erro ao enviar comprovante.");
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from("titulos")
+        .update({ documento_url: filePath })
+        .eq("id", titulo.id);
+
+      if (updateError) {
+        console.error("Update error:", updateError);
+        toast.error("Erro ao salvar comprovante.");
+        return;
+      }
+
+      toast.success("Comprovante importado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["titulos"] });
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Erro ao importar comprovante.");
+    } finally {
+      setIsUploadingComprovante(false);
+      if (comprovanteInputRef.current) {
+        comprovanteInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -117,13 +176,37 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Botão Atualizar no Sienge - no topo */}
-          {titulo.idSienge && (
-            <Button variant="outline" className="w-full gap-2" onClick={() => setShowSiengeModal(true)}>
-              <RefreshCw className="h-4 w-4" />
-              Atualizar no Sienge
+          {/* Hidden file input for comprovante */}
+          <input
+            type="file"
+            ref={comprovanteInputRef}
+            onChange={handleComprovanteUpload}
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+          />
+
+          {/* Botões de ação no topo */}
+          <div className="flex gap-2">
+            {titulo.idSienge && (
+              <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowSiengeModal(true)}>
+                <RefreshCw className="h-4 w-4" />
+                Atualizar no Sienge
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              onClick={() => comprovanteInputRef.current?.click()}
+              disabled={isUploadingComprovante}
+            >
+              {isUploadingComprovante ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              Importar Comprovante
             </Button>
-          )}
+          </div>
 
           {/* Valor destacado */}
           <div className="bg-accent/10 rounded-xl p-6 text-center">
