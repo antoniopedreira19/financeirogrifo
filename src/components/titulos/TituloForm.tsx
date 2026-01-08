@@ -32,7 +32,7 @@ const tituloSchema = z.object({
   valorTotal: z.number().min(0.01, "Valor deve ser maior que zero"),
   descontos: z.number().min(0, "Descontos não pode ser negativo").default(0),
   parcelas: z.number().min(1, "Mínimo 1 parcela"),
-  tipoDocumentoFiscal: z.enum(["NF", "BOL", "REC", "AD"]),
+  tipoDocumentoFiscal: z.enum(["NF", "BOL", "REC"]),
   numeroDocumento: z.string().min(1, "Número do documento é obrigatório"),
   dataEmissao: z.date(),
   dataVencimento: z.date(),
@@ -151,7 +151,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       dataVencimento: initialData?.dataVencimento ? new Date(initialData.dataVencimento) : undefined,
       parcelas: initialData?.parcelas || 1,
       descontos: initialData?.descontos || 0,
-      tipoDocumentoFiscal: (initialData?.tipoDocumentoFiscal as "NF" | "BOL" | "REC" | "AD") || "NF",
+      tipoDocumentoFiscal: (initialData?.tipoDocumentoFiscal as "NF" | "BOL" | "REC") || "NF",
       planoFinanceiro: initialData?.planoFinanceiro || "servicos_terceiros",
       empresa: initialData?.empresa ? Number(initialData.empresa) : undefined,
       credor: initialData?.credor || "",
@@ -444,7 +444,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
             <Label>Tipo de Documento</Label>
             <Select
               defaultValue="NF"
-              onValueChange={(value: "NF" | "BOL" | "REC" | "AD") => setValue("tipoDocumentoFiscal", value)}
+              onValueChange={(value: "NF" | "BOL" | "REC") => setValue("tipoDocumentoFiscal", value)}
             >
               <SelectTrigger className="input-field">
                 <SelectValue />
@@ -453,7 +453,6 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                 <SelectItem value="NF">NF</SelectItem>
                 <SelectItem value="BOL">BOL</SelectItem>
                 <SelectItem value="REC">REC</SelectItem>
-                <SelectItem value="AD">AD</SelectItem>
               </SelectContent>
             </Select>
           </div>
