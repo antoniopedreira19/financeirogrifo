@@ -408,7 +408,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "obra"
       plano_financeiro: "servicos_terceiros" | "materiais_aplicados"
-      tipo_documento: "NF" | "BOL" | "REC" | "AD"
+      tipo_documento: "NF" | "BOL" | "REC"
       titulo_status: "enviado" | "aprovado" | "reprovado" | "pago"
     }
     CompositeTypes: {
@@ -539,7 +539,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "obra"],
       plano_financeiro: ["servicos_terceiros", "materiais_aplicados"],
-      tipo_documento: ["NF", "BOL", "REC", "AD"],
+      tipo_documento: ["NF", "BOL", "REC"],
       titulo_status: ["enviado", "aprovado", "reprovado", "pago"],
     },
   },
