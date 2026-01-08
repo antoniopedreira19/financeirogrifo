@@ -152,6 +152,31 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         return;
       }
 
+      // Get public URL for the uploaded file
+      const { data: publicUrlData } = supabase.storage
+        .from("titulo-documentos")
+        .getPublicUrl(filePath);
+
+      // Send webhook with titulo data
+      try {
+        await fetch("https://grifoworkspace.app.n8n.cloud/webhook/comprovante-importado", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            documento_url: publicUrlData.publicUrl,
+            obra_codigo: titulo.obraCodigo,
+            tipo_documento: titulo.tipoDocumentoFiscal,
+            sienge_id: titulo.idSienge,
+            data_emissao: titulo.dataEmissao,
+          }),
+        });
+      } catch (webhookError) {
+        console.error("Webhook error:", webhookError);
+        // Don't show error to user since upload was successful
+      }
+
       toast.success("Comprovante importado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["titulos"] });
     } catch (error) {
