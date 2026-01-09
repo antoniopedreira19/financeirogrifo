@@ -60,6 +60,20 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     }).format(value);
   };
 
+  // Helper to parse date strings safely (handles both "YYYY-MM-DD" and full timestamps)
+  const parseDate = (dateValue: Date | string) => {
+    if (!dateValue) return new Date();
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date) return dateValue;
+    // If it's just a date string (10 chars like "2026-01-09"), add time to avoid timezone issues
+    const dateStr = String(dateValue);
+    if (dateStr.length === 10) {
+      return new Date(dateStr + "T12:00:00");
+    }
+    // Otherwise parse the full timestamp
+    return new Date(dateStr);
+  };
+
   const handleAprovar = () => {
     if (!user?.id) return;
 
@@ -251,12 +265,12 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             <InfoItem
               icon={Calendar}
               label="Emissão"
-              value={format(new Date(titulo.dataEmissao + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+              value={format(parseDate(titulo.dataEmissao), "dd/MM/yyyy", { locale: ptBR })}
             />
             <InfoItem
               icon={Calendar}
               label="Vencimento"
-              value={format(new Date(titulo.dataVencimento + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+              value={format(parseDate(titulo.dataVencimento), "dd/MM/yyyy", { locale: ptBR })}
             />
             <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
             <InfoItem icon={Banknote} label="Plano Financeiro" value={planoFinanceiroLabels[titulo.planoFinanceiro]} />
