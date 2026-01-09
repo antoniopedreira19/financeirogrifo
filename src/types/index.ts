@@ -60,6 +60,7 @@ export interface Titulo {
   dataPagamento?: Date;
   motivoReprovacao?: string;
   idSienge?: number;
+  descricao?: string;
   createdAt: Date;
   updatedAt: Date;
 }

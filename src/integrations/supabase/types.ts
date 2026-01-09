@@ -124,6 +124,7 @@ export type Database = {
           data_emissao: string
           data_vencimento: string
           descontos: number | null
+          descricao: string | null
           documento_numero: string
           documento_tipo: string
           documento_url: string | null
@@ -161,6 +162,7 @@ export type Database = {
           data_emissao?: string
           data_vencimento: string
           descontos?: number | null
+          descricao?: string | null
           documento_numero: string
           documento_tipo: string
           documento_url?: string | null
@@ -198,6 +200,7 @@ export type Database = {
           data_emissao?: string
           data_vencimento?: string
           descontos?: number | null
+          descricao?: string | null
           documento_numero?: string
           documento_tipo?: string
           documento_url?: string | null
@@ -246,6 +249,7 @@ export type Database = {
           data_emissao: string
           data_vencimento: string
           descontos: number | null
+          descricao: string | null
           documento_numero: string
           documento_tipo: string
           documento_url: string | null
@@ -279,6 +283,7 @@ export type Database = {
           data_emissao?: string
           data_vencimento: string
           descontos?: number | null
+          descricao?: string | null
           documento_numero: string
           documento_tipo: string
           documento_url?: string | null
@@ -312,6 +317,7 @@ export type Database = {
           data_emissao?: string
           data_vencimento?: string
           descontos?: number | null
+          descricao?: string | null
           documento_numero?: string
           documento_tipo?: string
           documento_url?: string | null

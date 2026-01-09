@@ -38,6 +38,7 @@ const tituloSchema = z.object({
   dataVencimento: z.date(),
   planoFinanceiro: z.enum(["servicos_terceiros", "materiais_aplicados"]),
   dadosBancarios: z.string().optional().default(""),
+  descricao: z.string().max(500, "Descrição muito longa (máx. 500 caracteres)").optional().default(""),
 });
 
 type TituloFormData = z.infer<typeof tituloSchema>;
@@ -161,6 +162,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       valorTotal: initialData?.valorTotal || undefined,
       numeroDocumento: initialData?.numeroDocumento || "",
       dadosBancarios: initialData?.dadosBancarios || "",
+      descricao: initialData?.descricao || "",
     },
   });
 
@@ -229,6 +231,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         criador: user.nome,
         documentoUrl,
         arquivoPagamentoUrl,
+        descricao: data.descricao || undefined,
       },
       {
         onSuccess: () => {
@@ -621,6 +624,22 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
             />
             {errors.dadosBancarios && <p className="text-sm text-destructive">{errors.dadosBancarios.message}</p>}
           </div>
+        </div>
+      </div>
+
+      {/* Descrição (opcional) */}
+      <div className="card-elevated p-6">
+        <h2 className="text-lg font-semibold mb-4">Descrição</h2>
+        <div className="space-y-2">
+          <Label htmlFor="descricao">Descrição do Título (opcional)</Label>
+          <Textarea
+            id="descricao"
+            placeholder="Descreva o título, motivo do pagamento, observações..."
+            rows={3}
+            {...register("descricao")}
+            className="input-field resize-none"
+          />
+          {errors.descricao && <p className="text-sm text-destructive">{errors.descricao.message}</p>}
         </div>
       </div>
 

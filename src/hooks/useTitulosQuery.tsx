@@ -35,6 +35,7 @@ interface TituloRow {
   pago_em: string | null;
   motivo_reprovacao: string | null;
   id_sienge?: number | null;
+  descricao?: string | null;
   created_at: string;
   updated_at: string;
   obras?: { nome: string } | null;
@@ -76,6 +77,7 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     dataPagamento: row.pago_em ? new Date(row.pago_em) : undefined,
     motivoReprovacao: row.motivo_reprovacao || undefined,
     idSienge: row.id_sienge || undefined,
+    descricao: row.descricao || undefined,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -235,6 +237,7 @@ export function useCreateTitulo() {
       criador: string;
       documentoUrl?: string;
       arquivoPagamentoUrl?: string;
+      descricao?: string;
     }) => {
       const insertData = {
         empresa: titulo.empresa,
@@ -261,6 +264,7 @@ export function useCreateTitulo() {
         criador: titulo.criador,
         documento_url: titulo.documentoUrl,
         arquivo_pagamento_url: titulo.arquivoPagamentoUrl,
+        descricao: titulo.descricao || null,
       };
 
       const { data, error } = await supabase
@@ -345,6 +349,7 @@ export function useUpdateTituloStatus() {
             tipo_leitura_pagamento: pendente.tipo_leitura_pagamento,
             arquivo_pagamento_url: pendente.arquivo_pagamento_url,
             documento_url: pendente.documento_url,
+            descricao: pendente.descricao,
             status: 'pago',
             criador: pendente.criador,
             created_by: pendente.created_by,
