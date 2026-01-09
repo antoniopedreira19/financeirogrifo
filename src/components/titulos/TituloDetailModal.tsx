@@ -251,12 +251,12 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             <InfoItem
               icon={Calendar}
               label="Emissão"
-              value={format(new Date(titulo.dataEmissao), "dd/MM/yyyy", { locale: ptBR })}
+              value={format(new Date(titulo.dataEmissao + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
             />
             <InfoItem
               icon={Calendar}
               label="Vencimento"
-              value={format(new Date(titulo.dataVencimento), "dd/MM/yyyy", { locale: ptBR })}
+              value={format(new Date(titulo.dataVencimento + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
             />
             <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
             <InfoItem icon={Banknote} label="Plano Financeiro" value={planoFinanceiroLabels[titulo.planoFinanceiro]} />
