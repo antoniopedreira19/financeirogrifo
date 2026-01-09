@@ -184,6 +184,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             tipo_documento: titulo.tipoDocumentoFiscal,
             sienge_id: titulo.idSienge,
             data_emissao: titulo.dataEmissao,
+            descricao: titulo.descricao || null,
           }),
         });
       } catch (webhookError) {
@@ -274,8 +275,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             />
             <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
             <InfoItem icon={Banknote} label="Plano Financeiro" value={planoFinanceiroLabels[titulo.planoFinanceiro]} />
-            {titulo.idSienge && <InfoItem icon={RefreshCw} label="ID Sienge" value={titulo.idSienge.toString()} />}
+          {titulo.idSienge && <InfoItem icon={RefreshCw} label="ID Sienge" value={titulo.idSienge.toString()} />}
           </div>
+
+          {titulo.descricao && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Descrição</p>
+              <p className="text-foreground">{titulo.descricao}</p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Etapa Apropriada</p>
