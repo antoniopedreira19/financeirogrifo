@@ -25,6 +25,9 @@ export default function AdminTitulos() {
   // NOVOS ESTADOS PARA DATA
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  
+  // FILTRO AD
+  const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
 
   const filteredTitulos = titulos.filter((titulo) => {
     // 1. Filtro de Texto
@@ -56,7 +59,10 @@ export default function AdminTitulos() {
       }
     }
 
-    return matchesSearch && matchesStatus && matchesObra && matchesDate;
+    // 5. Filtro AD
+    const matchesAd = adFilter === "all" || titulo.numeroDocumento.toUpperCase().includes("AD");
+
+    return matchesSearch && matchesStatus && matchesObra && matchesDate && matchesAd;
   });
 
   // Função para limpar filtros
@@ -66,6 +72,7 @@ export default function AdminTitulos() {
     setObraFilter("all");
     setStartDate("");
     setEndDate("");
+    setAdFilter("all");
   };
 
   const isLoading = loadingTitulos || loadingObras;
@@ -90,7 +97,7 @@ export default function AdminTitulos() {
             <div className="flex items-center gap-2 mt-1">
               <p className="text-muted-foreground">{filteredTitulos.length} título(s) encontrado(s)</p>
               {/* Botão de limpar filtros se houver algum ativo */}
-              {(searchTerm || statusFilter !== "all" || obraFilter !== "all" || startDate || endDate) && (
+              {(searchTerm || statusFilter !== "all" || obraFilter !== "all" || startDate || endDate || adFilter !== "all") && (
                 <Button variant="link" size="sm" onClick={clearFilters} className="text-red-500 h-auto p-0 ml-2">
                   <X className="h-3 w-3 mr-1" /> Limpar filtros
                 </Button>
@@ -106,8 +113,8 @@ export default function AdminTitulos() {
         {/* Filters Area */}
         <div className="card-elevated p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
-            {/* Campo de Busca (Ocupa 4 colunas) */}
-            <div className="lg:col-span-4 relative">
+            {/* Campo de Busca (Ocupa 3 colunas) */}
+            <div className="lg:col-span-3 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por credor, doc ou obra..."
@@ -150,7 +157,20 @@ export default function AdminTitulos() {
               </Select>
             </div>
 
-            {/* NOVO: Filtro de Datas (Ocupa 4 colunas divididas em 2 inputs) */}
+            {/* Filtro AD (Ocupa 1 coluna) */}
+            <div className="lg:col-span-1">
+              <Select value={adFilter} onValueChange={(value: "all" | "ad") => setAdFilter(value)}>
+                <SelectTrigger className="w-full input-field">
+                  <SelectValue placeholder="Documento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="ad">AD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtro de Datas (Ocupa 4 colunas divididas em 2 inputs) */}
             <div className="lg:col-span-2">
               <Input
                 type="date"
