@@ -58,8 +58,8 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     parcelas: row.parcelas,
     tipoDocumentoFiscal: row.tipo_documento as any,
     numeroDocumento: row.numero_documento,
-    dataEmissao: new Date(row.data_emissao),
-    dataVencimento: new Date(row.data_vencimento),
+    dataEmissao: row.data_emissao as unknown as Date,
+    dataVencimento: row.data_vencimento as unknown as Date,
     planoFinanceiro: row.plano_financeiro as any,
     dadosBancarios: typeof row.dados_bancarios === 'string' 
       ? row.dados_bancarios 

@@ -19,6 +19,18 @@ export function TituloCard({ titulo, onClick, showObra = false }: TituloCardProp
     }).format(value);
   };
 
+  // Helper to parse date strings safely (handles both "YYYY-MM-DD" and full timestamps)
+  const parseDate = (dateValue: Date | string) => {
+    if (!dateValue) return new Date();
+    if (dateValue instanceof Date) return dateValue;
+    const dateStr = String(dateValue);
+    // If it's just a date (10 chars like "2026-01-09"), add time to avoid timezone issues
+    if (dateStr.length === 10) {
+      return new Date(dateStr + "T12:00:00");
+    }
+    return new Date(dateStr);
+  };
+
   return (
     <div
       onClick={onClick}
@@ -52,7 +64,7 @@ export function TituloCard({ titulo, onClick, showObra = false }: TituloCardProp
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{format(new Date(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}</span>
+          <span>{format(parseDate(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <CreditCard className="h-4 w-4" />
