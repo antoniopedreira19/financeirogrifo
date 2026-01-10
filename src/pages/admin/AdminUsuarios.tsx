@@ -84,43 +84,40 @@ export default function AdminUsuarios() {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: { nome: string; email: string; role: UserRole; obraIds: string[] }) => {
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: userData.email,
-        password: DEFAULT_PASSWORD,
-        email_confirm: true,
-        user_metadata: { nome: userData.nome },
-      });
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
 
-      if (authError) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: userData.email,
-          password: DEFAULT_PASSWORD,
-          options: { data: { nome: userData.nome } },
-        });
-
-        if (signUpError) throw signUpError;
-        if (!signUpData.user) throw new Error("Erro ao criar usuário");
-
-        return { userId: signUpData.user.id, userData };
+      if (!token) {
+        throw new Error("Sessão não encontrada");
       }
 
-      return { userId: authData.user.id, userData };
+      const response = await fetch(
+        "https://epphcvlytxhemhiqgiir.supabase.co/functions/v1/create-user",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: userData.email,
+            password: DEFAULT_PASSWORD,
+            nome: userData.nome,
+            role: userData.role,
+            obraIds: userData.obraIds,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao criar usuário");
+      }
+
+      return result;
     },
-    onSuccess: async ({ userId, userData }) => {
-      const { error: roleError } = await supabase.from("user_roles").insert({ user_id: userId, role: userData.role });
-
-      if (roleError) console.error("Error adding role:", roleError);
-
-      if (userData.role === "obra" && userData.obraIds.length > 0) {
-        const obraInserts = userData.obraIds.map((obraId) => ({
-          user_id: userId,
-          obra_id: obraId,
-        }));
-
-        const { error: obrasError } = await supabase.from("user_obras").insert(obraInserts);
-        if (obrasError) console.error("Error adding obras:", obrasError);
-      }
-
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setNewUser({ nome: "", email: "", role: "obra", obraIds: [] });
       setIsDialogOpen(false);
@@ -131,8 +128,10 @@ export default function AdminUsuarios() {
     onError: (error: any) => {
       console.error("Error creating user:", error);
       let message = "Erro ao criar usuário";
-      if (error.message?.includes("already registered")) {
+      if (error.message?.includes("already registered") || error.message?.includes("already been registered")) {
         message = "Este email já está cadastrado.";
+      } else if (error.message) {
+        message = error.message;
       }
       toast.error(message);
     },
