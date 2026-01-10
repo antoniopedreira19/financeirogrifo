@@ -1,28 +1,16 @@
-import { useState } from 'react';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useObrasQuery } from '@/hooks/useObrasQuery';
-import { UserRole, Obra } from '@/types';
-import { Plus, Users, Building2, Mail, Shield, Loader2, Pencil } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useObrasQuery } from "@/hooks/useObrasQuery";
+import { UserRole, Obra } from "@/types";
+import { Plus, Users, Building2, Mail, Shield, Loader2, Pencil } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface UserDisplay {
   id: string;
@@ -32,7 +20,7 @@ interface UserDisplay {
   obras: Obra[];
 }
 
-const DEFAULT_PASSWORD = '@Grifo2025';
+const DEFAULT_PASSWORD = "@Grifo2026";
 
 export default function AdminUsuarios() {
   const { data: obras = [], isLoading: loadingObras } = useObrasQuery();
@@ -41,50 +29,43 @@ export default function AdminUsuarios() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserDisplay | null>(null);
   const [newUser, setNewUser] = useState({
-    nome: '',
-    email: '',
-    role: 'obra' as UserRole,
+    nome: "",
+    email: "",
+    role: "obra" as UserRole,
     obraIds: [] as string[],
   });
   const [editUser, setEditUser] = useState({
-    nome: '',
-    role: 'obra' as UserRole,
+    nome: "",
+    role: "obra" as UserRole,
     obraIds: [] as string[],
   });
 
   const { data: users = [], isLoading: loadingUsers } = useQuery({
-    queryKey: ['users'],
+    queryKey: ["users"],
     queryFn: async () => {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('nome');
+      const { data: profiles, error: profilesError } = await supabase.from("profiles").select("*").order("nome");
 
       if (profilesError) throw profilesError;
 
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
+      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("*");
 
       if (rolesError) throw rolesError;
 
-      const { data: userObras, error: userObrasError } = await supabase
-        .from('user_obras')
-        .select(`user_id, obras (*)`);
+      const { data: userObras, error: userObrasError } = await supabase.from("user_obras").select(`user_id, obras (*)`);
 
       if (userObrasError) throw userObrasError;
 
-      return (profiles || []).map(profile => {
-        const userRole = roles?.find(r => r.user_id === profile.id);
+      return (profiles || []).map((profile) => {
+        const userRole = roles?.find((r) => r.user_id === profile.id);
         const userObrasList = (userObras || [])
-          .filter(uo => uo.user_id === profile.id && uo.obras)
-          .map(uo => {
+          .filter((uo) => uo.user_id === profile.id && uo.obras)
+          .map((uo) => {
             const o = uo.obras as any;
             return {
               id: o.id,
               nome: o.nome,
               codigo: o.codigo,
-              endereco: o.endereco || '',
+              endereco: o.endereco || "",
               ativa: o.ativa,
               createdAt: new Date(o.created_at),
             } as Obra;
@@ -94,7 +75,7 @@ export default function AdminUsuarios() {
           id: profile.id,
           nome: profile.nome,
           email: profile.email,
-          role: (userRole?.role as UserRole) || 'obra',
+          role: (userRole?.role as UserRole) || "obra",
           obras: userObrasList,
         } as UserDisplay;
       });
@@ -116,117 +97,115 @@ export default function AdminUsuarios() {
           password: DEFAULT_PASSWORD,
           options: { data: { nome: userData.nome } },
         });
-        
+
         if (signUpError) throw signUpError;
-        if (!signUpData.user) throw new Error('Erro ao criar usuário');
-        
+        if (!signUpData.user) throw new Error("Erro ao criar usuário");
+
         return { userId: signUpData.user.id, userData };
       }
 
       return { userId: authData.user.id, userData };
     },
     onSuccess: async ({ userId, userData }) => {
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: userData.role });
+      const { error: roleError } = await supabase.from("user_roles").insert({ user_id: userId, role: userData.role });
 
-      if (roleError) console.error('Error adding role:', roleError);
+      if (roleError) console.error("Error adding role:", roleError);
 
-      if (userData.role === 'obra' && userData.obraIds.length > 0) {
-        const obraInserts = userData.obraIds.map(obraId => ({
+      if (userData.role === "obra" && userData.obraIds.length > 0) {
+        const obraInserts = userData.obraIds.map((obraId) => ({
           user_id: userId,
           obra_id: obraId,
         }));
 
-        const { error: obrasError } = await supabase.from('user_obras').insert(obraInserts);
-        if (obrasError) console.error('Error adding obras:', obrasError);
+        const { error: obrasError } = await supabase.from("user_obras").insert(obraInserts);
+        if (obrasError) console.error("Error adding obras:", obrasError);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      setNewUser({ nome: '', email: '', role: 'obra', obraIds: [] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setNewUser({ nome: "", email: "", role: "obra", obraIds: [] });
       setIsDialogOpen(false);
-      toast.success('Usuário criado com sucesso!', {
+      toast.success("Usuário criado com sucesso!", {
         description: `Senha padrão: ${DEFAULT_PASSWORD}`,
       });
     },
     onError: (error: any) => {
-      console.error('Error creating user:', error);
-      let message = 'Erro ao criar usuário';
-      if (error.message?.includes('already registered')) {
-        message = 'Este email já está cadastrado.';
+      console.error("Error creating user:", error);
+      let message = "Erro ao criar usuário";
+      if (error.message?.includes("already registered")) {
+        message = "Este email já está cadastrado.";
       }
       toast.error(message);
     },
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, userData }: { userId: string; userData: { nome: string; role: UserRole; obraIds: string[] } }) => {
+    mutationFn: async ({
+      userId,
+      userData,
+    }: {
+      userId: string;
+      userData: { nome: string; role: UserRole; obraIds: string[] };
+    }) => {
       // Update profile name
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ nome: userData.nome })
-        .eq('id', userId);
+      const { error: profileError } = await supabase.from("profiles").update({ nome: userData.nome }).eq("id", userId);
 
       if (profileError) throw profileError;
 
       // Update role
       const { error: roleError } = await supabase
-        .from('user_roles')
+        .from("user_roles")
         .update({ role: userData.role })
-        .eq('user_id', userId);
+        .eq("user_id", userId);
 
       if (roleError) throw roleError;
 
       // Get current obras
-      const { data: currentObras } = await supabase
-        .from('user_obras')
-        .select('obra_id')
-        .eq('user_id', userId);
+      const { data: currentObras } = await supabase.from("user_obras").select("obra_id").eq("user_id", userId);
 
-      const currentObraIds = (currentObras || []).map(o => o.obra_id);
+      const currentObraIds = (currentObras || []).map((o) => o.obra_id);
       const newObraIds = userData.obraIds;
 
       // Delete removed obras
-      const obrasToRemove = currentObraIds.filter(id => !newObraIds.includes(id));
+      const obrasToRemove = currentObraIds.filter((id) => !newObraIds.includes(id));
       if (obrasToRemove.length > 0) {
         const { error: deleteError } = await supabase
-          .from('user_obras')
+          .from("user_obras")
           .delete()
-          .eq('user_id', userId)
-          .in('obra_id', obrasToRemove);
+          .eq("user_id", userId)
+          .in("obra_id", obrasToRemove);
 
         if (deleteError) throw deleteError;
       }
 
       // Add new obras
-      const obrasToAdd = newObraIds.filter(id => !currentObraIds.includes(id));
+      const obrasToAdd = newObraIds.filter((id) => !currentObraIds.includes(id));
       if (obrasToAdd.length > 0) {
-        const obraInserts = obrasToAdd.map(obraId => ({
+        const obraInserts = obrasToAdd.map((obraId) => ({
           user_id: userId,
           obra_id: obraId,
         }));
 
-        const { error: insertError } = await supabase.from('user_obras').insert(obraInserts);
+        const { error: insertError } = await supabase.from("user_obras").insert(obraInserts);
         if (insertError) throw insertError;
       }
 
       return { userId, userData };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsEditDialogOpen(false);
       setEditingUser(null);
-      toast.success('Usuário atualizado com sucesso!');
+      toast.success("Usuário atualizado com sucesso!");
     },
     onError: (error: any) => {
-      console.error('Error updating user:', error);
-      toast.error('Erro ao atualizar usuário');
+      console.error("Error updating user:", error);
+      toast.error("Erro ao atualizar usuário");
     },
   });
 
   const handleCreateUser = () => {
     if (!newUser.nome || !newUser.email) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error("Preencha todos os campos obrigatórios");
       return;
     }
     createUserMutation.mutate(newUser);
@@ -237,14 +216,14 @@ export default function AdminUsuarios() {
     setEditUser({
       nome: user.nome,
       role: user.role,
-      obraIds: user.obras.map(o => o.id),
+      obraIds: user.obras.map((o) => o.id),
     });
     setIsEditDialogOpen(true);
   };
 
   const handleUpdateUser = () => {
     if (!editingUser || !editUser.nome) {
-      toast.error('Preencha o nome do usuário');
+      toast.error("Preencha o nome do usuário");
       return;
     }
     updateUserMutation.mutate({ userId: editingUser.id, userData: editUser });
@@ -326,7 +305,7 @@ export default function AdminUsuarios() {
                     </SelectContent>
                   </Select>
                 </div>
-                {newUser.role === 'obra' && (
+                {newUser.role === "obra" && (
                   <div className="space-y-2">
                     <Label>Obras Vinculadas</Label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -359,9 +338,9 @@ export default function AdminUsuarios() {
                     </div>
                   </div>
                 )}
-                <Button 
-                  variant="gold" 
-                  className="w-full" 
+                <Button
+                  variant="gold"
+                  className="w-full"
                   onClick={handleCreateUser}
                   disabled={createUserMutation.isPending}
                 >
@@ -371,7 +350,7 @@ export default function AdminUsuarios() {
                       Criando...
                     </>
                   ) : (
-                    'Criar Usuário'
+                    "Criar Usuário"
                   )}
                 </Button>
               </div>
@@ -399,11 +378,7 @@ export default function AdminUsuarios() {
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input
-                    value={editingUser.email}
-                    disabled
-                    className="input-field bg-muted"
-                  />
+                  <Input value={editingUser.email} disabled className="input-field bg-muted" />
                   <p className="text-xs text-muted-foreground">O email não pode ser alterado.</p>
                 </div>
                 <div className="space-y-2">
@@ -421,7 +396,7 @@ export default function AdminUsuarios() {
                     </SelectContent>
                   </Select>
                 </div>
-                {editUser.role === 'obra' && (
+                {editUser.role === "obra" && (
                   <div className="space-y-2">
                     <Label>Obras Vinculadas</Label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -454,9 +429,9 @@ export default function AdminUsuarios() {
                     </div>
                   </div>
                 )}
-                <Button 
-                  variant="gold" 
-                  className="w-full" 
+                <Button
+                  variant="gold"
+                  className="w-full"
                   onClick={handleUpdateUser}
                   disabled={updateUserMutation.isPending}
                 >
@@ -466,7 +441,7 @@ export default function AdminUsuarios() {
                       Salvando...
                     </>
                   ) : (
-                    'Salvar Alterações'
+                    "Salvar Alterações"
                   )}
                 </Button>
               </div>
@@ -491,28 +466,23 @@ export default function AdminUsuarios() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditUser(user)}
-                        className="h-8 w-8"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleEditUser(user)} className="h-8 w-8">
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <span
                         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${
-                          user.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'
+                          user.role === "admin" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
                         }`}
                       >
                         <Shield className="h-3 w-3" />
-                        {user.role === 'admin' ? 'Admin' : 'Obra'}
+                        {user.role === "admin" ? "Admin" : "Obra"}
                       </span>
                     </div>
                   </div>
-                  {user.role === 'obra' && user.obras.length > 0 && (
+                  {user.role === "obra" && user.obras.length > 0 && (
                     <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
                       <Building2 className="h-4 w-4" />
-                      <span className="truncate">{user.obras.map(o => o.nome).join(', ')}</span>
+                      <span className="truncate">{user.obras.map((o) => o.nome).join(", ")}</span>
                     </div>
                   )}
                 </div>
