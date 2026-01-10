@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { TituloCard } from "@/components/titulos/TituloCard";
 import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
@@ -7,9 +7,11 @@ import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { Titulo, TituloStatus } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileText, Loader2, Plus, X } from "lucide-react"; // Adicionei o ícone X
+import { Search, FileText, Loader2, Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function AdminTitulos() {
   const navigate = useNavigate();
@@ -28,42 +30,66 @@ export default function AdminTitulos() {
   
   // FILTRO AD
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
+  
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredTitulos = titulos.filter((titulo) => {
-    // 1. Filtro de Texto
-    const matchesSearch =
-      titulo.credor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      titulo.numeroDocumento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      titulo.obraNome?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Ordenar por data mais recente e aplicar filtros
+  const filteredAndSortedTitulos = useMemo(() => {
+    const filtered = titulos.filter((titulo) => {
+      // 1. Filtro de Texto
+      const matchesSearch =
+        titulo.credor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        titulo.numeroDocumento.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        titulo.obraNome?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // 2. Filtro de Status
-    const matchesStatus = statusFilter === "all" || titulo.status === statusFilter;
+      // 2. Filtro de Status
+      const matchesStatus = statusFilter === "all" || titulo.status === statusFilter;
 
-    // 3. Filtro de Obra
-    const matchesObra = obraFilter === "all" || titulo.obraId === obraFilter;
+      // 3. Filtro de Obra
+      const matchesObra = obraFilter === "all" || titulo.obraId === obraFilter;
 
-    // 4. NOVO: Filtro de Data (Considerando Data de Vencimento)
-    // IMPORTANTE: Verifique se no seu objeto 'titulo' o campo é 'dataVencimento' ou 'data_vencimento'
-    let matchesDate = true;
-    if (startDate || endDate) {
-      const tituloDate = new Date(titulo.dataVencimento); // Ajuste o campo aqui se necessário
+      // 4. Filtro de Data (Considerando Data de Vencimento)
+      let matchesDate = true;
+      if (startDate || endDate) {
+        const tituloDate = new Date(titulo.dataVencimento);
 
-      if (startDate) {
-        const start = new Date(startDate);
-        if (tituloDate < start) matchesDate = false;
+        if (startDate) {
+          const start = new Date(startDate);
+          if (tituloDate < start) matchesDate = false;
+        }
+
+        if (endDate && matchesDate) {
+          const end = new Date(endDate);
+          if (tituloDate > end) matchesDate = false;
+        }
       }
 
-      if (endDate && matchesDate) {
-        const end = new Date(endDate);
-        if (tituloDate > end) matchesDate = false;
-      }
-    }
+      // 5. Filtro AD
+      const matchesAd = adFilter === "all" || titulo.numeroDocumento.toUpperCase().includes("AD");
 
-    // 5. Filtro AD
-    const matchesAd = adFilter === "all" || titulo.numeroDocumento.toUpperCase().includes("AD");
+      return matchesSearch && matchesStatus && matchesObra && matchesDate && matchesAd;
+    });
 
-    return matchesSearch && matchesStatus && matchesObra && matchesDate && matchesAd;
-  });
+    // Ordenar por data de criação (mais recente primeiro)
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    });
+  }, [titulos, searchTerm, statusFilter, obraFilter, startDate, endDate, adFilter]);
+
+  // Calcular paginação
+  const totalPages = Math.ceil(filteredAndSortedTitulos.length / ITEMS_PER_PAGE);
+  const paginatedTitulos = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedTitulos.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedTitulos, currentPage]);
+
+  // Reset para página 1 quando filtros mudam
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
 
   // Função para limpar filtros
   const clearFilters = () => {
@@ -73,6 +99,7 @@ export default function AdminTitulos() {
     setStartDate("");
     setEndDate("");
     setAdFilter("all");
+    setCurrentPage(1);
   };
 
   const isLoading = loadingTitulos || loadingObras;
@@ -95,7 +122,7 @@ export default function AdminTitulos() {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Todos os Títulos</h1>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-muted-foreground">{filteredTitulos.length} título(s) encontrado(s)</p>
+              <p className="text-muted-foreground">{filteredAndSortedTitulos.length} título(s) encontrado(s)</p>
               {/* Botão de limpar filtros se houver algum ativo */}
               {(searchTerm || statusFilter !== "all" || obraFilter !== "all" || startDate || endDate || adFilter !== "all") && (
                 <Button variant="link" size="sm" onClick={clearFilters} className="text-red-500 h-auto p-0 ml-2">
@@ -193,12 +220,68 @@ export default function AdminTitulos() {
         </div>
 
         {/* Titles List */}
-        {filteredTitulos.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredTitulos.map((titulo) => (
-              <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
-            ))}
-          </div>
+        {paginatedTitulos.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {paginatedTitulos.map((titulo) => (
+                <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
+              ))}
+            </div>
+            
+            {/* Paginação */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      return (
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(page - currentPage) <= 1
+                      );
+                    })
+                    .map((page, index, array) => {
+                      // Add ellipsis if there's a gap
+                      const prevPage = array[index - 1];
+                      const showEllipsis = prevPage && page - prevPage > 1;
+                      
+                      return (
+                        <span key={page} className="flex items-center">
+                          {showEllipsis && <span className="px-2 text-muted-foreground">...</span>}
+                          <Button
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="min-w-[36px]"
+                          >
+                            {page}
+                          </Button>
+                        </span>
+                      );
+                    })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="card-elevated p-8 text-center">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
