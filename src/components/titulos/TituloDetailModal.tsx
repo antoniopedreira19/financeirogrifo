@@ -13,7 +13,7 @@ import { useUpdateTituloStatus } from "@/hooks/useTitulosQuery";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQueryClient, useQuery } from "@tanstack/react-query"; // <--- ADICIONADO useQuery
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   CheckCircle,
   XCircle,
@@ -51,37 +51,33 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [isUploadingComprovante, setIsUploadingComprovante] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
 
-  // --- NOVA LÓGICA DE TEMPO REAL ⚡ ---
-  // Busca os dados atualizados a cada 1 segundo enquanto o modal está aberto
+  // --- LÓGICA DE TEMPO REAL NO MODAL ---
+  // Mantemos isso para caso você reabra o modal, ele já pegue o dado novo
   const { data: tituloFresco } = useQuery({
     queryKey: ["titulo_modal", titulo?.id],
     queryFn: async () => {
       if (!titulo?.id) return null;
-      // 1. Tenta buscar em titulos_pendentes
       const { data: pendente } = await supabase.from("titulos_pendentes").select("*").eq("id", titulo.id).maybeSingle();
 
       if (pendente) return pendente;
 
-      // 2. Se não achar, busca em titulos (caso já tenha sido pago)
       const { data: oficial } = await supabase.from("titulos").select("*").eq("id", titulo.id).maybeSingle();
 
       return oficial;
     },
-    enabled: open && !!titulo?.id, // Só roda se modal aberto e titulo existir
-    refetchInterval: 1000, // Polling a cada 1 segundo
+    enabled: open && !!titulo?.id,
+    refetchInterval: 1000,
   });
 
   if (!titulo) return null;
 
-  // Mescla os dados: usa o que veio do banco (fresco) se existir, senão usa o da prop
   const tituloVisualizado = tituloFresco
     ? {
         ...titulo,
         ...tituloFresco,
-        idSienge: tituloFresco.id_sienge, // Garante que pega o ID novo
+        idSienge: tituloFresco.id_sienge,
       }
     : titulo;
-  // -------------------------------------
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -100,19 +96,16 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     return new Date(dateStr);
   };
 
-  // --- HANDLE APROVAR LIMPO (Sem fetch manual, confia no realtime) ---
+  // --- MUDANÇA AQUI: FECHA O MODAL IMEDIATAMENTE ---
   const handleAprovar = async () => {
     if (!user?.id) return;
 
-    // Apenas atualiza o status. O Webhook do banco cuidará do envio ao n8n.
-    // O useQuery acima pegará o ID Sienge assim que ele for salvo.
     updateStatusMutation.mutate(
       { id: titulo.id, status: "aprovado", userId: user.id },
       {
         onSuccess: () => {
-          // Não fechamos o modal imediatamente se quiser ver o ID aparecer
-          // onClose();
-          toast.success("Aprovado! Aguardando retorno do Sienge...");
+          onClose(); // <--- FECHA O MODAL AGORA
+          toast.success("Aprovado! O ID Sienge aparecerá no card em instantes.");
         },
         onError: () => {
           toast.error("Erro ao aprovar título.");
@@ -241,7 +234,6 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     }
   };
 
-  // OBS: Substituímos 'titulo' por 'tituloVisualizado' em todo o JSX abaixo
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -249,7 +241,6 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           <div className="flex items-start justify-between gap-4">
             <DialogTitle className="text-xl">{tituloVisualizado.credor}</DialogTitle>
             <div className="flex items-center gap-3">
-              {/* Destaque do ID Sienge (Agora atualiza em tempo real) */}
               {(tituloVisualizado.status === "aprovado" || tituloVisualizado.status === "pago") &&
                 tituloVisualizado.idSienge && (
                   <div className="flex flex-col items-end border-r pr-3">
