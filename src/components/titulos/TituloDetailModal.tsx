@@ -13,7 +13,7 @@ import { useUpdateTituloStatus } from "@/hooks/useTitulosQuery";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query"; // <--- ADICIONADO useQuery
 import {
   CheckCircle,
   XCircle,
@@ -49,10 +49,39 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSiengeModal, setShowSiengeModal] = useState(false);
   const [isUploadingComprovante, setIsUploadingComprovante] = useState(false);
-  // Removido: const [isApprovingToSienge, setIsApprovingToSienge] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
 
+  // --- NOVA LÓGICA DE TEMPO REAL ⚡ ---
+  // Busca os dados atualizados a cada 1 segundo enquanto o modal está aberto
+  const { data: tituloFresco } = useQuery({
+    queryKey: ["titulo_modal", titulo?.id],
+    queryFn: async () => {
+      if (!titulo?.id) return null;
+      // 1. Tenta buscar em titulos_pendentes
+      const { data: pendente } = await supabase.from("titulos_pendentes").select("*").eq("id", titulo.id).maybeSingle();
+
+      if (pendente) return pendente;
+
+      // 2. Se não achar, busca em titulos (caso já tenha sido pago)
+      const { data: oficial } = await supabase.from("titulos").select("*").eq("id", titulo.id).maybeSingle();
+
+      return oficial;
+    },
+    enabled: open && !!titulo?.id, // Só roda se modal aberto e titulo existir
+    refetchInterval: 1000, // Polling a cada 1 segundo
+  });
+
   if (!titulo) return null;
+
+  // Mescla os dados: usa o que veio do banco (fresco) se existir, senão usa o da prop
+  const tituloVisualizado = tituloFresco
+    ? {
+        ...titulo,
+        ...tituloFresco,
+        idSienge: tituloFresco.id_sienge, // Garante que pega o ID novo
+      }
+    : titulo;
+  // -------------------------------------
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -61,32 +90,29 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     }).format(value);
   };
 
-  // Helper to parse date strings safely (handles both "YYYY-MM-DD" and full timestamps)
   const parseDate = (dateValue: Date | string) => {
     if (!dateValue) return new Date();
-    // If it's already a Date object, return it
     if (dateValue instanceof Date) return dateValue;
-    // If it's just a date string (10 chars like "2026-01-09"), add time to avoid timezone issues
     const dateStr = String(dateValue);
     if (dateStr.length === 10) {
       return new Date(dateStr + "T12:00:00");
     }
-    // Otherwise parse the full timestamp
     return new Date(dateStr);
   };
 
-  // --- FUNÇÃO CORRIGIDA: SEM FETCH MANUAL ---
+  // --- HANDLE APROVAR LIMPO (Sem fetch manual, confia no realtime) ---
   const handleAprovar = async () => {
     if (!user?.id) return;
 
-    // Apenas chamamos a mutação do banco.
-    // O Webhook do Supabase disparará automaticamente para o n8n.
+    // Apenas atualiza o status. O Webhook do banco cuidará do envio ao n8n.
+    // O useQuery acima pegará o ID Sienge assim que ele for salvo.
     updateStatusMutation.mutate(
       { id: titulo.id, status: "aprovado", userId: user.id },
       {
         onSuccess: () => {
-          onClose();
-          toast.success("Título aprovado! O processamento no Sienge iniciará automaticamente.");
+          // Não fechamos o modal imediatamente se quiser ver o ID aparecer
+          // onClose();
+          toast.success("Aprovado! Aguardando retorno do Sienge...");
         },
         onError: () => {
           toast.error("Erro ao aprovar título.");
@@ -138,11 +164,11 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     outro: "Outros",
   };
 
-  const isLoading = updateStatusMutation.isPending; // Removido || isApprovingToSienge
+  const isLoading = updateStatusMutation.isPending;
 
   const handleComprovanteUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user?.id || !titulo) return;
+    if (!file || !user?.id || !tituloVisualizado) return;
 
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
     if (!allowedTypes.includes(file.type)) {
@@ -157,7 +183,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     setIsUploadingComprovante(true);
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `comprovante_${titulo.id}.${fileExt}`;
+      const fileName = `comprovante_${tituloVisualizado.id}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -173,7 +199,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
       const { error: updateError } = await supabase
         .from("titulos")
         .update({ documento_url: filePath })
-        .eq("id", titulo.id);
+        .eq("id", tituloVisualizado.id);
 
       if (updateError) {
         console.error("Update error:", updateError);
@@ -181,10 +207,8 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         return;
       }
 
-      // Get public URL for the uploaded file
       const { data: publicUrlData } = supabase.storage.from("titulo-documentos").getPublicUrl(filePath);
 
-      // Send webhook with titulo data
       try {
         await fetch("https://grifoworkspace.app.n8n.cloud/webhook/comprovante-importado", {
           method: "POST",
@@ -193,16 +217,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           },
           body: JSON.stringify({
             documento_url: publicUrlData.publicUrl,
-            obra_codigo: titulo.obraCodigo,
-            tipo_documento: titulo.tipoDocumentoFiscal,
-            sienge_id: titulo.idSienge,
-            data_emissao: titulo.dataEmissao,
-            descricao: titulo.descricao || null,
+            obra_codigo: tituloVisualizado.obraCodigo,
+            tipo_documento: tituloVisualizado.tipoDocumentoFiscal,
+            sienge_id: tituloVisualizado.idSienge,
+            data_emissao: tituloVisualizado.dataEmissao,
+            descricao: tituloVisualizado.descricao || null,
           }),
         });
       } catch (webhookError) {
         console.error("Webhook error:", webhookError);
-        // Don't show error to user since upload was successful
       }
 
       toast.success("Comprovante importado com sucesso!");
@@ -218,29 +241,32 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     }
   };
 
+  // OBS: Substituímos 'titulo' por 'tituloVisualizado' em todo o JSX abaixo
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
-            <DialogTitle className="text-xl">{titulo.credor}</DialogTitle>
+            <DialogTitle className="text-xl">{tituloVisualizado.credor}</DialogTitle>
             <div className="flex items-center gap-3">
-              {/* --- Destaque do ID Sienge --- */}
-              {(titulo.status === "aprovado" || titulo.status === "pago") && titulo.idSienge && (
-                <div className="flex flex-col items-end border-r pr-3">
-                  <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">
-                    ID Sienge
-                  </span>
-                  <span className="text-lg font-mono font-bold text-emerald-600 leading-none">{titulo.idSienge}</span>
-                </div>
-              )}
-              <StatusBadge status={titulo.status} />
+              {/* Destaque do ID Sienge (Agora atualiza em tempo real) */}
+              {(tituloVisualizado.status === "aprovado" || tituloVisualizado.status === "pago") &&
+                tituloVisualizado.idSienge && (
+                  <div className="flex flex-col items-end border-r pr-3">
+                    <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">
+                      ID Sienge
+                    </span>
+                    <span className="text-lg font-mono font-bold text-emerald-600 leading-none">
+                      {tituloVisualizado.idSienge}
+                    </span>
+                  </div>
+                )}
+              <StatusBadge status={tituloVisualizado.status} />
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Hidden file input for comprovante */}
           <input
             type="file"
             ref={comprovanteInputRef}
@@ -249,9 +275,8 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             className="hidden"
           />
 
-          {/* Botões de ação no topo */}
           <div className="flex gap-2">
-            {titulo.idSienge && (
+            {tituloVisualizado.idSienge && (
               <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowSiengeModal(true)}>
                 <RefreshCw className="h-4 w-4" />
                 Atualizar no Sienge
@@ -268,64 +293,74 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             </Button>
           </div>
 
-          {/* Valor destacado */}
           <div className="bg-accent/10 rounded-xl p-6 text-center">
             <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
-            <p className="text-3xl font-bold text-accent">{formatCurrency(titulo.valorTotal)}</p>
+            <p className="text-3xl font-bold text-accent">{formatCurrency(tituloVisualizado.valorTotal)}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {titulo.parcelas}x de {formatCurrency(titulo.valorTotal / titulo.parcelas)}
+              {tituloVisualizado.parcelas}x de{" "}
+              {formatCurrency(tituloVisualizado.valorTotal / tituloVisualizado.parcelas)}
             </p>
           </div>
 
-          {/* Grid de informações */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoItem icon={Building2} label="Obra" value={titulo.obraNome || "-"} />
-            <InfoItem icon={User} label="Credor" value={titulo.credor} />
-            <InfoItem icon={FileText} label={titulo.tipoDocumento.toUpperCase()} value={titulo.documento} />
-            <InfoItem icon={FileText} label="Nº Documento" value={titulo.numeroDocumento} />
+            <InfoItem icon={Building2} label="Obra" value={tituloVisualizado.obraNome || "-"} />
+            <InfoItem icon={User} label="Credor" value={tituloVisualizado.credor} />
+            <InfoItem
+              icon={FileText}
+              label={tituloVisualizado.tipoDocumento.toUpperCase()}
+              value={tituloVisualizado.documento}
+            />
+            <InfoItem icon={FileText} label="Nº Documento" value={tituloVisualizado.numeroDocumento} />
             <InfoItem
               icon={Calendar}
               label="Emissão"
-              value={format(parseDate(titulo.dataEmissao), "dd/MM/yyyy", { locale: ptBR })}
+              value={format(parseDate(tituloVisualizado.dataEmissao), "dd/MM/yyyy", { locale: ptBR })}
             />
             <InfoItem
               icon={Calendar}
               label="Vencimento"
-              value={format(parseDate(titulo.dataVencimento), "dd/MM/yyyy", { locale: ptBR })}
+              value={format(parseDate(tituloVisualizado.dataVencimento), "dd/MM/yyyy", { locale: ptBR })}
             />
-            <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
-            <InfoItem icon={Banknote} label="Plano Financeiro" value={planoFinanceiroLabels[titulo.planoFinanceiro]} />
-            {titulo.idSienge && <InfoItem icon={RefreshCw} label="ID Sienge" value={titulo.idSienge.toString()} />}
+            <InfoItem icon={CreditCard} label="Centro de Custo" value={tituloVisualizado.centroCusto} />
+            <InfoItem
+              icon={Banknote}
+              label="Plano Financeiro"
+              value={planoFinanceiroLabels[tituloVisualizado.planoFinanceiro]}
+            />
+            {tituloVisualizado.idSienge && (
+              <InfoItem icon={RefreshCw} label="ID Sienge" value={tituloVisualizado.idSienge.toString()} />
+            )}
           </div>
 
-          {titulo.descricao && (
+          {tituloVisualizado.descricao && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Descrição</p>
-              <p className="text-foreground">{titulo.descricao}</p>
+              <p className="text-foreground">{tituloVisualizado.descricao}</p>
             </div>
           )}
 
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Etapa Apropriada</p>
-            <p className="text-foreground">{titulo.etapaApropriada}</p>
+            <p className="text-foreground">{tituloVisualizado.etapaApropriada}</p>
           </div>
 
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Tipo de Documento</p>
             <p className="text-foreground">
-              {tipoDocumentoLabels[titulo.tipoDocumentoFiscal] || titulo.tipoDocumentoFiscal}
+              {tipoDocumentoLabels[tituloVisualizado.tipoDocumentoFiscal] || tituloVisualizado.tipoDocumentoFiscal}
             </p>
           </div>
 
-          {/* Documento Anexo */}
-          {titulo.documentoUrl && (
+          {tituloVisualizado.documentoUrl && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Documento Anexo</p>
               <Button
                 variant="outline"
                 className="w-full justify-start gap-2"
                 onClick={() => {
-                  const { data } = supabase.storage.from("titulo-documentos").getPublicUrl(titulo.documentoUrl!);
+                  const { data } = supabase.storage
+                    .from("titulo-documentos")
+                    .getPublicUrl(tituloVisualizado.documentoUrl!);
                   window.open(data.publicUrl, "_blank");
                 }}
               >
@@ -335,30 +370,28 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             </div>
           )}
 
-          {/* Dados Bancários / Pagamento */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Dados de Pagamento</p>
-
-            {/* Tipo de Pagamento */}
-            {titulo.tipoLeituraPagamento && (
+            {tituloVisualizado.tipoLeituraPagamento && (
               <div className="text-xs text-muted-foreground">
                 Tipo:{" "}
-                {titulo.tipoLeituraPagamento === "manual"
+                {tituloVisualizado.tipoLeituraPagamento === "manual"
                   ? "Manual"
-                  : titulo.tipoLeituraPagamento === "boleto"
+                  : tituloVisualizado.tipoLeituraPagamento === "boleto"
                     ? "Boleto"
                     : "QR Code / Pix"}
               </div>
             )}
 
-            {/* Link para arquivo de pagamento (Boleto/QR Code) */}
-            {titulo.arquivoPagamentoUrl && (
+            {tituloVisualizado.arquivoPagamentoUrl && (
               <Button
                 variant="outline"
                 size="sm"
                 className="w-full justify-start gap-2"
                 onClick={() => {
-                  const { data } = supabase.storage.from("titulo-documentos").getPublicUrl(titulo.arquivoPagamentoUrl!);
+                  const { data } = supabase.storage
+                    .from("titulo-documentos")
+                    .getPublicUrl(tituloVisualizado.arquivoPagamentoUrl!);
                   window.open(data.publicUrl, "_blank");
                 }}
               >
@@ -367,16 +400,17 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
               </Button>
             )}
 
-            {/* Código/Dados Bancários com botão de copiar */}
-            {titulo.dadosBancarios && titulo.dadosBancarios.trim() && (
+            {tituloVisualizado.dadosBancarios && tituloVisualizado.dadosBancarios.trim() && (
               <div className="space-y-2">
-                <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all">{titulo.dadosBancarios}</div>
+                <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all">
+                  {tituloVisualizado.dadosBancarios}
+                </div>
                 <Button
                   variant="secondary"
                   size="sm"
                   className="w-full gap-2"
                   onClick={() => {
-                    navigator.clipboard.writeText(titulo.dadosBancarios);
+                    navigator.clipboard.writeText(tituloVisualizado.dadosBancarios);
                     toast.success("Código copiado para a área de transferência");
                   }}
                 >
@@ -386,29 +420,28 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
               </div>
             )}
 
-            {/* Mensagem se não houver dados */}
-            {!titulo.arquivoPagamentoUrl && (!titulo.dadosBancarios || !titulo.dadosBancarios.trim()) && (
-              <p className="text-sm text-muted-foreground italic">Nenhum dado de pagamento informado</p>
-            )}
+            {!tituloVisualizado.arquivoPagamentoUrl &&
+              (!tituloVisualizado.dadosBancarios || !tituloVisualizado.dadosBancarios.trim()) && (
+                <p className="text-sm text-muted-foreground italic">Nenhum dado de pagamento informado</p>
+              )}
           </div>
 
-          {titulo.motivoReprovacao && (
+          {tituloVisualizado.motivoReprovacao && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-destructive">Motivo da Reprovação</p>
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                <p className="text-foreground">{titulo.motivoReprovacao}</p>
+                <p className="text-foreground">{tituloVisualizado.motivoReprovacao}</p>
               </div>
             </div>
           )}
 
-          {/* Botão Replicar */}
           {onReplicate && (
             <div className="pt-4 border-t">
               <Button
                 variant="outline"
                 className="w-full gap-2"
                 onClick={() => {
-                  onReplicate(titulo);
+                  onReplicate(tituloVisualizado);
                   onClose();
                 }}
               >
@@ -418,10 +451,9 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             </div>
           )}
 
-          {/* Ações */}
           {showActions && (
             <>
-              {titulo.status === "enviado" && !showRejectForm && (
+              {tituloVisualizado.status === "enviado" && !showRejectForm && (
                 <div className="flex gap-3 pt-4 border-t">
                   <Button variant="gold" className="flex-1" onClick={handleAprovar} disabled={isLoading}>
                     {isLoading ? (
@@ -481,7 +513,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                 </div>
               )}
 
-              {titulo.status === "aprovado" && (
+              {tituloVisualizado.status === "aprovado" && (
                 <div className="pt-4 border-t">
                   <Button
                     variant="success"
@@ -504,18 +536,18 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         onClose={() => setShowPaymentModal(false)}
         onConfirm={handlePagar}
         isLoading={isLoading}
-        credorName={titulo.credor}
-        valorTotal={titulo.valorTotal}
+        credorName={tituloVisualizado.credor}
+        valorTotal={tituloVisualizado.valorTotal}
       />
 
-      {titulo.idSienge && (
+      {tituloVisualizado.idSienge && (
         <SiengeUpdateModal
-          tituloId={titulo.id}
+          tituloId={tituloVisualizado.id}
           open={showSiengeModal}
           onClose={() => setShowSiengeModal(false)}
-          idSienge={titulo.idSienge}
-          tipoDocumento={titulo.tipoDocumentoFiscal}
-          numeroDocumento={titulo.numeroDocumento}
+          idSienge={tituloVisualizado.idSienge}
+          tipoDocumento={tituloVisualizado.tipoDocumentoFiscal}
+          numeroDocumento={tituloVisualizado.numeroDocumento}
         />
       )}
     </Dialog>
