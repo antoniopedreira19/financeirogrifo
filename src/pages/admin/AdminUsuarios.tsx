@@ -150,11 +150,10 @@ export default function AdminUsuarios() {
 
       if (profileError) throw profileError;
 
-      // Update role
+      // Update role - use upsert to handle cases where role doesn't exist
       const { error: roleError } = await supabase
         .from("user_roles")
-        .update({ role: userData.role })
-        .eq("user_id", userId);
+        .upsert({ user_id: userId, role: userData.role }, { onConflict: "user_id" });
 
       if (roleError) throw roleError;
 
