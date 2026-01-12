@@ -1,9 +1,9 @@
-import { Titulo } from '@/types';
-import { StatusBadge } from './StatusBadge';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Building2, Calendar, CreditCard, User } from 'lucide-react';
+import { Titulo } from "@/types";
+import { StatusBadge } from "./StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Building2, Calendar, CreditCard, User } from "lucide-react";
 
 interface TituloCardProps {
   titulo: Titulo;
@@ -13,9 +13,9 @@ interface TituloCardProps {
 
 export function TituloCard({ titulo, onClick, showObra = false }: TituloCardProps) {
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
@@ -42,7 +42,8 @@ export function TituloCard({ titulo, onClick, showObra = false }: TituloCardProp
           <p className="text-sm text-muted-foreground">{titulo.numeroDocumento}</p>
         </div>
         <div className="flex items-center gap-2">
-          {titulo.status === 'pago' && titulo.idSienge && (
+          {/* MUDANÇA AQUI: Exibe se for aprovado OU pago */}
+          {(titulo.status === "aprovado" || titulo.status === "pago") && titulo.idSienge && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               Sienge #{titulo.idSienge}
             </Badge>
@@ -64,7 +65,7 @@ export function TituloCard({ titulo, onClick, showObra = false }: TituloCardProp
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{format(parseDate(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}</span>
+          <span>{format(parseDate(titulo.dataVencimento), "dd/MM/yyyy", { locale: ptBR })}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <CreditCard className="h-4 w-4" />
