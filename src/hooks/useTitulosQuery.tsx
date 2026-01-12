@@ -305,12 +305,14 @@ export function useUpdateTituloStatus() {
       userId,
       motivoReprovacao,
       obs,
+      idSienge,
     }: {
       id: string;
       status: TituloStatus;
       userId: string;
       motivoReprovacao?: string;
       obs?: string;
+      idSienge?: number;
     }) => {
       // For "pago" status, move from titulos_pendentes to titulos
       if (status === 'pago') {
@@ -323,7 +325,7 @@ export function useUpdateTituloStatus() {
 
         if (fetchError) throw fetchError;
 
-        // Insert into titulos with pago status
+        // Insert into titulos with pago status (id_sienge já vem do titulo_pendente)
         const { error: insertError } = await supabase
           .from('titulos')
           .insert({
@@ -350,6 +352,7 @@ export function useUpdateTituloStatus() {
             arquivo_pagamento_url: pendente.arquivo_pagamento_url,
             documento_url: pendente.documento_url,
             descricao: pendente.descricao,
+            id_sienge: pendente.id_sienge, // Preserva o id_sienge que foi salvo na aprovação
             status: 'pago',
             criador: pendente.criador,
             created_by: pendente.created_by,
@@ -380,6 +383,10 @@ export function useUpdateTituloStatus() {
       if (status === 'aprovado') {
         updateData.aprovado_por = userId;
         updateData.aprovado_em = new Date().toISOString();
+        // Salva o id_sienge retornado pelo webhook
+        if (idSienge) {
+          updateData.id_sienge = idSienge;
+        }
       } else if (status === 'reprovado') {
         updateData.aprovado_por = userId;
         updateData.aprovado_em = new Date().toISOString();
@@ -402,9 +409,9 @@ export function useUpdateTituloStatus() {
       
       const messages: Record<TituloStatus, string> = {
         enviado: 'Título reenviado.',
-        aprovado: 'Título aprovado com sucesso.',
+        aprovado: 'Título aprovado e lançado no Sienge.',
         reprovado: 'Título reprovado.',
-        pago: 'Pagamento registrado. Título movido para a tabela de pagos.',
+        pago: 'Pagamento registrado.',
       };
       
       toast({

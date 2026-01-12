@@ -257,6 +257,7 @@ export type Database = {
           etapa: string
           grupo_id: string | null
           id: string
+          id_sienge: number | null
           motivo_reprovacao: string | null
           numero_documento: string
           obra_codigo: string
@@ -291,6 +292,7 @@ export type Database = {
           etapa: string
           grupo_id?: string | null
           id?: string
+          id_sienge?: number | null
           motivo_reprovacao?: string | null
           numero_documento: string
           obra_codigo: string
@@ -325,6 +327,7 @@ export type Database = {
           etapa?: string
           grupo_id?: string | null
           id?: string
+          id_sienge?: number | null
           motivo_reprovacao?: string | null
           numero_documento?: string
           obra_codigo?: string

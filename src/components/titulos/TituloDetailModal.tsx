@@ -49,6 +49,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSiengeModal, setShowSiengeModal] = useState(false);
   const [isUploadingComprovante, setIsUploadingComprovante] = useState(false);
+  const [isApprovingToSienge, setIsApprovingToSienge] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
 
   if (!titulo) return null;
@@ -74,10 +75,68 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     return new Date(dateStr);
   };
 
-  const handleAprovar = () => {
+  const handleAprovar = async () => {
     if (!user?.id) return;
 
-    updateStatusMutation.mutate({ id: titulo.id, status: "aprovado", userId: user.id }, { onSuccess: () => onClose() });
+    setIsApprovingToSienge(true);
+    try {
+      // Call webhook to send titulo to Sienge and get id_sienge
+      const webhookPayload = {
+        id: titulo.id,
+        empresa: titulo.empresa,
+        credor: titulo.credor,
+        documento_tipo: titulo.tipoDocumento,
+        documento_numero: titulo.documento,
+        obra_codigo: titulo.obraCodigo,
+        centro_custo: titulo.centroCusto,
+        etapa: titulo.etapaApropriada,
+        codigo_etapa: titulo.codigoEtapa,
+        valor_total: titulo.valorTotal,
+        descontos: titulo.descontos,
+        parcelas: titulo.parcelas,
+        tipo_documento: titulo.tipoDocumentoFiscal,
+        numero_documento: titulo.numeroDocumento,
+        data_emissao: titulo.dataEmissao,
+        data_vencimento: titulo.dataVencimento,
+        plano_financeiro: titulo.planoFinanceiro,
+        dados_bancarios: titulo.dadosBancarios,
+        documento_url: titulo.documentoUrl,
+        descricao: titulo.descricao,
+      };
+
+      const webhookResponse = await fetch("https://grifoworkspace.app.n8n.cloud/webhook/titulos-sienge-pendentes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(webhookPayload),
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error("Erro ao enviar para o Sienge");
+      }
+
+      const responseData = await webhookResponse.json();
+      const idSienge = responseData.id_sienge;
+
+      // Update status with id_sienge
+      updateStatusMutation.mutate(
+        { id: titulo.id, status: "aprovado", userId: user.id, idSienge },
+        { 
+          onSuccess: () => {
+            setIsApprovingToSienge(false);
+            onClose();
+          },
+          onError: () => {
+            setIsApprovingToSienge(false);
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error calling Sienge webhook:", error);
+      toast.error("Erro ao enviar para o Sienge. Tente novamente.");
+      setIsApprovingToSienge(false);
+    }
   };
 
   const handleReprovar = () => {
@@ -123,7 +182,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     outro: "Outros",
   };
 
-  const isLoading = updateStatusMutation.isPending;
+  const isLoading = updateStatusMutation.isPending || isApprovingToSienge;
 
   const handleComprovanteUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
