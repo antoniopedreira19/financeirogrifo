@@ -122,15 +122,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
       // Update status with id_sienge
       updateStatusMutation.mutate(
         { id: titulo.id, status: "aprovado", userId: user.id, idSienge },
-        { 
+        {
           onSuccess: () => {
             setIsApprovingToSienge(false);
             onClose();
           },
           onError: () => {
             setIsApprovingToSienge(false);
-          }
-        }
+          },
+        },
       );
     } catch (error) {
       console.error("Error calling Sienge webhook:", error);
@@ -226,9 +226,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
       }
 
       // Get public URL for the uploaded file
-      const { data: publicUrlData } = supabase.storage
-        .from("titulo-documentos")
-        .getPublicUrl(filePath);
+      const { data: publicUrlData } = supabase.storage.from("titulo-documentos").getPublicUrl(filePath);
 
       // Send webhook with titulo data
       try {
@@ -270,7 +268,18 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
             <DialogTitle className="text-xl">{titulo.credor}</DialogTitle>
-            <StatusBadge status={titulo.status} />
+            <div className="flex items-center gap-3">
+              {/* --- CÓDIGO NOVO: Destaque do ID Sienge --- */}
+              {(titulo.status === "aprovado" || titulo.status === "pago") && titulo.idSienge && (
+                <div className="flex flex-col items-end border-r pr-3">
+                  <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">
+                    ID Sienge
+                  </span>
+                  <span className="text-lg font-mono font-bold text-emerald-600 leading-none">{titulo.idSienge}</span>
+                </div>
+              )}
+              <StatusBadge status={titulo.status} />
+            </div>
           </div>
         </DialogHeader>
 
@@ -298,11 +307,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
               onClick={() => comprovanteInputRef.current?.click()}
               disabled={isUploadingComprovante}
             >
-              {isUploadingComprovante ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
+              {isUploadingComprovante ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               Importar Comprovante
             </Button>
           </div>
@@ -334,7 +339,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             />
             <InfoItem icon={CreditCard} label="Centro de Custo" value={titulo.centroCusto} />
             <InfoItem icon={Banknote} label="Plano Financeiro" value={planoFinanceiroLabels[titulo.planoFinanceiro]} />
-          {titulo.idSienge && <InfoItem icon={RefreshCw} label="ID Sienge" value={titulo.idSienge.toString()} />}
+            {titulo.idSienge && <InfoItem icon={RefreshCw} label="ID Sienge" value={titulo.idSienge.toString()} />}
           </div>
 
           {titulo.descricao && (
