@@ -1,10 +1,10 @@
-export type UserRole = 'admin' | 'obra';
+export type UserRole = "admin" | "obra";
 
-export type TituloStatus = 'enviado' | 'aprovado' | 'reprovado' | 'pago';
+export type TituloStatus = "enviado" | "aprovado" | "reprovado" | "pago";
 
-export type DocumentoTipo = 'nota_fiscal' | 'boleto' | 'recibo' | 'contrato' | 'outros';
+export type DocumentoTipo = "nota_fiscal" | "boleto" | "recibo" | "contrato" | "outros" | "PRV";
 
-export type PlanoFinanceiro = 'servicos_terceiros' | 'materiais_aplicados';
+export type PlanoFinanceiro = "servicos_terceiros" | "materiais_aplicados";
 
 export interface User {
   id: string;
@@ -25,14 +25,14 @@ export interface Obra {
   createdAt: Date;
 }
 
-export type TipoPagamento = 'manual' | 'boleto' | 'qrcode';
+export type TipoPagamento = "manual" | "boleto" | "qrcode";
 
 export interface Titulo {
   id: string;
   empresa: string;
   credor: string;
   documento: string; // CNPJ ou CPF
-  tipoDocumento: 'cnpj' | 'cpf';
+  tipoDocumento: "cnpj" | "cpf";
   obraId: string;
   obraCodigo?: string;
   obraNome?: string;
