@@ -2,7 +2,7 @@ export type UserRole = "admin" | "obra";
 
 export type TituloStatus = "enviado" | "aprovado" | "reprovado" | "pago";
 
-export type DocumentoTipo = "nota_fiscal" | "boleto" | "recibo" | "contrato" | "outros" | "PRV";
+export type DocumentoTipo = "nota_fiscal" | "boleto" | "recibo" | "contrato" | "outros" | "PRV" | "FAT";
 
 export type PlanoFinanceiro = "servicos_terceiros" | "materiais_aplicados";
 
