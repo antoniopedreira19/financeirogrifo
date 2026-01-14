@@ -11,9 +11,11 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
+  onClick?: () => void;
+  showIcon?: boolean;
 }
 
-export function StatCard({ title, value, subtitle, icon, variant = 'default', trend }: StatCardProps) {
+export function StatCard({ title, value, subtitle, icon, variant = 'default', trend, onClick, showIcon }: StatCardProps) {
   const variantClasses = {
     default: 'bg-card',
     primary: 'bg-primary',
@@ -33,10 +35,14 @@ export function StatCard({ title, value, subtitle, icon, variant = 'default', tr
   };
 
   return (
-    <div className={cn(
-      "stat-card animate-fade-in",
-      variantClasses[variant]
-    )}>
+    <div 
+      className={cn(
+        "stat-card animate-fade-in",
+        variantClasses[variant],
+        onClick && "cursor-pointer hover:shadow-lg transition-shadow"
+      )}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between">
         <div className={cn(
           "p-3 rounded-xl",
@@ -60,12 +66,22 @@ export function StatCard({ title, value, subtitle, icon, variant = 'default', tr
         )}>
           {title}
         </p>
-        <p className={cn(
-          "text-2xl lg:text-3xl font-bold mt-1",
-          variant === 'default' ? 'text-foreground' : 'text-foreground'
-        )}>
-          {value}
-        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <p className={cn(
+            "text-2xl lg:text-3xl font-bold",
+            variant === 'default' ? 'text-foreground' : 'text-foreground'
+          )}>
+            {value}
+          </p>
+          {showIcon && (
+            <span className={cn(
+              "p-1.5 rounded-full",
+              iconBgClasses[variant]
+            )}>
+              {icon}
+            </span>
+          )}
+        </div>
         {subtitle && (
           <p className={cn(
             "text-sm mt-1",

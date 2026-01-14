@@ -3,7 +3,7 @@ import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Building2, Calendar, CreditCard, User } from "lucide-react";
+import { Building2, Calendar, CreditCard, User, Paperclip } from "lucide-react";
 
 interface TituloCardProps {
   titulo: Titulo;
@@ -42,7 +42,14 @@ export function TituloCard({ titulo, onClick, showObra = false }: TituloCardProp
           <p className="text-sm text-muted-foreground">{titulo.numeroDocumento}</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* MUDANÇA AQUI: Exibe se for aprovado OU pago */}
+          {/* Badge de anexo */}
+          {titulo.documentoUrl && (
+            <Badge variant="outline" className="text-xs bg-muted text-muted-foreground border-muted-foreground/30">
+              <Paperclip className="h-3 w-3 mr-1" />
+              Anexo
+            </Badge>
+          )}
+          {/* Exibe se for aprovado OU pago */}
           {(titulo.status === "aprovado" || titulo.status === "pago") && titulo.idSienge && (
             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
               Sienge #{titulo.idSienge}
