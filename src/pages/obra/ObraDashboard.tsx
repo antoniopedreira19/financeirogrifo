@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTitulosQuery, useTitulosStats } from '@/hooks/useTitulosQuery';
 import { Titulo } from '@/types';
 import { useState } from 'react';
-import { FileText, Clock, CheckCircle, Wallet, TrendingUp, Plus, Loader2 } from 'lucide-react';
+import { FileText, Clock, CheckCircle, Wallet, TrendingUp, Plus, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,6 +18,9 @@ export default function ObraDashboard() {
   const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
 
   const recentTitulos = titulos.slice(0, 4);
+  
+  // Títulos pendentes (aguardando aprovação ou pagamento)
+  const pendingTitulos = titulos.filter(t => t.status === 'enviado' || t.status === 'aprovado');
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -50,11 +53,19 @@ export default function ObraDashboard() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard title="Total de Títulos" value={stats.total} icon={<FileText className="h-5 w-5" />} variant="default" />
+          <StatCard 
+            title="Pendentes" 
+            value={stats.enviados + stats.aprovados} 
+            subtitle="Aguardando aprovação/pagamento"
+            icon={<AlertCircle className="h-5 w-5" />} 
+            variant="warning" 
+            onClick={() => navigate('/obra/titulos?filter=pendente')}
+          />
           <StatCard title="Enviados" value={stats.enviados} icon={<Clock className="h-5 w-5" />} variant="warning" />
           <StatCard title="Aprovados" value={stats.aprovados} icon={<CheckCircle className="h-5 w-5" />} variant="success" />
-          <StatCard title="Pagos" value={stats.pagos} icon={<Wallet className="h-5 w-5" />} variant="accent" />
+          <StatCard title="Pagos" value={stats.pagos} icon={<Wallet className="h-5 w-5" />} variant="accent" showIcon />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

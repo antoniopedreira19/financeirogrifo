@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { TituloCard } from "@/components/titulos/TituloCard";
 import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
@@ -8,20 +8,32 @@ import { Titulo, TituloStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText, Loader2, X } from "lucide-react"; // Adicionei o X
-import { useNavigate } from "react-router-dom";
+import { Plus, Search, FileText, Loader2, X } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
+type StatusFilterType = TituloStatus | "all" | "pendente";
 
 export default function ObraTitulos() {
   const { selectedObra } = useAuth();
   const { data: titulos = [], isLoading } = useTitulosQuery(selectedObra?.id);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
 
   // Estados dos filtros
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<TituloStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
+
+  // Inicializar filtro a partir da URL
+  useEffect(() => {
+    const filterParam = searchParams.get("filter");
+    if (filterParam === "pendente") {
+      setStatusFilter("pendente");
+    }
+  }, [searchParams]);
 
   const filteredTitulos = titulos.filter((titulo) => {
     // 1. Filtro de Texto
@@ -29,13 +41,18 @@ export default function ObraTitulos() {
       titulo.credor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       titulo.numeroDocumento.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // 2. Filtro de Status
-    const matchesStatus = statusFilter === "all" || titulo.status === statusFilter;
+    // 2. Filtro de Status (incluindo pendente = enviado + aprovado)
+    let matchesStatus = true;
+    if (statusFilter === "pendente") {
+      matchesStatus = titulo.status === "enviado" || titulo.status === "aprovado";
+    } else if (statusFilter !== "all") {
+      matchesStatus = titulo.status === statusFilter;
+    }
 
     // 3. Filtro de Data
     let matchesDate = true;
     if (startDate || endDate) {
-      const tituloDate = new Date(titulo.dataVencimento); // Confirme se o campo é dataVencimento
+      const tituloDate = new Date(titulo.dataVencimento);
 
       if (startDate) {
         const start = new Date(startDate);
@@ -48,7 +65,10 @@ export default function ObraTitulos() {
       }
     }
 
-    return matchesSearch && matchesStatus && matchesDate;
+    // 4. Filtro AD
+    const matchesAd = adFilter === "all" || titulo.numeroDocumento.toUpperCase().includes("AD");
+
+    return matchesSearch && matchesStatus && matchesDate && matchesAd;
   });
 
   const clearFilters = () => {
@@ -56,9 +76,12 @@ export default function ObraTitulos() {
     setStatusFilter("all");
     setStartDate("");
     setEndDate("");
+    setAdFilter("all");
+    // Limpar parâmetros da URL
+    setSearchParams({});
   };
 
-  const hasActiveFilters = searchTerm || statusFilter !== "all" || startDate || endDate;
+  const hasActiveFilters = searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all";
 
   if (isLoading) {
     return (
@@ -95,9 +118,9 @@ export default function ObraTitulos() {
 
         {/* Filters Area - Layout Grid com Labels */}
         <div className="card-elevated p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
-            {/* 1. Busca (Ocupa 6 colunas) */}
-            <div className="lg:col-span-6 space-y-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-4">
+            {/* 1. Busca (Ocupa 4 colunas) */}
+            <div className="lg:col-span-4 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Buscar</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -113,12 +136,13 @@ export default function ObraTitulos() {
             {/* 2. Status (Ocupa 2 colunas) */}
             <div className="lg:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Status</label>
-              <Select value={statusFilter} onValueChange={(value: TituloStatus | "all") => setStatusFilter(value)}>
+              <Select value={statusFilter} onValueChange={(value: StatusFilterType) => setStatusFilter(value)}>
                 <SelectTrigger className="w-full input-field">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendentes</SelectItem>
                   <SelectItem value="enviado">Enviado</SelectItem>
                   <SelectItem value="aprovado">Aprovado</SelectItem>
                   <SelectItem value="reprovado">Reprovado</SelectItem>
@@ -127,8 +151,22 @@ export default function ObraTitulos() {
               </Select>
             </div>
 
-            {/* 3. Data Inicial (Ocupa 2 colunas) */}
-            <div className="lg:col-span-2 space-y-1.5">
+            {/* 3. Filtro AD (Ocupa 1 coluna) */}
+            <div className="lg:col-span-1 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Tipo</label>
+              <Select value={adFilter} onValueChange={(value: "all" | "ad") => setAdFilter(value)}>
+                <SelectTrigger className="w-full input-field">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="ad">AD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 4. Data Inicial (Ocupa 1.5 colunas) */}
+            <div className="lg:col-span-1 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Data Inicial</label>
               <Input
                 type="date"
