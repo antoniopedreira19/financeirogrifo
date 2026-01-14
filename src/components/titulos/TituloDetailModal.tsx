@@ -539,6 +539,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           idSienge={tituloVisualizado.idSienge}
           tipoDocumento={tituloVisualizado.tipoDocumentoFiscal}
           numeroDocumento={tituloVisualizado.numeroDocumento}
+          status={tituloVisualizado.status}
         />
       )}
     </Dialog>

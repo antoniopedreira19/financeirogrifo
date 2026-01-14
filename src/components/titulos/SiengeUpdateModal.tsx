@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SiengeUpdateModalProps {
   tituloId: string;
@@ -20,6 +21,7 @@ interface SiengeUpdateModalProps {
   idSienge: number;
   tipoDocumento: string;
   numeroDocumento: string;
+  status: string;
 }
 
 // Mapeia os tipos do banco para os códigos do Sienge
@@ -38,8 +40,10 @@ export function SiengeUpdateModal({
   onClose, 
   idSienge, 
   tipoDocumento, 
-  numeroDocumento 
+  numeroDocumento,
+  status,
 }: SiengeUpdateModalProps) {
+  const queryClient = useQueryClient();
   const [documentNumber, setDocumentNumber] = useState(numeroDocumento);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -62,9 +66,11 @@ export function SiengeUpdateModal({
       });
 
       if (response.ok) {
-        // Atualiza no Supabase também
+        // Determina qual tabela atualizar com base no status
+        const tableName = status === 'pago' ? 'titulos' : 'titulos_pendentes';
+        
         const { error } = await supabase
-          .from('titulos')
+          .from(tableName)
           .update({ numero_documento: documentNumber })
           .eq('id', tituloId);
 
@@ -72,6 +78,10 @@ export function SiengeUpdateModal({
           console.error('Erro ao atualizar no Supabase:', error);
           toast.error('Sincronizado com Sienge, mas erro ao salvar localmente');
         } else {
+          // Invalida as queries para refletir a mudança no frontend
+          queryClient.invalidateQueries({ queryKey: ['titulos'] });
+          queryClient.invalidateQueries({ queryKey: ['titulos_pendentes'] });
+          queryClient.invalidateQueries({ queryKey: ['titulo_modal', tituloId] });
           toast.success('Sincronizado com Sienge!');
         }
         onClose();
