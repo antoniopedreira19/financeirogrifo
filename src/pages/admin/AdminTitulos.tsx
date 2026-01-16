@@ -27,10 +27,13 @@ export default function AdminTitulos() {
   // NOVOS ESTADOS PARA DATA
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  
+
   // FILTRO AD
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
-  
+
+  // FILTRO ANEXO (NOVO)
+  const [anexoFilter, setAnexoFilter] = useState<"all" | "with" | "without">("all");
+
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -68,7 +71,11 @@ export default function AdminTitulos() {
       // 5. Filtro AD
       const matchesAd = adFilter === "all" || titulo.numeroDocumento.toUpperCase().includes("AD");
 
-      return matchesSearch && matchesStatus && matchesObra && matchesDate && matchesAd;
+      // 6. Filtro Anexo (NOVO)
+      const matchesAnexo =
+        anexoFilter === "all" ? true : anexoFilter === "with" ? !!titulo.documentoUrl : !titulo.documentoUrl;
+
+      return matchesSearch && matchesStatus && matchesObra && matchesDate && matchesAd && matchesAnexo;
     });
 
     // Ordenar por data de criação (mais recente primeiro)
@@ -77,7 +84,7 @@ export default function AdminTitulos() {
       const dateB = new Date(b.createdAt).getTime();
       return dateB - dateA;
     });
-  }, [titulos, searchTerm, statusFilter, obraFilter, startDate, endDate, adFilter]);
+  }, [titulos, searchTerm, statusFilter, obraFilter, startDate, endDate, adFilter, anexoFilter]);
 
   // Calcular paginação
   const totalPages = Math.ceil(filteredAndSortedTitulos.length / ITEMS_PER_PAGE);
@@ -99,8 +106,18 @@ export default function AdminTitulos() {
     setStartDate("");
     setEndDate("");
     setAdFilter("all");
+    setAnexoFilter("all");
     setCurrentPage(1);
   };
+
+  const hasActiveFilters =
+    searchTerm ||
+    statusFilter !== "all" ||
+    obraFilter !== "all" ||
+    startDate ||
+    endDate ||
+    adFilter !== "all" ||
+    anexoFilter !== "all";
 
   const isLoading = loadingTitulos || loadingObras;
 
@@ -124,7 +141,7 @@ export default function AdminTitulos() {
             <div className="flex items-center gap-2 mt-1">
               <p className="text-muted-foreground">{filteredAndSortedTitulos.length} título(s) encontrado(s)</p>
               {/* Botão de limpar filtros se houver algum ativo */}
-              {(searchTerm || statusFilter !== "all" || obraFilter !== "all" || startDate || endDate || adFilter !== "all") && (
+              {hasActiveFilters && (
                 <Button variant="link" size="sm" onClick={clearFilters} className="text-red-500 h-auto p-0 ml-2">
                   <X className="h-3 w-3 mr-1" /> Limpar filtros
                 </Button>
@@ -137,25 +154,38 @@ export default function AdminTitulos() {
           </Button>
         </div>
 
-        {/* Filters Area */}
+        {/* Filters Area - Com Labels */}
         <div className="card-elevated p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
-            {/* Campo de Busca (Ocupa 3 colunas) */}
-            <div className="lg:col-span-3 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por credor, doc ou obra..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 input-field w-full"
-              />
+            {/* Campo de Busca (3 colunas) */}
+            <div className="lg:col-span-3 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Buscar</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Credor, doc ou obra..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    handleFilterChange();
+                  }}
+                  className="pl-10 input-field w-full"
+                />
+              </div>
             </div>
 
-            {/* Filtro de Obra (Ocupa 2 colunas) */}
-            <div className="lg:col-span-2">
-              <Select value={obraFilter} onValueChange={setObraFilter}>
+            {/* Filtro de Obra (2 colunas) */}
+            <div className="lg:col-span-2 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Obra</label>
+              <Select
+                value={obraFilter}
+                onValueChange={(val) => {
+                  setObraFilter(val);
+                  handleFilterChange();
+                }}
+              >
                 <SelectTrigger className="w-full input-field">
-                  <SelectValue placeholder="Obra" />
+                  <SelectValue placeholder="Todas Obras" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas Obras</SelectItem>
@@ -168,11 +198,18 @@ export default function AdminTitulos() {
               </Select>
             </div>
 
-            {/* Filtro de Status (Ocupa 2 colunas) */}
-            <div className="lg:col-span-2">
-              <Select value={statusFilter} onValueChange={(value: TituloStatus | "all") => setStatusFilter(value)}>
+            {/* Filtro de Status (2 colunas) */}
+            <div className="lg:col-span-2 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Status</label>
+              <Select
+                value={statusFilter}
+                onValueChange={(val: any) => {
+                  setStatusFilter(val);
+                  handleFilterChange();
+                }}
+              >
                 <SelectTrigger className="w-full input-field">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="Todos Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos Status</SelectItem>
@@ -184,11 +221,18 @@ export default function AdminTitulos() {
               </Select>
             </div>
 
-            {/* Filtro AD (Ocupa 1 coluna) */}
-            <div className="lg:col-span-1">
-              <Select value={adFilter} onValueChange={(value: "all" | "ad") => setAdFilter(value)}>
+            {/* Filtro AD (1 coluna) */}
+            <div className="lg:col-span-1 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Tipo</label>
+              <Select
+                value={adFilter}
+                onValueChange={(val: any) => {
+                  setAdFilter(val);
+                  handleFilterChange();
+                }}
+              >
                 <SelectTrigger className="w-full input-field">
-                  <SelectValue placeholder="Documento" />
+                  <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
@@ -197,23 +241,50 @@ export default function AdminTitulos() {
               </Select>
             </div>
 
-            {/* Filtro de Datas (Ocupa 4 colunas divididas em 2 inputs) */}
-            <div className="lg:col-span-2">
+            {/* Filtro Anexo (2 colunas) - NOVO */}
+            <div className="lg:col-span-2 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Anexo</label>
+              <Select
+                value={anexoFilter}
+                onValueChange={(val: any) => {
+                  setAnexoFilter(val);
+                  handleFilterChange();
+                }}
+              >
+                <SelectTrigger className="w-full input-field">
+                  <SelectValue placeholder="Anexo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="with">Com Anexo</SelectItem>
+                  <SelectItem value="without">Sem Anexo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtro de Datas (2 colunas divididas em 2 inputs - quebram linha se preciso) */}
+            <div className="lg:col-span-1 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Início</label>
               <Input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  handleFilterChange();
+                }}
                 className="input-field w-full"
-                title="Data Inicial"
               />
             </div>
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Fim</label>
               <Input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  handleFilterChange();
+                }}
                 className="input-field w-full"
-                title="Data Final"
               />
             </div>
           </div>
@@ -227,7 +298,7 @@ export default function AdminTitulos() {
                 <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
               ))}
             </div>
-            
+
             {/* Paginação */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-6">
@@ -243,18 +314,12 @@ export default function AdminTitulos() {
                 <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter((page) => {
-                      // Show first page, last page, current page, and pages around current
-                      return (
-                        page === 1 ||
-                        page === totalPages ||
-                        Math.abs(page - currentPage) <= 1
-                      );
+                      return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
                     })
                     .map((page, index, array) => {
-                      // Add ellipsis if there's a gap
                       const prevPage = array[index - 1];
                       const showEllipsis = prevPage && page - prevPage > 1;
-                      
+
                       return (
                         <span key={page} className="flex items-center">
                           {showEllipsis && <span className="px-2 text-muted-foreground">...</span>}
