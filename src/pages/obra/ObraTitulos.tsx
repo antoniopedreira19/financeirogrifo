@@ -26,6 +26,7 @@ export default function ObraTitulos() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
+  const [anexoFilter, setAnexoFilter] = useState<"all" | "with" | "without">("all");
 
   // Inicializar filtro a partir da URL
   useEffect(() => {
@@ -68,7 +69,15 @@ export default function ObraTitulos() {
     // 4. Filtro AD
     const matchesAd = adFilter === "all" || titulo.numeroDocumento.toUpperCase().includes("AD");
 
-    return matchesSearch && matchesStatus && matchesDate && matchesAd;
+    // 5. Filtro de Anexo
+    const matchesAnexo =
+      anexoFilter === "all"
+        ? true
+        : anexoFilter === "with"
+          ? !!titulo.documentoUrl // Verifica se existe URL (Com anexo)
+          : !titulo.documentoUrl; // Verifica se não existe (Sem anexo)
+
+    return matchesSearch && matchesStatus && matchesDate && matchesAd && matchesAnexo;
   });
 
   const clearFilters = () => {
@@ -77,11 +86,13 @@ export default function ObraTitulos() {
     setStartDate("");
     setEndDate("");
     setAdFilter("all");
+    setAnexoFilter("all");
     // Limpar parâmetros da URL
     setSearchParams({});
   };
 
-  const hasActiveFilters = searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all";
+  const hasActiveFilters =
+    searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all" || anexoFilter !== "all";
 
   if (isLoading) {
     return (
@@ -118,14 +129,15 @@ export default function ObraTitulos() {
 
         {/* Filters Area - Layout Grid com Labels */}
         <div className="card-elevated p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-4">
-            {/* 1. Busca (Ocupa 4 colunas) */}
-            <div className="lg:col-span-4 space-y-1.5">
+          {/* Alterado para 12 colunas para acomodar melhor os campos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+            {/* 1. Busca (Ocupa 3 colunas) */}
+            <div className="lg:col-span-3 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Buscar</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por credor ou número do documento..."
+                  placeholder="Buscar por credor ou doc..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 input-field w-full"
@@ -165,8 +177,23 @@ export default function ObraTitulos() {
               </Select>
             </div>
 
-            {/* 4. Data Inicial (Ocupa 1.5 colunas) */}
-            <div className="lg:col-span-1 space-y-1.5">
+            {/* 4. Filtro Anexo (Ocupa 2 colunas) - NOVO */}
+            <div className="lg:col-span-2 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground ml-1">Anexo</label>
+              <Select value={anexoFilter} onValueChange={(value: "all" | "with" | "without") => setAnexoFilter(value)}>
+                <SelectTrigger className="w-full input-field">
+                  <SelectValue placeholder="Anexo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="with">Com Anexo</SelectItem>
+                  <SelectItem value="without">Sem Anexo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 5. Data Inicial (Ocupa 2 colunas) */}
+            <div className="lg:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Data Inicial</label>
               <Input
                 type="date"
@@ -176,7 +203,7 @@ export default function ObraTitulos() {
               />
             </div>
 
-            {/* 4. Data Final (Ocupa 2 colunas) */}
+            {/* 6. Data Final (Ocupa 2 colunas) */}
             <div className="lg:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Data Final</label>
               <Input
@@ -222,9 +249,9 @@ export default function ObraTitulos() {
         )}
       </div>
 
-      <TituloDetailModal 
-        titulo={selectedTitulo} 
-        open={!!selectedTitulo} 
+      <TituloDetailModal
+        titulo={selectedTitulo}
+        open={!!selectedTitulo}
         onClose={() => setSelectedTitulo(null)}
         onReplicate={(titulo) => navigate("/obra/novo-titulo", { state: { tituloToReplicate: titulo } })}
       />
