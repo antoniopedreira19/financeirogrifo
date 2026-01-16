@@ -8,10 +8,21 @@ import { Titulo, TituloStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Plus, Search, FileText, Loader2, X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 type StatusFilterType = TituloStatus | "all" | "pendente";
+
+const ITEMS_PER_PAGE = 20;
 
 export default function ObraTitulos() {
   const { selectedObra } = useAuth();
@@ -28,6 +39,9 @@ export default function ObraTitulos() {
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
   const [anexoFilter, setAnexoFilter] = useState<"all" | "with" | "without">("all");
 
+  // Estado da Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Inicializar filtro a partir da URL
   useEffect(() => {
     const filterParam = searchParams.get("filter");
@@ -36,13 +50,18 @@ export default function ObraTitulos() {
     }
   }, [searchParams]);
 
+  // Resetar para página 1 quando qualquer filtro mudar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, startDate, endDate, adFilter, anexoFilter]);
+
   const filteredTitulos = titulos.filter((titulo) => {
     // 1. Filtro de Texto
     const matchesSearch =
       titulo.credor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       titulo.numeroDocumento.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // 2. Filtro de Status (incluindo pendente = enviado + aprovado)
+    // 2. Filtro de Status
     let matchesStatus = true;
     if (statusFilter === "pendente") {
       matchesStatus = titulo.status === "enviado" || titulo.status === "aprovado";
@@ -71,11 +90,7 @@ export default function ObraTitulos() {
 
     // 5. Filtro de Anexo
     const matchesAnexo =
-      anexoFilter === "all"
-        ? true
-        : anexoFilter === "with"
-          ? !!titulo.documentoUrl // Verifica se existe URL (Com anexo)
-          : !titulo.documentoUrl; // Verifica se não existe (Sem anexo)
+      anexoFilter === "all" ? true : anexoFilter === "with" ? !!titulo.documentoUrl : !titulo.documentoUrl;
 
     return matchesSearch && matchesStatus && matchesDate && matchesAd && matchesAnexo;
   });
@@ -87,9 +102,15 @@ export default function ObraTitulos() {
     setEndDate("");
     setAdFilter("all");
     setAnexoFilter("all");
-    // Limpar parâmetros da URL
     setSearchParams({});
+    setCurrentPage(1);
   };
+
+  // Lógica de Paginação
+  const totalPages = Math.ceil(filteredTitulos.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentTitulos = filteredTitulos.slice(startIndex, endIndex);
 
   const hasActiveFilters =
     searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all" || anexoFilter !== "all";
@@ -112,8 +133,9 @@ export default function ObraTitulos() {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Meus Títulos</h1>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-muted-foreground">{filteredTitulos.length} título(s) encontrado(s)</p>
-              {/* Botão de limpar filtros */}
+              <p className="text-muted-foreground">
+                Mostrando {currentTitulos.length} de {filteredTitulos.length} título(s)
+              </p>
               {hasActiveFilters && (
                 <Button variant="link" size="sm" onClick={clearFilters} className="text-red-500 h-auto p-0 ml-2">
                   <X className="h-3 w-3 mr-1" /> Limpar filtros
@@ -127,11 +149,10 @@ export default function ObraTitulos() {
           </Button>
         </div>
 
-        {/* Filters Area - Layout Grid com Labels */}
+        {/* Filtros */}
         <div className="card-elevated p-4">
-          {/* Alterado para 12 colunas para acomodar melhor os campos */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
-            {/* 1. Busca (Ocupa 3 colunas) */}
+            {/* Busca */}
             <div className="lg:col-span-3 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Buscar</label>
               <div className="relative">
@@ -145,7 +166,7 @@ export default function ObraTitulos() {
               </div>
             </div>
 
-            {/* 2. Status (Ocupa 2 colunas) */}
+            {/* Status */}
             <div className="lg:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Status</label>
               <Select value={statusFilter} onValueChange={(value: StatusFilterType) => setStatusFilter(value)}>
@@ -163,7 +184,7 @@ export default function ObraTitulos() {
               </Select>
             </div>
 
-            {/* 3. Filtro AD (Ocupa 1 coluna) */}
+            {/* Tipo */}
             <div className="lg:col-span-1 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Tipo</label>
               <Select value={adFilter} onValueChange={(value: "all" | "ad") => setAdFilter(value)}>
@@ -177,7 +198,7 @@ export default function ObraTitulos() {
               </Select>
             </div>
 
-            {/* 4. Filtro Anexo (Ocupa 2 colunas) - NOVO */}
+            {/* Anexo */}
             <div className="lg:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Anexo</label>
               <Select value={anexoFilter} onValueChange={(value: "all" | "with" | "without") => setAnexoFilter(value)}>
@@ -192,7 +213,7 @@ export default function ObraTitulos() {
               </Select>
             </div>
 
-            {/* 5. Data Inicial (Ocupa 2 colunas) */}
+            {/* Datas */}
             <div className="lg:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Data Inicial</label>
               <Input
@@ -202,8 +223,6 @@ export default function ObraTitulos() {
                 className="input-field w-full"
               />
             </div>
-
-            {/* 6. Data Final (Ocupa 2 colunas) */}
             <div className="lg:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Data Final</label>
               <Input
@@ -216,13 +235,63 @@ export default function ObraTitulos() {
           </div>
         </div>
 
-        {/* Titles List */}
+        {/* Lista de Títulos Paginada */}
         {filteredTitulos.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredTitulos.map((titulo) => (
-              <TituloCard key={titulo.id} titulo={titulo} onClick={() => setSelectedTitulo(titulo)} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {currentTitulos.map((titulo) => (
+                <TituloCard key={titulo.id} titulo={titulo} onClick={() => setSelectedTitulo(titulo)} />
+              ))}
+            </div>
+
+            {/* Componente de Paginação */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {/* Lógica simples de exibição de números */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Mostrar primeira, última, atual e vizinhas
+                      if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              isActive={page === currentPage}
+                              onClick={() => setCurrentPage(page)}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (page === currentPage - 2 || page === currentPage + 2) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
         ) : (
           <div className="card-elevated p-8 text-center">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
