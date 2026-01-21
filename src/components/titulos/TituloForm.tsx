@@ -67,18 +67,21 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   const paymentFileInputRef = useRef<HTMLInputElement>(null);
   const { data: etapas = [] } = useEtapasByObra(selectedObra?.id);
 
-  // Fetch obra details to get grupo_id
+  // Fetch obra details to get grupo_id and permite_sem_apropriacao
+  const [obraPermiteSemApropriacao, setObraPermiteSemApropriacao] = useState(false);
+  
   useEffect(() => {
     if (selectedObra?.id) {
       supabase
         .from("obras")
-        .select("grupo_id")
+        .select("grupo_id, permite_sem_apropriacao")
         .eq("id", selectedObra.id)
         .single()
         .then(({ data }) => {
           if (data?.grupo_id) {
             setObraGrupoId(data.grupo_id);
           }
+          setObraPermiteSemApropriacao(data?.permite_sem_apropriacao || false);
         });
     }
   }, [selectedObra?.id]);
@@ -350,7 +353,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                 className="input-field bg-muted flex-1" 
                 placeholder={obraCodigoRemoved ? "Sem apropriação por obra" : ""}
               />
-              {!obraCodigoRemoved && selectedObra?.codigo ? (
+              {!obraCodigoRemoved && selectedObra?.codigo && obraPermiteSemApropriacao ? (
                 <Button
                   type="button"
                   variant="ghost"

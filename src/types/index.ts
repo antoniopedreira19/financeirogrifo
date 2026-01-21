@@ -22,6 +22,7 @@ export interface Obra {
   endereco: string;
   ativa: boolean;
   grupoId?: string;
+  permiteSemApropriacao?: boolean;
   createdAt: Date;
 }
 
