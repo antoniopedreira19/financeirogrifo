@@ -55,6 +55,7 @@ export type Database = {
           grupo_id: string | null
           id: string
           nome: string
+          permite_sem_apropriacao: boolean
           updated_at: string
         }
         Insert: {
@@ -65,6 +66,7 @@ export type Database = {
           grupo_id?: string | null
           id?: string
           nome: string
+          permite_sem_apropriacao?: boolean
           updated_at?: string
         }
         Update: {
@@ -75,6 +77,7 @@ export type Database = {
           grupo_id?: string | null
           id?: string
           nome?: string
+          permite_sem_apropriacao?: boolean
           updated_at?: string
         }
         Relationships: []

@@ -58,7 +58,7 @@ export default function AdminObras() {
   });
 
   const updateObraMutation = useMutation({
-    mutationFn: async (obraData: { id: string; nome: string; codigo: string; endereco: string; grupoId?: string; ativa: boolean }) => {
+    mutationFn: async (obraData: { id: string; nome: string; codigo: string; endereco: string; grupoId?: string; ativa: boolean; permiteSemApropriacao: boolean }) => {
       const { data, error } = await supabase
         .from("obras")
         .update({
@@ -67,6 +67,7 @@ export default function AdminObras() {
           endereco: obraData.endereco,
           grupo_id: obraData.grupoId || null,
           ativa: obraData.ativa,
+          permite_sem_apropriacao: obraData.permiteSemApropriacao,
         })
         .eq("id", obraData.id)
         .select()
@@ -127,6 +128,7 @@ export default function AdminObras() {
       endereco: editingObra.endereco,
       grupoId: editingObra.grupoId,
       ativa: editingObra.ativa,
+      permiteSemApropriacao: editingObra.permiteSemApropriacao || false,
     });
   };
 
@@ -342,6 +344,16 @@ export default function AdminObras() {
                   className="h-4 w-4 rounded border-border"
                 />
                 <Label htmlFor="edit-ativa">Obra Ativa</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="edit-permite-sem-apropriacao"
+                  checked={editingObra.permiteSemApropriacao || false}
+                  onChange={(e) => setEditingObra({ ...editingObra, permiteSemApropriacao: e.target.checked })}
+                  className="h-4 w-4 rounded border-border"
+                />
+                <Label htmlFor="edit-permite-sem-apropriacao">Permitir lançar títulos sem apropriação por obra</Label>
               </div>
 
               {/* Etapas Manager */}

@@ -24,6 +24,7 @@ export function useObrasQuery() {
         endereco: o.endereco || '',
         ativa: o.ativa,
         grupoId: o.grupo_id || undefined,
+        permiteSemApropriacao: o.permite_sem_apropriacao || false,
         createdAt: new Date(o.created_at),
       })) as Obra[];
     },
@@ -59,6 +60,7 @@ export function useObraById(obraId: string | undefined) {
         endereco: data.endereco || '',
         ativa: data.ativa,
         grupoId: data.grupo_id || undefined,
+        permiteSemApropriacao: data.permite_sem_apropriacao || false,
         createdAt: new Date(data.created_at),
       } as Obra;
     },
