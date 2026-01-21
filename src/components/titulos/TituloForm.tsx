@@ -62,6 +62,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   );
   const [isUploading, setIsUploading] = useState(false);
   const [obraGrupoId, setObraGrupoId] = useState<string | undefined>();
+  const [obraCodigoRemoved, setObraCodigoRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const paymentFileInputRef = useRef<HTMLInputElement>(null);
   const { data: etapas = [] } = useEtapasByObra(selectedObra?.id);
@@ -214,7 +215,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         documentoTipo: data.tipoDocumento,
         documentoNumero: data.documento,
         obraId: selectedObra.id,
-        obraCodigo: selectedObra.codigo,
+        obraCodigo: obraCodigoRemoved ? "" : selectedObra.codigo,
         grupoId: obraGrupoId,
         centroCusto: data.centroCusto,
         etapa: etapaNome,
@@ -342,7 +343,30 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
 
           <div className="space-y-2">
             <Label>Código da Obra</Label>
-            <Input value={selectedObra?.codigo || ""} disabled className="input-field bg-muted" />
+            <div className="flex items-center gap-2">
+              <Input 
+                value={obraCodigoRemoved ? "" : (selectedObra?.codigo || "")} 
+                disabled 
+                className="input-field bg-muted flex-1" 
+              />
+              {!obraCodigoRemoved && selectedObra?.codigo && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setObraCodigoRemoved(true)}
+                  className="h-10 w-10 text-muted-foreground hover:text-destructive"
+                  title="Remover código da obra (sem apropriação por obra no Sienge)"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {obraCodigoRemoved && (
+              <p className="text-xs text-muted-foreground">
+                Título será lançado sem apropriação por obra no Sienge
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
