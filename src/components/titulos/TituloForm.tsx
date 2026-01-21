@@ -348,8 +348,9 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                 value={obraCodigoRemoved ? "" : (selectedObra?.codigo || "")} 
                 disabled 
                 className="input-field bg-muted flex-1" 
+                placeholder={obraCodigoRemoved ? "Sem apropriação por obra" : ""}
               />
-              {!obraCodigoRemoved && selectedObra?.codigo && (
+              {!obraCodigoRemoved && selectedObra?.codigo ? (
                 <Button
                   type="button"
                   variant="ghost"
@@ -359,6 +360,17 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
                   title="Remover código da obra (sem apropriação por obra no Sienge)"
                 >
                   <X className="h-4 w-4" />
+                </Button>
+              ) : obraCodigoRemoved && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setObraCodigoRemoved(false)}
+                  className="h-10 w-10 text-muted-foreground hover:text-primary"
+                  title="Restaurar código da obra"
+                >
+                  <FileEdit className="h-4 w-4" />
                 </Button>
               )}
             </div>
