@@ -463,7 +463,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
           <div className="space-y-2">
             <Label>Plano Financeiro</Label>
             <Select
-              defaultValue="servicos_terceiros"
+              value={watch("planoFinanceiro")}
               onValueChange={(value: "servicos_terceiros" | "materiais_aplicados") =>
                 setValue("planoFinanceiro", value)
               }
@@ -486,9 +486,8 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Tipo de Documento</Label>
-            {/* 3. Atualizada a tipagem no onValueChange e adicionado Item PRV */}
             <Select
-              defaultValue="NF"
+              value={watch("tipoDocumentoFiscal")}
               onValueChange={(value: "NF" | "BOL" | "REC" | "PRV" | "FAT") => setValue("tipoDocumentoFiscal", value)}
             >
               <SelectTrigger className="input-field">
