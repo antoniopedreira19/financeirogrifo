@@ -11,6 +11,8 @@ export interface UserProfile {
   obras: Obra[];
   telefone?: string;
   perfilCompleto: boolean;
+  empresaId: string;
+  empresaNome?: string;
 }
 
 export function useSupabaseAuth() {
@@ -19,7 +21,7 @@ export function useSupabaseAuth() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUserProfile = useCallback(async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -44,6 +46,20 @@ export function useSupabaseAuth() {
 
       const role: UserRole = (roleData?.role as UserRole) || 'obra';
 
+      // Get empresa details
+      let empresaNome: string | undefined;
+      const empresaId = (profileData as any)?.empresa_id;
+      
+      if (empresaId) {
+        const { data: empresaData } = await supabase
+          .from('empresas')
+          .select('nome')
+          .eq('id', empresaId)
+          .single();
+        
+        empresaNome = empresaData?.nome;
+      }
+
       let obras: Obra[] = [];
       
       if (role === 'admin') {
@@ -62,6 +78,7 @@ export function useSupabaseAuth() {
             codigo: o.codigo,
             endereco: o.endereco || '',
             ativa: o.ativa,
+            empresaId: (o as any).empresa_id,
             createdAt: new Date(o.created_at),
           }));
         }
@@ -84,6 +101,7 @@ export function useSupabaseAuth() {
                 codigo: o.codigo,
                 endereco: o.endereco || '',
                 ativa: o.ativa,
+                empresaId: o.empresa_id,
                 createdAt: new Date(o.created_at),
               };
             });
@@ -98,6 +116,8 @@ export function useSupabaseAuth() {
         obras,
         telefone: (profileData as any)?.telefone || undefined,
         perfilCompleto: (profileData as any)?.perfil_completo || false,
+        empresaId: empresaId || '',
+        empresaNome,
       };
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
