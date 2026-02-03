@@ -239,6 +239,15 @@ export function useCreateTitulo() {
       arquivoPagamentoUrl?: string;
       descricao?: string;
     }) => {
+      // Get user's empresa_id from their profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("empresa_id")
+        .eq("id", titulo.createdBy)
+        .single();
+
+      if (!profile?.empresa_id) throw new Error("Empresa não encontrada");
+
       const insertData = {
         empresa: titulo.empresa,
         credor: titulo.credor,
@@ -265,6 +274,7 @@ export function useCreateTitulo() {
         documento_url: titulo.documentoUrl,
         arquivo_pagamento_url: titulo.arquivoPagamentoUrl,
         descricao: titulo.descricao || null,
+        empresa_id: profile.empresa_id,
       };
 
       const { data, error } = await supabase
@@ -362,6 +372,7 @@ export function useUpdateTituloStatus() {
             pago_em: new Date().toISOString(),
             created_at: pendente.created_at,
             obs: obs || null,
+            empresa_id: (pendente as any).empresa_id,
           });
 
         if (insertError) throw insertError;

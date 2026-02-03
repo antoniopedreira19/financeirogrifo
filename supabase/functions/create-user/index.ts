@@ -50,6 +50,23 @@ serve(async (req) => {
       });
     }
 
+    // Get the admin's empresa_id
+    const { data: adminProfile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("empresa_id")
+      .eq("id", requestingUser.id)
+      .single();
+
+    if (profileError || !adminProfile?.empresa_id) {
+      console.error("Error fetching admin profile:", profileError);
+      return new Response(JSON.stringify({ error: "Erro ao obter empresa do administrador" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const empresaId = adminProfile.empresa_id;
+
     const { email, password, nome, role, obraIds } = await req.json();
 
     if (!email || !password || !nome) {
@@ -64,7 +81,7 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { nome },
+      user_metadata: { nome, empresa_id: empresaId },
     });
 
     if (createError) {
@@ -76,6 +93,16 @@ serve(async (req) => {
     }
 
     const userId = newUser.user.id;
+
+    // Update the profile with empresa_id (profile is created by trigger)
+    const { error: updateProfileError } = await supabaseAdmin
+      .from("profiles")
+      .update({ empresa_id: empresaId })
+      .eq("id", userId);
+
+    if (updateProfileError) {
+      console.error("Error updating profile with empresa_id:", updateProfileError);
+    }
 
     // Add role
     const { error: roleError } = await supabaseAdmin

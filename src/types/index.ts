@@ -6,11 +6,20 @@ export type DocumentoTipo = "nota_fiscal" | "boleto" | "recibo" | "contrato" | "
 
 export type PlanoFinanceiro = "servicos_terceiros" | "materiais_aplicados";
 
+export interface Empresa {
+  id: string;
+  nome: string;
+  ativa: boolean;
+  createdAt: Date;
+}
+
 export interface User {
   id: string;
   nome: string;
   email: string;
   role: UserRole;
+  empresaId: string;
+  empresaNome?: string;
   obras: string[]; // IDs das obras vinculadas
   createdAt: Date;
 }
@@ -21,6 +30,7 @@ export interface Obra {
   codigo: string;
   endereco: string;
   ativa: boolean;
+  empresaId?: string;
   grupoId?: string;
   permiteSemApropriacao?: boolean;
   createdAt: Date;
@@ -62,6 +72,7 @@ export interface Titulo {
   motivoReprovacao?: string;
   idSienge?: number;
   descricao?: string;
+  empresaId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

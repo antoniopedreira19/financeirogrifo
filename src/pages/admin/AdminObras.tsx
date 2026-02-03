@@ -30,6 +30,18 @@ export default function AdminObras() {
 
   const createObraMutation = useMutation({
     mutationFn: async (obraData: { nome: string; codigo: string; endereco: string; grupoId: string }) => {
+      // Get user's empresa_id from their profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("empresa_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.empresa_id) throw new Error("Empresa não encontrada");
+
       const { data, error } = await supabase
         .from("obras")
         .insert({
@@ -38,6 +50,7 @@ export default function AdminObras() {
           endereco: obraData.endereco,
           grupo_id: obraData.grupoId || null,
           ativa: true,
+          empresa_id: profile.empresa_id,
         })
         .select()
         .single();

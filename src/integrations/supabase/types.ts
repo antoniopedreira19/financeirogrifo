@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      empresas: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       obra_etapas: {
         Row: {
           codigo: string
@@ -51,6 +72,7 @@ export type Database = {
           ativa: boolean
           codigo: string
           created_at: string
+          empresa_id: string
           endereco: string | null
           grupo_id: string | null
           id: string
@@ -62,6 +84,7 @@ export type Database = {
           ativa?: boolean
           codigo: string
           created_at?: string
+          empresa_id: string
           endereco?: string | null
           grupo_id?: string | null
           id?: string
@@ -73,6 +96,7 @@ export type Database = {
           ativa?: boolean
           codigo?: string
           created_at?: string
+          empresa_id?: string
           endereco?: string | null
           grupo_id?: string | null
           id?: string
@@ -80,12 +104,21 @@ export type Database = {
           permite_sem_apropriacao?: boolean
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "obras_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           created_at: string
           email: string
+          empresa_id: string
           id: string
           nome: string
           perfil_completo: boolean
@@ -95,6 +128,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          empresa_id: string
           id: string
           nome: string
           perfil_completo?: boolean
@@ -104,13 +138,22 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          empresa_id?: string
           id?: string
           nome?: string
           perfil_completo?: boolean
           telefone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       titulos: {
         Row: {
@@ -132,6 +175,7 @@ export type Database = {
           documento_tipo: string
           documento_url: string | null
           empresa: string
+          empresa_id: string
           etapa: string
           grupo_id: string | null
           id: string
@@ -170,6 +214,7 @@ export type Database = {
           documento_tipo: string
           documento_url?: string | null
           empresa: string
+          empresa_id: string
           etapa: string
           grupo_id?: string | null
           id?: string
@@ -208,6 +253,7 @@ export type Database = {
           documento_tipo?: string
           documento_url?: string | null
           empresa?: string
+          empresa_id?: string
           etapa?: string
           grupo_id?: string | null
           id?: string
@@ -228,6 +274,13 @@ export type Database = {
           valor_total?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "titulos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "titulos_obra_id_fkey"
             columns: ["obra_id"]
@@ -257,6 +310,7 @@ export type Database = {
           documento_tipo: string
           documento_url: string | null
           empresa: string
+          empresa_id: string
           etapa: string
           grupo_id: string | null
           id: string
@@ -292,6 +346,7 @@ export type Database = {
           documento_tipo: string
           documento_url?: string | null
           empresa: string
+          empresa_id: string
           etapa: string
           grupo_id?: string | null
           id?: string
@@ -327,6 +382,7 @@ export type Database = {
           documento_tipo?: string
           documento_url?: string | null
           empresa?: string
+          empresa_id?: string
           etapa?: string
           grupo_id?: string | null
           id?: string
@@ -344,6 +400,13 @@ export type Database = {
           valor_total?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "titulos_pendentes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "titulos_pendentes_obra_id_fkey"
             columns: ["obra_id"]
@@ -405,6 +468,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_empresa_id: { Args: { _user_id: string }; Returns: string }
       has_obra_access: {
         Args: { _obra_id: string; _user_id: string }
         Returns: boolean
