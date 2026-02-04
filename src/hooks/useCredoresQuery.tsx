@@ -19,7 +19,8 @@ export function useCredoresQuery() {
       const { data, error } = await supabase
         .from('sienge_credores')
         .select('id, creditor_id, nome, nome_fantasia, doc, tipo')
-        .order('nome', { ascending: true });
+        .order('nome', { ascending: true })
+        .range(0, 9999); // Buscar todos os credores (limite padrão é 1000)
 
       if (error) {
         console.error('Error fetching credores:', error);
