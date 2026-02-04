@@ -58,13 +58,24 @@ export function useCredoresQuery() {
   });
 }
 
-// Normalize text for better matching (accents, punctuation, spaces)
-function normalizeText(text: string): string {
+function stripAccentsLower(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics/accents
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+// Loose normalization: remove punctuation (helps with "f&s" -> "f s")
+function normalizeTextLoose(text: string): string {
+  return stripAccentsLower(text)
     .replace(/[^\w\s]/gi, ' ') // Replace punctuation with space
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .trim();
+}
+
+// Strict normalization: keep punctuation (helps with "F &" matching "F & S ...")
+function normalizeTextStrict(text: string): string {
+  return stripAccentsLower(text)
     .replace(/\s+/g, ' ') // Collapse multiple spaces
     .trim();
 }
@@ -72,34 +83,46 @@ function normalizeText(text: string): string {
 // Hook for filtering credores with improved matching
 export function useCredoresFilter(searchTerm: string) {
   const { data: allCredores = [], isLoading } = useCredoresQuery();
-  
-  const normalizedSearch = normalizeText(searchTerm);
+
+  const rawSearch = searchTerm.trim();
+  const looseSearch = normalizeTextLoose(rawSearch);
+  const strictSearch = normalizeTextStrict(rawSearch);
   
   const filteredCredores = useMemo(() => {
-    if (!normalizedSearch || normalizedSearch.length < 2) {
+    // IMPORTANT: check the raw input length, not the normalized one.
+    // Example: "F &" becomes "f" in loose mode, but should still search.
+    if (!rawSearch || rawSearch.length < 2) {
       return [];
     }
+
+    const useLoose = looseSearch.length >= 2;
+    const useStrict = strictSearch.length >= 2;
     
     // Also prepare numeric-only version for doc search
     const numericSearch = searchTerm.replace(/\D/g, '');
     
     const results = allCredores.filter(credor => {
-      // Search in normalized nome
-      const nomeNormalized = normalizeText(credor.nome || '');
-      const nomeMatch = nomeNormalized.includes(normalizedSearch);
-      
-      // Search in normalized nome_fantasia
-      const fantasiaNormalized = normalizeText(credor.nome_fantasia || '');
-      const fantasiaMatch = fantasiaNormalized.includes(normalizedSearch);
+      const nome = credor.nome || '';
+      const fantasia = credor.nome_fantasia || '';
+
+      const looseMatch =
+        useLoose &&
+        (normalizeTextLoose(nome).includes(looseSearch) ||
+          normalizeTextLoose(fantasia).includes(looseSearch));
+
+      const strictMatch =
+        useStrict &&
+        (normalizeTextStrict(nome).includes(strictSearch) ||
+          normalizeTextStrict(fantasia).includes(strictSearch));
       
       // Search in document (numbers only)
       const docMatch = numericSearch.length > 0 && credor.doc?.replace(/\D/g, '').includes(numericSearch);
       
-      return nomeMatch || fantasiaMatch || docMatch;
+      return strictMatch || looseMatch || docMatch;
     });
     
     return results.slice(0, 50); // Limit to 50 results for performance
-  }, [allCredores, normalizedSearch, searchTerm]);
+  }, [allCredores, looseSearch, rawSearch, searchTerm, strictSearch]);
 
   return {
     credores: filteredCredores,
