@@ -155,6 +155,39 @@ export type Database = {
           },
         ]
       }
+      sienge_credores: {
+        Row: {
+          created_at: string | null
+          creditor_id: number
+          doc: string | null
+          id: string
+          nome: string
+          nome_fantasia: string | null
+          status: string | null
+          tipo: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creditor_id: number
+          doc?: string | null
+          id?: string
+          nome: string
+          nome_fantasia?: string | null
+          status?: string | null
+          tipo?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creditor_id?: number
+          doc?: string | null
+          id?: string
+          nome?: string
+          nome_fantasia?: string | null
+          status?: string | null
+          tipo?: string | null
+        }
+        Relationships: []
+      }
       titulos: {
         Row: {
           aprovado_em: string | null
@@ -164,6 +197,7 @@ export type Database = {
           codigo_etapa: string | null
           created_at: string
           created_by: string
+          creditor_id: number | null
           credor: string
           criador: string
           dados_bancarios: Json | null
@@ -203,6 +237,7 @@ export type Database = {
           codigo_etapa?: string | null
           created_at?: string
           created_by: string
+          creditor_id?: number | null
           credor: string
           criador: string
           dados_bancarios?: Json | null
@@ -242,6 +277,7 @@ export type Database = {
           codigo_etapa?: string | null
           created_at?: string
           created_by?: string
+          creditor_id?: number | null
           credor?: string
           criador?: string
           dados_bancarios?: Json | null
@@ -299,6 +335,7 @@ export type Database = {
           codigo_etapa: string | null
           created_at: string
           created_by: string
+          creditor_id: number | null
           credor: string
           criador: string
           dados_bancarios: Json | null
@@ -335,6 +372,7 @@ export type Database = {
           codigo_etapa?: string | null
           created_at?: string
           created_by: string
+          creditor_id?: number | null
           credor: string
           criador: string
           dados_bancarios?: Json | null
@@ -371,6 +409,7 @@ export type Database = {
           codigo_etapa?: string | null
           created_at?: string
           created_by?: string
+          creditor_id?: number | null
           credor?: string
           criador?: string
           dados_bancarios?: Json | null
