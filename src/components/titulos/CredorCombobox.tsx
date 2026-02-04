@@ -105,14 +105,28 @@ export function CredorCombobox({ value, onChange, error }: CredorComboboxProps) 
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 ref={inputRef}
                 value={searchTerm}
                 onChange={(e) => {
-                  handleManualInput(e.target.value);
-                  if (!open && e.target.value.length >= 2) {
+                  const newValue = e.target.value;
+                  setSearchTerm(newValue);
+                  setIsManualMode(true);
+                  
+                  // Update parent with manual input
+                  onChange({
+                    creditor_id: null,
+                    nome: newValue,
+                    documento: value.documento,
+                    tipoDocumento: value.tipoDocumento,
+                  });
+                  
+                  // Open dropdown if 2+ chars
+                  if (newValue.length >= 2 && !open) {
                     setOpen(true);
+                  } else if (newValue.length < 2 && open) {
+                    setOpen(false);
                   }
                 }}
                 onFocus={() => {
@@ -125,13 +139,17 @@ export function CredorCombobox({ value, onChange, error }: CredorComboboxProps) 
                   "input-field pl-10 pr-10",
                   value.creditor_id && "border-primary"
                 )}
+                autoComplete="off"
               />
               {searchTerm && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={handleClear}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClear();
+                  }}
                   className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
                 >
                   <X className="h-4 w-4" />
@@ -139,7 +157,12 @@ export function CredorCombobox({ value, onChange, error }: CredorComboboxProps) 
               )}
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
+          <PopoverContent 
+            className="w-[400px] p-0" 
+            align="start"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => e.preventDefault()}
+          >
             <div className="max-h-[300px] overflow-y-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center py-6">
@@ -165,7 +188,10 @@ export function CredorCombobox({ value, onChange, error }: CredorComboboxProps) 
                     <button
                       key={credor.id}
                       type="button"
-                      onClick={() => handleSelect(credor)}
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                        handleSelect(credor);
+                      }}
                       className={cn(
                         "flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground",
                         value.creditor_id === credor.creditor_id && "bg-accent"
