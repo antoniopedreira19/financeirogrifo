@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Check, ChevronsUpDown, Search, X, Loader2 } from 'lucide-react';
+import { Check, Search, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ export function CredorCombobox({ value, onChange, error }: CredorComboboxProps) 
   const [isManualMode, setIsManualMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const { credores, isLoading } = useCredoresFilter(searchTerm);
+  const { credores, isLoading, totalCount } = useCredoresFilter(searchTerm);
 
   // Initialize with value if editing
   useEffect(() => {
@@ -53,19 +53,6 @@ export function CredorCombobox({ value, onChange, error }: CredorComboboxProps) 
     setSearchTerm(credor.nome);
     setIsManualMode(false);
     setOpen(false);
-  };
-
-  const handleManualInput = (newName: string) => {
-    setSearchTerm(newName);
-    setIsManualMode(true);
-    
-    // Clear creditor_id when typing manually
-    onChange({
-      creditor_id: null,
-      nome: newName,
-      documento: value.documento,
-      tipoDocumento: value.tipoDocumento,
-    });
   };
 
   const handleClear = () => {
@@ -230,6 +217,12 @@ export function CredorCombobox({ value, onChange, error }: CredorComboboxProps) 
                   )}
                 </div>
               )}
+            </div>
+            {/* Debug: show total loaded */}
+            <div className="border-t px-3 py-1.5 bg-muted/50">
+              <p className="text-xs text-muted-foreground">
+                Base carregada: {totalCount.toLocaleString('pt-BR')} credores
+              </p>
             </div>
           </PopoverContent>
         </Popover>

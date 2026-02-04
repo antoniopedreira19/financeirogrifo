@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,47 +11,87 @@ export interface Credor {
   tipo: string | null; // "F" ou "J"
 }
 
+const PAGE_SIZE = 1000;
+
+// Fetch all credores with pagination (to bypass 1000 row limit)
+async function fetchAllCredores(): Promise<Credor[]> {
+  const allCredores: Credor[] = [];
+  let page = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, error } = await supabase
+      .from('sienge_credores')
+      .select('id, creditor_id, nome, nome_fantasia, doc, tipo')
+      .order('nome', { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      console.error('Error fetching credores page:', page, error);
+      throw error;
+    }
+
+    if (data && data.length > 0) {
+      allCredores.push(...(data as Credor[]));
+      // If we got less than PAGE_SIZE, we've reached the end
+      hasMore = data.length === PAGE_SIZE;
+      page++;
+    } else {
+      hasMore = false;
+    }
+  }
+
+  console.info(`[useCredoresQuery] Total credores loaded: ${allCredores.length}`);
+  return allCredores;
+}
+
 // Fetch all credores (cached)
 export function useCredoresQuery() {
   return useQuery({
-    queryKey: ['sienge_credores'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('sienge_credores')
-        .select('id, creditor_id, nome, nome_fantasia, doc, tipo')
-        .order('nome', { ascending: true })
-        .range(0, 9999); // Buscar todos os credores (limite padrão é 1000)
-
-      if (error) {
-        console.error('Error fetching credores:', error);
-        throw error;
-      }
-
-      return (data || []) as Credor[];
-    },
+    queryKey: ['sienge_credores', 'v2'], // Bumped version to force refetch
+    queryFn: fetchAllCredores,
     staleTime: 1000 * 60 * 30, // Cache for 30 minutes
     gcTime: 1000 * 60 * 60, // Keep in garbage collection for 1 hour
   });
 }
 
-// Hook for filtering credores with debounce-like behavior in client
+// Normalize text for better matching (accents, punctuation, spaces)
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics/accents
+    .replace(/[^\w\s]/gi, ' ') // Replace punctuation with space
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .trim();
+}
+
+// Hook for filtering credores with improved matching
 export function useCredoresFilter(searchTerm: string) {
   const { data: allCredores = [], isLoading } = useCredoresQuery();
   
-  const normalizedSearch = searchTerm.toLowerCase().trim();
+  const normalizedSearch = normalizeText(searchTerm);
   
   const filteredCredores = useMemo(() => {
     if (!normalizedSearch || normalizedSearch.length < 2) {
       return [];
     }
     
-    const numericSearch = normalizedSearch.replace(/\D/g, '');
+    // Also prepare numeric-only version for doc search
+    const numericSearch = searchTerm.replace(/\D/g, '');
     
     const results = allCredores.filter(credor => {
-      // Search in nome
-      const nomeMatch = credor.nome?.toLowerCase().includes(normalizedSearch);
-      // Search in nome_fantasia
-      const fantasiaMatch = credor.nome_fantasia?.toLowerCase().includes(normalizedSearch);
+      // Search in normalized nome
+      const nomeNormalized = normalizeText(credor.nome || '');
+      const nomeMatch = nomeNormalized.includes(normalizedSearch);
+      
+      // Search in normalized nome_fantasia
+      const fantasiaNormalized = normalizeText(credor.nome_fantasia || '');
+      const fantasiaMatch = fantasiaNormalized.includes(normalizedSearch);
+      
       // Search in document (numbers only)
       const docMatch = numericSearch.length > 0 && credor.doc?.replace(/\D/g, '').includes(numericSearch);
       
@@ -59,7 +99,7 @@ export function useCredoresFilter(searchTerm: string) {
     });
     
     return results.slice(0, 50); // Limit to 50 results for performance
-  }, [allCredores, normalizedSearch]);
+  }, [allCredores, normalizedSearch, searchTerm]);
 
   return {
     credores: filteredCredores,
