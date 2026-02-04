@@ -19,21 +19,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
+import { CredorCombobox, type CredorSelection } from "./CredorCombobox";
 
 type TipoPagamento = "manual" | "boleto";
 
-// 1. Atualizado o schema para incluir "PRV"
 const tituloSchema = z.object({
   empresa: z.number().min(1, "Código da empresa é obrigatório"),
-  credor: z.string().min(1, "Credor é obrigatório"),
-  tipoDocumento: z.enum(["cnpj", "cpf"]),
-  documento: z.string().min(1, "Documento é obrigatório"),
   centroCusto: z.string().optional().default(""),
   etapaApropriada: z.string().optional().default(""),
   valorTotal: z.number().min(0.01, "Valor deve ser maior que zero"),
   descontos: z.number().min(0, "Descontos não pode ser negativo").default(0),
   parcelas: z.number().min(1, "Mínimo 1 parcela"),
-  tipoDocumentoFiscal: z.enum(["NF", "BOL", "REC", "PRV", "FAT"]), // <--- ADICIONADO PRV
+  tipoDocumentoFiscal: z.enum(["NF", "BOL", "REC", "PRV", "FAT"]),
   numeroDocumento: z.string().min(1, "Número do documento é obrigatório"),
   dataEmissao: z.date(),
   dataVencimento: z.date(),
@@ -66,6 +63,15 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   const fileInputRef = useRef<HTMLInputElement>(null);
   const paymentFileInputRef = useRef<HTMLInputElement>(null);
   const { data: etapas = [] } = useEtapasByObra(selectedObra?.id);
+  
+  // Credor selection state (managed outside react-hook-form)
+  const [credorSelection, setCredorSelection] = useState<CredorSelection>({
+    creditor_id: null,
+    nome: initialData?.credor || '',
+    documento: initialData?.documento || '',
+    tipoDocumento: (initialData?.tipoDocumento as 'cnpj' | 'cpf') || 'cnpj',
+  });
+  const [credorError, setCredorError] = useState<string | undefined>();
 
   // Fetch obra details to get grupo_id and permite_sem_apropriacao
   const [obraPermiteSemApropriacao, setObraPermiteSemApropriacao] = useState(false);
@@ -152,17 +158,13 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   } = useForm<TituloFormData>({
     resolver: zodResolver(tituloSchema),
     defaultValues: {
-      tipoDocumento: (initialData?.tipoDocumento as "cnpj" | "cpf") || "cnpj",
       dataEmissao: initialData?.dataEmissao ? new Date(initialData.dataEmissao) : new Date(),
       dataVencimento: initialData?.dataVencimento ? new Date(initialData.dataVencimento) : undefined,
       parcelas: initialData?.parcelas || 1,
       descontos: initialData?.descontos || 0,
-      // 2. Atualizado o tipo do valor padrão
       tipoDocumentoFiscal: (initialData?.tipoDocumentoFiscal as "NF" | "BOL" | "REC" | "PRV" | "FAT") || "NF",
       planoFinanceiro: initialData?.planoFinanceiro || "servicos_terceiros",
       empresa: initialData?.empresa ? Number(initialData.empresa) : undefined,
-      credor: initialData?.credor || "",
-      documento: initialData?.documento || "",
       centroCusto: initialData?.centroCusto || "",
       etapaApropriada: initialData?.codigoEtapa || "",
       valorTotal: initialData?.valorTotal || undefined,
@@ -172,12 +174,22 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     },
   });
 
-  const tipoDocumento = watch("tipoDocumento");
   const dataEmissao = watch("dataEmissao");
   const dataVencimento = watch("dataVencimento");
 
   const onSubmit = async (data: TituloFormData) => {
     if (!selectedObra || !user) return;
+
+    // Validate credor fields
+    if (!credorSelection.nome.trim()) {
+      setCredorError("Nome do credor é obrigatório");
+      return;
+    }
+    if (!credorSelection.documento.trim()) {
+      setCredorError("Documento do credor é obrigatório");
+      return;
+    }
+    setCredorError(undefined);
 
     // Validate dadosBancarios only for manual payment type
     if (tipoPagamento === "manual" && !data.dadosBancarios?.trim()) {
@@ -214,9 +226,10 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     createTituloMutation.mutate(
       {
         empresa: String(data.empresa),
-        credor: data.credor,
-        documentoTipo: data.tipoDocumento,
-        documentoNumero: data.documento,
+        credor: credorSelection.nome,
+        documentoTipo: credorSelection.tipoDocumento,
+        documentoNumero: credorSelection.documento,
+        creditorId: credorSelection.creditor_id,
         obraId: selectedObra.id,
         obraCodigo: obraCodigoRemoved ? "" : selectedObra.codigo,
         grupoId: obraGrupoId,
@@ -251,23 +264,6 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     );
   };
 
-  const formatDocumento = (value: string, tipo: "cnpj" | "cpf") => {
-    const numbers = value.replace(/\D/g, "");
-    if (tipo === "cpf") {
-      return numbers
-        .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
-        .slice(0, 14);
-    }
-    return numbers
-      .replace(/(\d{2})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1/$2")
-      .replace(/(\d{4})(\d{1,2})$/, "$1-$2")
-      .slice(0, 18);
-  };
-
   const isSubmitting = createTituloMutation.isPending || isUploading;
 
   const getFileIcon = () => {
@@ -294,43 +290,13 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
             {errors.empresa && <p className="text-sm text-destructive">{errors.empresa.message}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="credor">Credor</Label>
-            <Input
-              id="credor"
-              placeholder="Nome do fornecedor/credor"
-              {...register("credor")}
-              className="input-field"
+          {/* Credor Combobox */}
+          <div className="md:col-span-2">
+            <CredorCombobox
+              value={credorSelection}
+              onChange={setCredorSelection}
+              error={credorError}
             />
-            {errors.credor && <p className="text-sm text-destructive">{errors.credor.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tipo de Documento</Label>
-            <Select value={tipoDocumento} onValueChange={(value: "cnpj" | "cpf") => setValue("tipoDocumento", value)}>
-              <SelectTrigger className="input-field">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cnpj">CNPJ</SelectItem>
-                <SelectItem value="cpf">CPF</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="documento">{tipoDocumento === "cnpj" ? "CNPJ" : "CPF"}</Label>
-            <Input
-              id="documento"
-              placeholder={tipoDocumento === "cnpj" ? "00.000.000/0000-00" : "000.000.000-00"}
-              {...register("documento")}
-              onChange={(e) => {
-                const formatted = formatDocumento(e.target.value, tipoDocumento);
-                setValue("documento", formatted);
-              }}
-              className="input-field"
-            />
-            {errors.documento && <p className="text-sm text-destructive">{errors.documento.message}</p>}
           </div>
         </div>
       </div>

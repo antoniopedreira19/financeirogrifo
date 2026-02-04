@@ -217,6 +217,7 @@ export function useCreateTitulo() {
       credor: string;
       documentoTipo: 'cnpj' | 'cpf';
       documentoNumero: string;
+      creditorId?: number | null;
       obraId: string;
       obraCodigo: string;
       grupoId?: string;
@@ -253,6 +254,7 @@ export function useCreateTitulo() {
         credor: titulo.credor,
         documento_tipo: titulo.documentoTipo,
         documento_numero: titulo.documentoNumero,
+        creditor_id: titulo.creditorId || null,
         obra_id: titulo.obraId,
         obra_codigo: titulo.obraCodigo,
         grupo_id: titulo.grupoId || null,
