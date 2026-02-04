@@ -37,22 +37,28 @@ export function useCredoresQuery() {
 export function useCredoresFilter(searchTerm: string) {
   const { data: allCredores = [], isLoading } = useCredoresQuery();
   
+  const normalizedSearch = searchTerm.toLowerCase().trim();
+  
   const filteredCredores = useMemo(() => {
-    if (!searchTerm || searchTerm.length < 2) {
+    if (!normalizedSearch || normalizedSearch.length < 2) {
       return [];
     }
     
-    const normalizedSearch = searchTerm.toLowerCase().trim();
+    const numericSearch = normalizedSearch.replace(/\D/g, '');
     
-    return allCredores
-      .filter(credor => {
-        const nomeMatch = credor.nome?.toLowerCase().includes(normalizedSearch);
-        const fantasiaMatch = credor.nome_fantasia?.toLowerCase().includes(normalizedSearch);
-        const docMatch = credor.doc?.replace(/\D/g, '').includes(searchTerm.replace(/\D/g, ''));
-        return nomeMatch || fantasiaMatch || docMatch;
-      })
-      .slice(0, 50); // Limit to 50 results for performance
-  }, [allCredores, searchTerm]);
+    const results = allCredores.filter(credor => {
+      // Search in nome
+      const nomeMatch = credor.nome?.toLowerCase().includes(normalizedSearch);
+      // Search in nome_fantasia
+      const fantasiaMatch = credor.nome_fantasia?.toLowerCase().includes(normalizedSearch);
+      // Search in document (numbers only)
+      const docMatch = numericSearch.length > 0 && credor.doc?.replace(/\D/g, '').includes(numericSearch);
+      
+      return nomeMatch || fantasiaMatch || docMatch;
+    });
+    
+    return results.slice(0, 50); // Limit to 50 results for performance
+  }, [allCredores, normalizedSearch]);
 
   return {
     credores: filteredCredores,
