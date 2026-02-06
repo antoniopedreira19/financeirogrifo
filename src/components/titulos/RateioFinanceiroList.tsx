@@ -59,7 +59,7 @@ export function RateioFinanceiroList({ items, onChange, error }: RateioFinanceir
                 step={0.01}
                 value={item.percentual || ""}
                 onChange={(e) => updateItem(index, "percentual", parseFloat(e.target.value) || 0)}
-                className="input-field w-16 text-center"
+                className="input-field w-20 text-center"
                 placeholder="%"
               />
               <span className="text-xs text-muted-foreground">%</span>
