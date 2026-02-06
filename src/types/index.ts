@@ -33,6 +33,7 @@ export interface Obra {
   empresaId?: string;
   grupoId?: string;
   permiteSemApropriacao?: boolean;
+  ocultarCodigoObra?: boolean;
   createdAt: Date;
 }
 

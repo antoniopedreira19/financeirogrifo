@@ -77,6 +77,7 @@ export type Database = {
           grupo_id: string | null
           id: string
           nome: string
+          ocultar_codigo_obra: boolean
           permite_sem_apropriacao: boolean
           updated_at: string
         }
@@ -89,6 +90,7 @@ export type Database = {
           grupo_id?: string | null
           id?: string
           nome: string
+          ocultar_codigo_obra?: boolean
           permite_sem_apropriacao?: boolean
           updated_at?: string
         }
@@ -101,6 +103,7 @@ export type Database = {
           grupo_id?: string | null
           id?: string
           nome?: string
+          ocultar_codigo_obra?: boolean
           permite_sem_apropriacao?: boolean
           updated_at?: string
         }

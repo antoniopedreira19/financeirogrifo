@@ -1,0 +1,1 @@
+ALTER TABLE public.obras ADD COLUMN ocultar_codigo_obra boolean NOT NULL DEFAULT false;

@@ -71,7 +71,7 @@ export default function AdminObras() {
   });
 
   const updateObraMutation = useMutation({
-    mutationFn: async (obraData: { id: string; nome: string; codigo: string; endereco: string; grupoId?: string; ativa: boolean; permiteSemApropriacao: boolean }) => {
+    mutationFn: async (obraData: { id: string; nome: string; codigo: string; endereco: string; grupoId?: string; ativa: boolean; permiteSemApropriacao: boolean; ocultarCodigoObra: boolean }) => {
       const { data, error } = await supabase
         .from("obras")
         .update({
@@ -81,6 +81,7 @@ export default function AdminObras() {
           grupo_id: obraData.grupoId || null,
           ativa: obraData.ativa,
           permite_sem_apropriacao: obraData.permiteSemApropriacao,
+          ocultar_codigo_obra: obraData.ocultarCodigoObra,
         })
         .eq("id", obraData.id)
         .select()
@@ -142,6 +143,7 @@ export default function AdminObras() {
       grupoId: editingObra.grupoId,
       ativa: editingObra.ativa,
       permiteSemApropriacao: editingObra.permiteSemApropriacao || false,
+      ocultarCodigoObra: editingObra.ocultarCodigoObra || false,
     });
   };
 
@@ -367,6 +369,16 @@ export default function AdminObras() {
                   className="h-4 w-4 rounded border-border"
                 />
                 <Label htmlFor="edit-permite-sem-apropriacao">Permitir lançar títulos sem apropriação por obra</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="edit-ocultar-codigo-obra"
+                  checked={editingObra.ocultarCodigoObra || false}
+                  onChange={(e) => setEditingObra({ ...editingObra, ocultarCodigoObra: e.target.checked })}
+                  className="h-4 w-4 rounded border-border"
+                />
+                <Label htmlFor="edit-ocultar-codigo-obra">Ocultar código da obra (lançar sem apropriação e sem etapas)</Label>
               </div>
 
               {/* Etapas Manager */}

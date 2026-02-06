@@ -87,14 +87,15 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   ]);
   const [rateioEngenhariaError, setRateioEngenhariaError] = useState<string | undefined>();
 
-  // Fetch obra details to get grupo_id and permite_sem_apropriacao
+  // Fetch obra details to get grupo_id, permite_sem_apropriacao, ocultar_codigo_obra
   const [obraPermiteSemApropriacao, setObraPermiteSemApropriacao] = useState(false);
+  const [obraOcultarCodigo, setObraOcultarCodigo] = useState(false);
   
   useEffect(() => {
     if (selectedObra?.id) {
       supabase
         .from("obras")
-        .select("grupo_id, permite_sem_apropriacao")
+        .select("grupo_id, permite_sem_apropriacao, ocultar_codigo_obra")
         .eq("id", selectedObra.id)
         .single()
         .then(({ data }) => {
@@ -102,6 +103,11 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
             setObraGrupoId(data.grupo_id);
           }
           setObraPermiteSemApropriacao(data?.permite_sem_apropriacao || false);
+          const ocultar = data?.ocultar_codigo_obra || false;
+          setObraOcultarCodigo(ocultar);
+          if (ocultar) {
+            setObraCodigoRemoved(true);
+          }
         });
     }
   }, [selectedObra?.id]);
@@ -373,45 +379,47 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
             <Input value={selectedObra?.nome || ""} disabled className="input-field bg-muted" />
           </div>
 
-          <div className="space-y-2">
-            <Label>Código da Obra</Label>
-            <div className="flex items-center gap-2">
-              <Input 
-                value={obraCodigoRemoved ? "" : (selectedObra?.codigo || "")} 
-                disabled 
-                className="input-field bg-muted flex-1" 
-                placeholder={obraCodigoRemoved ? "Sem apropriação por obra" : ""}
-              />
-              {!obraCodigoRemoved && selectedObra?.codigo && obraPermiteSemApropriacao ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setObraCodigoRemoved(true)}
-                  className="h-10 w-10 text-muted-foreground hover:text-destructive"
-                  title="Remover código da obra (sem apropriação por obra no Sienge)"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              ) : obraCodigoRemoved && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setObraCodigoRemoved(false)}
-                  className="h-10 w-10 text-muted-foreground hover:text-primary"
-                  title="Restaurar código da obra"
-                >
-                  <FileEdit className="h-4 w-4" />
-                </Button>
+          {!obraOcultarCodigo && (
+            <div className="space-y-2">
+              <Label>Código da Obra</Label>
+              <div className="flex items-center gap-2">
+                <Input 
+                  value={obraCodigoRemoved ? "" : (selectedObra?.codigo || "")} 
+                  disabled 
+                  className="input-field bg-muted flex-1" 
+                  placeholder={obraCodigoRemoved ? "Sem apropriação por obra" : ""}
+                />
+                {!obraCodigoRemoved && selectedObra?.codigo && obraPermiteSemApropriacao ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setObraCodigoRemoved(true)}
+                    className="h-10 w-10 text-muted-foreground hover:text-destructive"
+                    title="Remover código da obra (sem apropriação por obra no Sienge)"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                ) : obraCodigoRemoved && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setObraCodigoRemoved(false)}
+                    className="h-10 w-10 text-muted-foreground hover:text-primary"
+                    title="Restaurar código da obra"
+                  >
+                    <FileEdit className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {obraCodigoRemoved && (
+                <p className="text-xs text-muted-foreground">
+                  Título será lançado sem apropriação por obra no Sienge
+                </p>
               )}
             </div>
-            {obraCodigoRemoved && (
-              <p className="text-xs text-muted-foreground">
-                Título será lançado sem apropriação por obra no Sienge
-              </p>
-            )}
-          </div>
+          )}
 
           <div className="md:col-span-2">
             <RateioFinanceiroList
@@ -421,14 +429,16 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
             />
           </div>
 
-          <div className="md:col-span-2">
-            <RateioEngenhariaList
-              items={rateioEngenharia}
-              onChange={setRateioEngenharia}
-              etapas={etapas}
-              error={rateioEngenhariaError}
-            />
-          </div>
+          {!obraOcultarCodigo && (
+            <div className="md:col-span-2">
+              <RateioEngenhariaList
+                items={rateioEngenharia}
+                onChange={setRateioEngenharia}
+                etapas={etapas}
+                error={rateioEngenhariaError}
+              />
+            </div>
+          )}
         </div>
       </div>
 
