@@ -239,6 +239,8 @@ export function useCreateTitulo() {
       documentoUrl?: string;
       arquivoPagamentoUrl?: string;
       descricao?: string;
+      rateioFinanceiro?: Array<{ centro_custo_id: string; percentual: number }>;
+      apropObra?: Array<{ etapa: string; percentual: number }>;
     }) => {
       // Get user's empresa_id from their profile
       const { data: profile } = await supabase
@@ -277,6 +279,8 @@ export function useCreateTitulo() {
         arquivo_pagamento_url: titulo.arquivoPagamentoUrl,
         descricao: titulo.descricao || null,
         empresa_id: profile.empresa_id,
+        rateio_financeiro: titulo.rateioFinanceiro ? JSON.stringify(titulo.rateioFinanceiro) : '[]',
+        aprop_obra: titulo.apropObra ? JSON.stringify(titulo.apropObra) : '[]',
       };
 
       const { data, error } = await supabase
@@ -364,7 +368,7 @@ export function useUpdateTituloStatus() {
             arquivo_pagamento_url: pendente.arquivo_pagamento_url,
             documento_url: pendente.documento_url,
             descricao: pendente.descricao,
-            id_sienge: pendente.id_sienge, // Preserva o id_sienge que foi salvo na aprovação
+            id_sienge: pendente.id_sienge,
             status: 'pago',
             criador: pendente.criador,
             created_by: pendente.created_by,
@@ -375,6 +379,8 @@ export function useUpdateTituloStatus() {
             created_at: pendente.created_at,
             obs: obs || null,
             empresa_id: (pendente as any).empresa_id,
+            rateio_financeiro: pendente.rateio_financeiro,
+            aprop_obra: pendente.aprop_obra,
           });
 
         if (insertError) throw insertError;
