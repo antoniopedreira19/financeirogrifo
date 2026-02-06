@@ -25,6 +25,7 @@ export function useObrasQuery() {
         ativa: o.ativa,
         grupoId: o.grupo_id || undefined,
         permiteSemApropriacao: o.permite_sem_apropriacao || false,
+        ocultarCodigoObra: o.ocultar_codigo_obra || false,
         createdAt: new Date(o.created_at),
       })) as Obra[];
     },
@@ -61,6 +62,7 @@ export function useObraById(obraId: string | undefined) {
         ativa: data.ativa,
         grupoId: data.grupo_id || undefined,
         permiteSemApropriacao: data.permite_sem_apropriacao || false,
+        ocultarCodigoObra: data.ocultar_codigo_obra || false,
         createdAt: new Date(data.created_at),
       } as Obra;
     },
