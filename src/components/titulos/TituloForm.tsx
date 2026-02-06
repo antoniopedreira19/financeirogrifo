@@ -20,6 +20,8 @@ import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
 import { CredorCombobox, type CredorSelection } from "./CredorCombobox";
+import { RateioFinanceiroList, type RateioFinanceiroItem } from "./RateioFinanceiroList";
+import { RateioEngenhariaList, type RateioEngenhariaItem } from "./RateioEngenhariaList";
 
 type TipoPagamento = "manual" | "boleto";
 
@@ -72,6 +74,18 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     tipoDocumento: (initialData?.tipoDocumento as 'cnpj' | 'cpf') || 'cnpj',
   });
   const [credorError, setCredorError] = useState<string | undefined>();
+
+  // Rateio Financeiro state
+  const [rateioFinanceiro, setRateioFinanceiro] = useState<RateioFinanceiroItem[]>([
+    { centro_custo_id: initialData?.centroCusto || "", percentual: 100 },
+  ]);
+  const [rateioFinanceiroError, setRateioFinanceiroError] = useState<string | undefined>();
+
+  // Rateio Engenharia state
+  const [rateioEngenharia, setRateioEngenharia] = useState<RateioEngenhariaItem[]>([
+    { etapa: initialData?.codigoEtapa || "", percentual: 100 },
+  ]);
+  const [rateioEngenhariaError, setRateioEngenhariaError] = useState<string | undefined>();
 
   // Fetch obra details to get grupo_id and permite_sem_apropriacao
   const [obraPermiteSemApropriacao, setObraPermiteSemApropriacao] = useState(false);
@@ -191,6 +205,35 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     }
     setCredorError(undefined);
 
+    // Validate rateio financeiro
+    const totalFinanceiro = rateioFinanceiro.reduce((sum, item) => sum + (item.percentual || 0), 0);
+    const hasEmptyCentroCusto = rateioFinanceiro.some(item => !item.centro_custo_id.trim());
+    if (hasEmptyCentroCusto) {
+      setRateioFinanceiroError("Todos os centros de custo devem ser preenchidos");
+      return;
+    }
+    if (Math.abs(totalFinanceiro - 100) > 0.01) {
+      setRateioFinanceiroError(`A soma dos percentuais deve ser 100%. Atual: ${totalFinanceiro.toFixed(1)}%`);
+      return;
+    }
+    setRateioFinanceiroError(undefined);
+
+    // Validate rateio engenharia (only if obra has etapas or user filled something)
+    const hasRateioEngenharia = rateioEngenharia.some(item => item.etapa.trim());
+    if (hasRateioEngenharia) {
+      const totalEngenharia = rateioEngenharia.reduce((sum, item) => sum + (item.percentual || 0), 0);
+      const hasEmptyEtapa = rateioEngenharia.some(item => !item.etapa.trim());
+      if (hasEmptyEtapa) {
+        setRateioEngenhariaError("Todas as etapas devem ser preenchidas");
+        return;
+      }
+      if (Math.abs(totalEngenharia - 100) > 0.01) {
+        setRateioEngenhariaError(`A soma dos percentuais deve ser 100%. Atual: ${totalEngenharia.toFixed(1)}%`);
+        return;
+      }
+    }
+    setRateioEngenhariaError(undefined);
+
     // Validate dadosBancarios only for manual payment type
     if (tipoPagamento === "manual" && !data.dadosBancarios?.trim()) {
       toast.error("Dados bancários são obrigatórios para pagamento manual");
@@ -219,9 +262,27 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       return;
     }
 
-    // Find the etapa name if etapas exist
-    const selectedEtapa = etapas.find((e) => e.codigo === data.etapaApropriada);
-    const etapaNome = selectedEtapa ? `${selectedEtapa.codigo} - ${selectedEtapa.nome}` : data.etapaApropriada;
+    // Build rateio_financeiro array
+    const rateioFinanceiroPayload = rateioFinanceiro.map(item => ({
+      centro_custo_id: item.centro_custo_id,
+      percentual: item.percentual,
+    }));
+
+    // Build aprop_obra array
+    const apropObraPayload = hasRateioEngenharia
+      ? rateioEngenharia.filter(item => item.etapa.trim()).map(item => ({
+          etapa: item.etapa,
+          percentual: item.percentual,
+        }))
+      : [];
+
+    // Find the etapa name for legacy field (first item)
+    const firstEtapa = rateioEngenharia[0]?.etapa || "";
+    const selectedEtapa = etapas.find((e) => e.codigo === firstEtapa);
+    const etapaNome = selectedEtapa ? `${selectedEtapa.codigo} - ${selectedEtapa.nome}` : firstEtapa;
+
+    // Legacy centro_custo = first item's centro_custo_id
+    const legacyCentroCusto = rateioFinanceiro[0]?.centro_custo_id || "";
 
     createTituloMutation.mutate(
       {
@@ -233,9 +294,9 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         obraId: selectedObra.id,
         obraCodigo: obraCodigoRemoved ? "" : selectedObra.codigo,
         grupoId: obraGrupoId,
-        centroCusto: data.centroCusto,
+        centroCusto: legacyCentroCusto,
         etapa: etapaNome,
-        codigoEtapa: data.etapaApropriada,
+        codigoEtapa: firstEtapa,
         valorTotal: data.valorTotal,
         descontos: data.descontos || 0,
         parcelas: data.parcelas,
@@ -251,6 +312,8 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         documentoUrl,
         arquivoPagamentoUrl,
         descricao: data.descricao || undefined,
+        rateioFinanceiro: rateioFinanceiroPayload,
+        apropObra: apropObraPayload,
       },
       {
         onSuccess: () => {
@@ -350,36 +413,21 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="centroCusto">Centro de Custo Apropriado</Label>
-            <Input id="centroCusto" placeholder="Ex: 21101" {...register("centroCusto")} className="input-field" />
-            {errors.centroCusto && <p className="text-sm text-destructive">{errors.centroCusto.message}</p>}
+          <div className="md:col-span-2">
+            <RateioFinanceiroList
+              items={rateioFinanceiro}
+              onChange={setRateioFinanceiro}
+              error={rateioFinanceiroError}
+            />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="etapaApropriada">Etapa Apropriada</Label>
-            {etapas.length > 0 ? (
-              <Select onValueChange={(value) => setValue("etapaApropriada", value)}>
-                <SelectTrigger className="input-field">
-                  <SelectValue placeholder="Selecione a etapa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {etapas.map((etapa) => (
-                    <SelectItem key={etapa.id} value={etapa.codigo}>
-                      {etapa.codigo} - {etapa.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                id="etapaApropriada"
-                placeholder="Ex: Fundação, Estrutura..."
-                {...register("etapaApropriada")}
-                className="input-field"
-              />
-            )}
-            {errors.etapaApropriada && <p className="text-sm text-destructive">{errors.etapaApropriada.message}</p>}
+          <div className="md:col-span-2">
+            <RateioEngenhariaList
+              items={rateioEngenharia}
+              onChange={setRateioEngenharia}
+              etapas={etapas}
+              error={rateioEngenhariaError}
+            />
           </div>
         </div>
       </div>

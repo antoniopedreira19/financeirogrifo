@@ -190,6 +190,7 @@ export type Database = {
       }
       titulos: {
         Row: {
+          aprop_obra: Json | null
           aprovado_em: string | null
           aprovado_por: string | null
           arquivo_pagamento_url: string | null
@@ -223,6 +224,7 @@ export type Database = {
           pago_por: string | null
           parcelas: number
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
+          rateio_financeiro: Json | null
           status: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
           tipo_leitura_pagamento: string | null
@@ -230,6 +232,7 @@ export type Database = {
           valor_total: number
         }
         Insert: {
+          aprop_obra?: Json | null
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
@@ -263,6 +266,7 @@ export type Database = {
           pago_por?: string | null
           parcelas?: number
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
+          rateio_financeiro?: Json | null
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
           tipo_leitura_pagamento?: string | null
@@ -270,6 +274,7 @@ export type Database = {
           valor_total: number
         }
         Update: {
+          aprop_obra?: Json | null
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
@@ -303,6 +308,7 @@ export type Database = {
           pago_por?: string | null
           parcelas?: number
           plano_financeiro?: Database["public"]["Enums"]["plano_financeiro"]
+          rateio_financeiro?: Json | null
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento?: Database["public"]["Enums"]["tipo_documento"]
           tipo_leitura_pagamento?: string | null
@@ -328,6 +334,7 @@ export type Database = {
       }
       titulos_pendentes: {
         Row: {
+          aprop_obra: Json | null
           aprovado_em: string | null
           aprovado_por: string | null
           arquivo_pagamento_url: string | null
@@ -358,6 +365,7 @@ export type Database = {
           obra_id: string
           parcelas: number
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
+          rateio_financeiro: Json | null
           status: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
           tipo_leitura_pagamento: string | null
@@ -365,6 +373,7 @@ export type Database = {
           valor_total: number
         }
         Insert: {
+          aprop_obra?: Json | null
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
@@ -395,6 +404,7 @@ export type Database = {
           obra_id: string
           parcelas?: number
           plano_financeiro: Database["public"]["Enums"]["plano_financeiro"]
+          rateio_financeiro?: Json | null
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento: Database["public"]["Enums"]["tipo_documento"]
           tipo_leitura_pagamento?: string | null
@@ -402,6 +412,7 @@ export type Database = {
           valor_total: number
         }
         Update: {
+          aprop_obra?: Json | null
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
@@ -432,6 +443,7 @@ export type Database = {
           obra_id?: string
           parcelas?: number
           plano_financeiro?: Database["public"]["Enums"]["plano_financeiro"]
+          rateio_financeiro?: Json | null
           status?: Database["public"]["Enums"]["titulo_status"]
           tipo_documento?: Database["public"]["Enums"]["tipo_documento"]
           tipo_leitura_pagamento?: string | null
