@@ -45,70 +45,72 @@ export function RateioEngenhariaList({ items, onChange, etapas, error }: RateioE
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label>Rateio de Engenharia — Etapa da Obra</Label>
-        <span className={`text-xs font-medium ${total === 100 ? "text-emerald-600" : "text-destructive"}`}>
-          Total: {total.toFixed(1)}%
+        <Label className="text-sm">Etapa da Obra</Label>
+        <span className={`text-xs font-semibold ${total === 100 ? "text-emerald-600" : "text-destructive"}`}>
+          {total.toFixed(0)}%
         </span>
       </div>
 
-      {items.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
-          {hasEtapas ? (
-            <Select
-              value={item.etapa}
-              onValueChange={(value) => updateItem(index, "etapa", value)}
+      <div className="space-y-2">
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center gap-2">
+            {hasEtapas ? (
+              <Select
+                value={item.etapa}
+                onValueChange={(value) => updateItem(index, "etapa", value)}
+              >
+                <SelectTrigger className="input-field flex-1 min-w-0 truncate">
+                  <SelectValue placeholder="Etapa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {etapas.map((etapa) => (
+                    <SelectItem key={etapa.id} value={etapa.codigo}>
+                      {etapa.codigo} - {etapa.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                placeholder="Ex: 02.001"
+                value={item.etapa}
+                onChange={(e) => updateItem(index, "etapa", e.target.value)}
+                className="input-field flex-1 min-w-0"
+              />
+            )}
+            <div className="flex items-center gap-1 shrink-0">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={0.01}
+                value={item.percentual || ""}
+                onChange={(e) => updateItem(index, "percentual", parseFloat(e.target.value) || 0)}
+                className="input-field w-16 text-center"
+                placeholder="%"
+              />
+              <span className="text-xs text-muted-foreground">%</span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => removeItem(index)}
+              disabled={items.length <= 1}
+              className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
             >
-              <SelectTrigger className="input-field flex-1">
-                <SelectValue placeholder="Selecione a etapa" />
-              </SelectTrigger>
-              <SelectContent>
-                {etapas.map((etapa) => (
-                  <SelectItem key={etapa.id} value={etapa.codigo}>
-                    {etapa.codigo} - {etapa.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Input
-              placeholder="Ex: 02.001"
-              value={item.etapa}
-              onChange={(e) => updateItem(index, "etapa", e.target.value)}
-              className="input-field flex-1"
-            />
-          )}
-          <div className="flex items-center gap-1 w-28 shrink-0">
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              step={0.01}
-              value={item.percentual || ""}
-              onChange={(e) => updateItem(index, "percentual", parseFloat(e.target.value) || 0)}
-              className="input-field text-right"
-              placeholder="%"
-            />
-            <span className="text-sm text-muted-foreground">%</span>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => removeItem(index)}
-            disabled={items.length <= 1}
-            className="shrink-0 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
+        ))}
+      </div>
 
-      <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-1">
-        <Plus className="h-3.5 w-3.5" />
-        Adicionar Etapa
+      <Button type="button" variant="outline" size="sm" onClick={addItem} className="gap-1 text-xs h-8">
+        <Plus className="h-3 w-3" />
+        Adicionar
       </Button>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
