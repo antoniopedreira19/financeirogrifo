@@ -41,10 +41,14 @@ export default function AdminTitulos() {
   const filteredAndSortedTitulos = useMemo(() => {
     const filtered = titulos.filter((titulo) => {
       // 1. Filtro de Texto
+      const searchLower = searchTerm.toLowerCase();
+      const valorFormatted = titulo.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const matchesSearch =
-        titulo.credor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        titulo.numeroDocumento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        titulo.obraNome?.toLowerCase().includes(searchTerm.toLowerCase());
+        titulo.credor.toLowerCase().includes(searchLower) ||
+        titulo.numeroDocumento.toLowerCase().includes(searchLower) ||
+        titulo.obraNome?.toLowerCase().includes(searchLower) ||
+        titulo.valorTotal.toString().includes(searchTerm) ||
+        valorFormatted.includes(searchTerm);
 
       // 2. Filtro de Status
       const matchesStatus = statusFilter === "all" || titulo.status === statusFilter;
