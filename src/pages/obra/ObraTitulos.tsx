@@ -57,9 +57,13 @@ export default function ObraTitulos() {
 
   const filteredTitulos = titulos.filter((titulo) => {
     // 1. Filtro de Texto
+    const searchLower = searchTerm.toLowerCase();
+    const valorFormatted = titulo.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const matchesSearch =
-      titulo.credor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      titulo.numeroDocumento.toLowerCase().includes(searchTerm.toLowerCase());
+      titulo.credor.toLowerCase().includes(searchLower) ||
+      titulo.numeroDocumento.toLowerCase().includes(searchLower) ||
+      titulo.valorTotal.toString().includes(searchTerm) ||
+      valorFormatted.includes(searchTerm);
 
     // 2. Filtro de Status
     let matchesStatus = true;
