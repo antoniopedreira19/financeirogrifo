@@ -431,6 +431,7 @@ export function useUpdateTituloStatus() {
         aprovado: 'Título aprovado e lançado no Sienge.',
         reprovado: 'Título reprovado.',
         pago: 'Pagamento registrado.',
+        processando_pagamento: 'Pagamento em processamento.',
       };
       
       toast({

@@ -529,6 +529,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         isLoading={isLoading}
         credorName={tituloVisualizado.credor}
         valorTotal={tituloVisualizado.valorTotal}
+        titulo={{
+          id: tituloVisualizado.id,
+          idSienge: tituloVisualizado.idSienge,
+          valorTotal: tituloVisualizado.valorTotal,
+          dadosBancarios: tituloVisualizado.dadosBancarios,
+          credor: tituloVisualizado.credor,
+          obraCodigo: tituloVisualizado.obraCodigo ?? '',
+          descricao: tituloVisualizado.descricao,
+        }}
       />
 
       {tituloVisualizado.idSienge && (

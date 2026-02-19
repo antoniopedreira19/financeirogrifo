@@ -539,7 +539,12 @@ export type Database = {
       app_role: "admin" | "obra"
       plano_financeiro: "servicos_terceiros" | "materiais_aplicados"
       tipo_documento: "NF" | "BOL" | "REC" | "PRV" | "FAT"
-      titulo_status: "enviado" | "aprovado" | "reprovado" | "pago"
+      titulo_status:
+        | "enviado"
+        | "aprovado"
+        | "reprovado"
+        | "pago"
+        | "processando_pagamento"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -670,7 +675,13 @@ export const Constants = {
       app_role: ["admin", "obra"],
       plano_financeiro: ["servicos_terceiros", "materiais_aplicados"],
       tipo_documento: ["NF", "BOL", "REC", "PRV", "FAT"],
-      titulo_status: ["enviado", "aprovado", "reprovado", "pago"],
+      titulo_status: [
+        "enviado",
+        "aprovado",
+        "reprovado",
+        "pago",
+        "processando_pagamento",
+      ],
     },
   },
 } as const

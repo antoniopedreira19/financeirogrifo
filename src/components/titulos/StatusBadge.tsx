@@ -1,6 +1,6 @@
 import { TituloStatus } from '@/types';
 import { cn } from '@/lib/utils';
-import { Clock, CheckCircle, XCircle, Wallet } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Wallet, Loader2 } from 'lucide-react';
 
 interface StatusBadgeProps {
   status: TituloStatus;
@@ -27,6 +27,11 @@ const statusConfig: Record<TituloStatus, { label: string; className: string; ico
     label: 'Pago',
     className: 'status-pago',
     icon: Wallet,
+  },
+  processando_pagamento: {
+    label: 'Processando',
+    className: 'status-enviado',
+    icon: Loader2,
   },
 };
 
