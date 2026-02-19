@@ -96,9 +96,9 @@ export function PaymentModal({
         }),
       });
 
-      // B. Atualizar status no Supabase
+      // B. Atualizar status no Supabase (títulos aprovados estão em titulos_pendentes)
       const { error } = await supabase
-        .from('titulos')
+        .from('titulos_pendentes')
         .update({ status: 'processando_pagamento' as any })
         .eq('id', titulo.id);
 
