@@ -30,6 +30,8 @@ import {
   CopyPlus,
   RefreshCw,
   Upload,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 
 interface TituloDetailModalProps {
@@ -49,6 +51,8 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSiengeModal, setShowSiengeModal] = useState(false);
   const [isUploadingComprovante, setIsUploadingComprovante] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isDeletingTitulo, setIsDeletingTitulo] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
 
   // --- LÓGICA DE TEMPO REAL NO MODAL ---
@@ -141,6 +145,36 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         },
       },
     );
+  };
+
+  const handleDeleteTitulo = async () => {
+    setIsDeletingTitulo(true);
+    try {
+      // Try deleting from titulos_pendentes first, then titulos
+      const { error: errorPendente } = await supabase
+        .from('titulos_pendentes')
+        .delete()
+        .eq('id', titulo.id);
+
+      if (errorPendente) {
+        // If not in titulos_pendentes, try titulos
+        const { error: errorTitulo } = await supabase
+          .from('titulos')
+          .delete()
+          .eq('id', titulo.id);
+        if (errorTitulo) throw errorTitulo;
+      }
+
+      toast.success('Título excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['titulos'] });
+      onClose();
+    } catch (err: any) {
+      console.error('Erro ao excluir título:', err);
+      toast.error(`Erro ao excluir título: ${err?.message ?? 'Erro desconhecido'}`);
+    } finally {
+      setIsDeletingTitulo(false);
+      setConfirmingDelete(false);
+    }
   };
 
   const planoFinanceiroLabels = {
@@ -248,7 +282,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                     <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">
                       ID Sienge
                     </span>
-                    <span className="text-lg font-mono font-bold text-emerald-600 leading-none">
+                    <span className="text-lg font-mono font-bold text-success leading-none">
                       {tituloVisualizado.idSienge}
                     </span>
                   </div>
@@ -518,8 +552,59 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                   </Button>
                 </div>
               )}
+
+              {/* Botão Excluir — sempre visível para admins com showActions */}
+              {!confirmingDelete ? (
+                <div className="pt-4 border-t">
+                  <Button
+                    variant="ghost"
+                    className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => setConfirmingDelete(true)}
+                    disabled={isLoading || isDeletingTitulo}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Excluir Título
+                  </Button>
+                </div>
+              ) : (
+                <div className="pt-4 border-t space-y-3">
+                  <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-destructive">Confirmar exclusão?</p>
+                      <p className="text-sm text-muted-foreground">
+                        Esta ação é irreversível. O título de <strong>{tituloVisualizado.credor}</strong> será excluído permanentemente.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setConfirmingDelete(false)}
+                      disabled={isDeletingTitulo}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1 gap-2"
+                      onClick={handleDeleteTitulo}
+                      disabled={isDeletingTitulo}
+                    >
+                      {isDeletingTitulo ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      {isDeletingTitulo ? 'Excluindo...' : 'Excluir Permanentemente'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
+
         </div>
       </DialogContent>
     </Dialog>
