@@ -1,6 +1,6 @@
 export type UserRole = "admin" | "obra";
 
-export type TituloStatus = "enviado" | "aprovado" | "reprovado" | "pago";
+export type TituloStatus = "enviado" | "aprovado" | "reprovado" | "pago" | "processando_pagamento";
 
 export type DocumentoTipo = "nota_fiscal" | "boleto" | "recibo" | "contrato" | "outros" | "PRV" | "FAT";
 

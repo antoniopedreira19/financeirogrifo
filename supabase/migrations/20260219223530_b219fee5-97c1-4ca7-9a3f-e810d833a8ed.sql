@@ -1,0 +1,1 @@
+ALTER TYPE public.titulo_status ADD VALUE IF NOT EXISTS 'processando_pagamento';
