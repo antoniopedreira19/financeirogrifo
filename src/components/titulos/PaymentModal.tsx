@@ -71,20 +71,33 @@ export function PaymentModal({
     setIsProcessingAsaas(true);
 
     try {
-      // A. Disparar webhook para o n8n
-      await fetch('https://grifoworkspace.app.n8n.cloud/webhook/pagamento-asaas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: titulo.id,
-          id_sienge: titulo.idSienge ?? null,
-          valor_total: titulo.valorTotal,
-          dados_bancarios: titulo.dadosBancarios ?? null,
-          credor: titulo.credor,
-          obra_codigo: titulo.obraCodigo,
-          descricao: titulo.descricao ?? null,
-        }),
-      });
+      // A. Disparar webhook para o n8n via Edge Function (evita CORS)
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pagamento-asaas`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            id: titulo.id,
+            id_sienge: titulo.idSienge ?? null,
+            valor_total: titulo.valorTotal,
+            dados_bancarios: titulo.dadosBancarios ?? null,
+            credor: titulo.credor,
+            obra_codigo: titulo.obraCodigo,
+            descricao: titulo.descricao ?? null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`Webhook falhou [${res.status}]: ${errBody}`);
+      }
 
       // B. Atualizar status no Supabase
       const { error } = await supabase
