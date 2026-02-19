@@ -6,20 +6,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Wallet, Loader2, Zap } from 'lucide-react';
+import { Wallet, Loader2, Zap, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -54,7 +44,7 @@ export function PaymentModal({
   titulo,
 }: PaymentModalProps) {
   const [obs, setObs] = useState('');
-  const [showAsaasConfirm, setShowAsaasConfirm] = useState(false);
+  const [confirmingAsaas, setConfirmingAsaas] = useState(false);
   const [isProcessingAsaas, setIsProcessingAsaas] = useState(false);
   const queryClient = useQueryClient();
 
@@ -72,12 +62,12 @@ export function PaymentModal({
 
   const handleClose = () => {
     setObs('');
+    setConfirmingAsaas(false);
     onClose();
   };
 
   const handleAsaasConfirm = async () => {
     if (!titulo) return;
-    setShowAsaasConfirm(false);
     setIsProcessingAsaas(true);
 
     try {
@@ -96,7 +86,7 @@ export function PaymentModal({
         }),
       });
 
-      // B. Atualizar status no Supabase (títulos aprovados estão em titulos_pendentes)
+      // B. Atualizar status no Supabase
       const { error } = await supabase
         .from('titulos_pendentes')
         .update({ status: 'processando_pagamento' as any })
@@ -116,34 +106,71 @@ export function PaymentModal({
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-success" />
-              Registrar Pagamento
-            </DialogTitle>
-            <DialogDescription>
-              Confirme o pagamento do título de <strong>{credorName}</strong> no valor de{' '}
-              <strong>{formatCurrency(valorTotal)}</strong>
-            </DialogDescription>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-success" />
+            Registrar Pagamento
+          </DialogTitle>
+          <DialogDescription>
+            Confirme o pagamento do título de <strong>{credorName}</strong> no valor de{' '}
+            <strong>{formatCurrency(valorTotal)}</strong>
+          </DialogDescription>
+        </DialogHeader>
 
+        {confirmingAsaas ? (
+          /* Tela de confirmação inline — sem AlertDialog */
+          <div className="space-y-4 mt-4">
+            <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4">
+              <AlertTriangle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Confirmar pagamento via Asaas?</p>
+                <p className="text-sm text-muted-foreground">
+                  Será enviada uma ordem de pagamento de{' '}
+                  <strong>{formatCurrency(valorTotal)}</strong> para o Asaas. O status será
+                  atualizado para <em>"Processando Pagamento"</em>.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 gap-2"
+                onClick={() => setConfirmingAsaas(false)}
+                disabled={isProcessingAsaas}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Button>
+              <Button
+                variant="success"
+                className="flex-1 gap-2"
+                onClick={handleAsaasConfirm}
+                disabled={isProcessingAsaas}
+              >
+                {isProcessingAsaas ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Zap className="h-4 w-4" />
+                )}
+                {isProcessingAsaas ? 'Enviando...' : 'Confirmar e Enviar'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          /* Tela inicial com as duas opções */
           <div className="space-y-4 mt-4">
             {/* Botão principal: Pagar Automaticamente */}
             <Button
               variant="success"
               className="w-full gap-2"
-              onClick={() => setShowAsaasConfirm(true)}
+              onClick={() => setConfirmingAsaas(true)}
               disabled={isLoading || isProcessingAsaas}
             >
-              {isProcessingAsaas ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Zap className="h-4 w-4" />
-              )}
-              {isProcessingAsaas ? 'Enviando...' : 'Pagar Automaticamente (via Asaas)'}
+              <Zap className="h-4 w-4" />
+              Pagar Automaticamente (via Asaas)
             </Button>
 
             <div className="relative">
@@ -192,31 +219,8 @@ export function PaymentModal({
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* AlertDialog de confirmação Asaas */}
-      <AlertDialog open={showAsaasConfirm} onOpenChange={setShowAsaasConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Pagamento via Asaas</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja processar o pagamento de{' '}
-              <strong>{formatCurrency(valorTotal)}</strong> via Asaas agora?
-              <br />
-              <span className="text-muted-foreground text-xs mt-1 block">
-                Uma ordem de pagamento será enviada automaticamente e o status será atualizado para "Processando".
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAsaasConfirm}>
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
