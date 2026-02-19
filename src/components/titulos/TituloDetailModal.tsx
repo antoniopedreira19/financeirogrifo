@@ -235,6 +235,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -521,37 +522,38 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           )}
         </div>
       </DialogContent>
-
-      <PaymentModal
-        open={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onConfirm={handlePagar}
-        isLoading={isLoading}
-        credorName={tituloVisualizado.credor}
-        valorTotal={tituloVisualizado.valorTotal}
-        titulo={{
-          id: tituloVisualizado.id,
-          idSienge: tituloVisualizado.idSienge,
-          valorTotal: tituloVisualizado.valorTotal,
-          dadosBancarios: tituloVisualizado.dadosBancarios,
-          credor: tituloVisualizado.credor,
-          obraCodigo: tituloVisualizado.obraCodigo ?? '',
-          descricao: tituloVisualizado.descricao,
-        }}
-      />
-
-      {tituloVisualizado.idSienge && (
-        <SiengeUpdateModal
-          tituloId={tituloVisualizado.id}
-          open={showSiengeModal}
-          onClose={() => setShowSiengeModal(false)}
-          idSienge={tituloVisualizado.idSienge}
-          tipoDocumento={tituloVisualizado.tipoDocumentoFiscal}
-          numeroDocumento={tituloVisualizado.numeroDocumento}
-          status={tituloVisualizado.status}
-        />
-      )}
     </Dialog>
+
+    <PaymentModal
+      open={showPaymentModal}
+      onClose={() => setShowPaymentModal(false)}
+      onConfirm={handlePagar}
+      isLoading={isLoading}
+      credorName={tituloVisualizado.credor}
+      valorTotal={tituloVisualizado.valorTotal}
+      titulo={{
+        id: tituloVisualizado.id,
+        idSienge: tituloVisualizado.idSienge,
+        valorTotal: tituloVisualizado.valorTotal,
+        dadosBancarios: tituloVisualizado.dadosBancarios,
+        credor: tituloVisualizado.credor,
+        obraCodigo: tituloVisualizado.obraCodigo ?? '',
+        descricao: tituloVisualizado.descricao,
+      }}
+    />
+
+    {tituloVisualizado.idSienge && (
+      <SiengeUpdateModal
+        tituloId={tituloVisualizado.id}
+        open={showSiengeModal}
+        onClose={() => setShowSiengeModal(false)}
+        idSienge={tituloVisualizado.idSienge}
+        tipoDocumento={tituloVisualizado.tipoDocumentoFiscal}
+        numeroDocumento={tituloVisualizado.numeroDocumento}
+        status={tituloVisualizado.status}
+      />
+    )}
+    </>
   );
 }
 
