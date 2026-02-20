@@ -115,7 +115,7 @@ export function useTitulosPendentesQuery(obraId?: string) {
   });
 }
 
-// Fetch only paid titulos from titulos table
+// Fetch titulos from titulos table (pago + processando_pagamento)
 export function useTitulosPagosQuery(obraId?: string) {
   return useQuery({
     queryKey: ['titulos', obraId],
@@ -126,7 +126,7 @@ export function useTitulosPagosQuery(obraId?: string) {
           *,
           obras (nome)
         `)
-        .eq('status', 'pago')
+        .in('status', ['pago', 'processando_pagamento'])
         .order('created_at', { ascending: false });
 
       if (obraId) {
@@ -163,19 +163,19 @@ export function useTitulosByStatus(status: TituloStatus) {
   return useQuery({
     queryKey: ['titulos', 'status', status],
     queryFn: async () => {
-      // Paid titulos are in the titulos table
-      if (status === 'pago') {
+      // Titulos na tabela 'titulos': pago e processando_pagamento
+      if (status === 'pago' || status === 'processando_pagamento') {
         const { data, error } = await supabase
           .from('titulos')
           .select(`
             *,
             obras (nome)
           `)
-          .eq('status', 'pago')
+          .eq('status', status)
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching titulos pagos:', error);
+          console.error('Error fetching titulos by status:', error);
           throw error;
         }
 
