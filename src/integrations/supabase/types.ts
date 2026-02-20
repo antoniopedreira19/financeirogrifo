@@ -199,6 +199,7 @@ export type Database = {
           arquivo_pagamento_url: string | null
           centro_custo: string
           codigo_etapa: string | null
+          comprovante_asaas: string | null
           created_at: string
           created_by: string
           creditor_id: number | null
@@ -241,6 +242,7 @@ export type Database = {
           arquivo_pagamento_url?: string | null
           centro_custo: string
           codigo_etapa?: string | null
+          comprovante_asaas?: string | null
           created_at?: string
           created_by: string
           creditor_id?: number | null
@@ -283,6 +285,7 @@ export type Database = {
           arquivo_pagamento_url?: string | null
           centro_custo?: string
           codigo_etapa?: string | null
+          comprovante_asaas?: string | null
           created_at?: string
           created_by?: string
           creditor_id?: number | null

@@ -159,8 +159,8 @@ export function PaymentModal({
       if (deleteError) throw deleteError;
 
       toast.success('Ordem de pagamento enviada para o Asaas!');
-      queryClient.invalidateQueries({ queryKey: ['titulos'] });
-      queryClient.invalidateQueries({ queryKey: ['titulos_pendentes'] });
+      await queryClient.invalidateQueries({ queryKey: ['titulos'], refetchType: 'all' });
+      await queryClient.invalidateQueries({ queryKey: ['titulos_pendentes'], refetchType: 'all' });
       handleClose();
     } catch (err: any) {
       console.error('Erro no pagamento Asaas:', err);
