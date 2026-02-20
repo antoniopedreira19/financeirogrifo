@@ -4,7 +4,7 @@ import { TituloCard } from "@/components/titulos/TituloCard";
 import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
 import { useTitulosQuery } from "@/hooks/useTitulosQuery";
 import { useObrasQuery } from "@/hooks/useObrasQuery";
-import { Titulo, TituloStatus } from "@/types";
+import { TituloStatus } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, FileText, Loader2, Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -17,7 +17,10 @@ export default function AdminTitulos() {
   const navigate = useNavigate();
   const { data: titulos = [], isLoading: loadingTitulos } = useTitulosQuery();
   const { data: obras = [], isLoading: loadingObras } = useObrasQuery();
-  const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
+  const [selectedTituloId, setSelectedTituloId] = useState<string | null>(null);
+
+  // Sempre pega o título atualizado do cache da query (não o objeto stale do click)
+  const selectedTitulo = selectedTituloId ? (titulos.find(t => t.id === selectedTituloId) ?? null) : null;
 
   // Estados dos filtros
   const [searchTerm, setSearchTerm] = useState("");
@@ -299,7 +302,7 @@ export default function AdminTitulos() {
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {paginatedTitulos.map((titulo) => (
-                <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
+                <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTituloId(titulo.id)} />
               ))}
             </div>
 
@@ -365,8 +368,8 @@ export default function AdminTitulos() {
 
       <TituloDetailModal
         titulo={selectedTitulo}
-        open={!!selectedTitulo}
-        onClose={() => setSelectedTitulo(null)}
+        open={!!selectedTituloId}
+        onClose={() => setSelectedTituloId(null)}
         showActions
       />
     </AppLayout>
