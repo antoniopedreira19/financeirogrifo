@@ -99,16 +99,68 @@ export function PaymentModal({
         throw new Error(`Webhook falhou [${res.status}]: ${errBody}`);
       }
 
-      // B. Atualizar status no Supabase
-      const { error } = await supabase
+      // B. Buscar registro completo de titulos_pendentes
+      const { data: pendente, error: fetchError } = await supabase
         .from('titulos_pendentes')
-        .update({ status: 'processando_pagamento' as any })
+        .select('*')
+        .eq('id', titulo.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // C. Inserir em titulos com status processando_pagamento
+      const { error: insertError } = await supabase
+        .from('titulos')
+        .insert({
+          empresa: pendente.empresa,
+          credor: pendente.credor,
+          documento_tipo: pendente.documento_tipo,
+          documento_numero: pendente.documento_numero,
+          obra_id: pendente.obra_id,
+          obra_codigo: pendente.obra_codigo,
+          grupo_id: pendente.grupo_id,
+          centro_custo: pendente.centro_custo,
+          etapa: pendente.etapa,
+          codigo_etapa: pendente.codigo_etapa,
+          valor_total: pendente.valor_total,
+          descontos: pendente.descontos,
+          parcelas: pendente.parcelas,
+          tipo_documento: pendente.tipo_documento,
+          numero_documento: pendente.numero_documento,
+          data_emissao: pendente.data_emissao,
+          data_vencimento: pendente.data_vencimento,
+          plano_financeiro: pendente.plano_financeiro,
+          dados_bancarios: pendente.dados_bancarios,
+          tipo_leitura_pagamento: pendente.tipo_leitura_pagamento,
+          arquivo_pagamento_url: pendente.arquivo_pagamento_url,
+          documento_url: pendente.documento_url,
+          descricao: pendente.descricao,
+          id_sienge: pendente.id_sienge,
+          creditor_id: pendente.creditor_id,
+          status: 'processando_pagamento',
+          criador: pendente.criador,
+          created_by: pendente.created_by,
+          aprovado_por: pendente.aprovado_por,
+          aprovado_em: pendente.aprovado_em,
+          created_at: pendente.created_at,
+          empresa_id: (pendente as any).empresa_id,
+          rateio_financeiro: pendente.rateio_financeiro,
+          aprop_obra: pendente.aprop_obra,
+        });
+
+      if (insertError) throw insertError;
+
+      // D. Remover de titulos_pendentes
+      const { error: deleteError } = await supabase
+        .from('titulos_pendentes')
+        .delete()
         .eq('id', titulo.id);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
       toast.success('Ordem de pagamento enviada para o Asaas!');
       queryClient.invalidateQueries({ queryKey: ['titulos'] });
+      queryClient.invalidateQueries({ queryKey: ['titulos_pendentes'] });
       handleClose();
     } catch (err: any) {
       console.error('Erro no pagamento Asaas:', err);
