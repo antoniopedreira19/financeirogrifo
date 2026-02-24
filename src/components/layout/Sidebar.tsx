@@ -23,6 +23,8 @@ export function Sidebar() {
   ];
 
   const orcamentoNavItems = [
+    { path: "/obra/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/obra/titulos", label: "Meus Títulos", icon: FileText },
     { path: "/orcamento/obras", label: "Obras", icon: Building2 },
   ];
 

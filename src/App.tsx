@@ -51,7 +51,6 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-    if (user.role === 'orcamento') return <Navigate to="/orcamento/obras" replace />;
     return <Navigate to="/selecionar-obra" replace />;
   }
 
@@ -74,8 +73,7 @@ function ObraProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (user.role !== 'obra') {
-    if (user.role === 'orcamento') return <Navigate to="/orcamento/obras" replace />;
+  if (user.role !== 'obra' && user.role !== 'orcamento') {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -95,12 +93,12 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/auth" element={user ? <Navigate to={user.role === 'admin' ? '/admin/dashboard' : user.role === 'orcamento' ? '/orcamento/obras' : '/selecionar-obra'} replace /> : <Auth />} />
+      <Route path="/auth" element={user ? <Navigate to={user.role === 'admin' ? '/admin/dashboard' : '/selecionar-obra'} replace /> : <Auth />} />
       <Route path="/login" element={<Navigate to="/auth" replace />} />
       
       {/* Obra selection */}
       <Route path="/selecionar-obra" element={
-        <ProtectedRoute allowedRoles={['obra']}>
+        <ProtectedRoute allowedRoles={['obra', 'orcamento']}>
           <SelecionarObra />
         </ProtectedRoute>
       } />
