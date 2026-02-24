@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "obra";
+export type UserRole = "admin" | "obra" | "orcamento";
 
 export type TituloStatus = "enviado" | "aprovado" | "reprovado" | "pago" | "processando_pagamento";
 

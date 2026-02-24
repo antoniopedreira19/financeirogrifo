@@ -300,6 +300,7 @@ export default function AdminUsuarios() {
                     <SelectContent>
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="obra">Equipe de Obra</SelectItem>
+                      <SelectItem value="orcamento">Orçamento</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -391,6 +392,7 @@ export default function AdminUsuarios() {
                     <SelectContent>
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="obra">Equipe de Obra</SelectItem>
+                      <SelectItem value="orcamento">Orçamento</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -469,11 +471,11 @@ export default function AdminUsuarios() {
                       </Button>
                       <span
                         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${
-                          user.role === "admin" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
+                          user.role === "admin" ? "bg-primary/10 text-primary" : user.role === "orcamento" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"
                         }`}
                       >
                         <Shield className="h-3 w-3" />
-                        {user.role === "admin" ? "Admin" : "Obra"}
+                        {user.role === "admin" ? "Admin" : user.role === "orcamento" ? "Orçamento" : "Obra"}
                       </span>
                     </div>
                   </div>
