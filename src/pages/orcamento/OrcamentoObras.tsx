@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { Building2, MapPin, Hash, CheckCircle, Loader2, Pencil } from "lucide-react";
 import { Obra } from "@/types";
 import { EtapasManager } from "@/components/admin/EtapasManager";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function OrcamentoObras() {
-  const { data: obras = [], isLoading } = useObrasQuery();
+  const { user } = useAuth();
+  const obras = user?.obras || [];
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingObra, setEditingObra] = useState<Obra | null>(null);
 
@@ -18,26 +18,14 @@ export default function OrcamentoObras() {
     setIsEditDialogOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </AppLayout>
-    );
-  }
-
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Obras</h1>
           <p className="text-muted-foreground mt-1">Gerencie as etapas das obras</p>
         </div>
 
-        {/* Obras Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {obras.map((obra) => (
             <div key={obra.id} className="card-elevated p-5">
@@ -84,19 +72,16 @@ export default function OrcamentoObras() {
         {obras.length === 0 && (
           <div className="card-elevated p-8 text-center">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhuma obra encontrada</h3>
-            <p className="text-muted-foreground">Não há obras disponíveis no momento.</p>
+            <h3 className="text-lg font-semibold mb-2">Nenhuma obra vinculada</h3>
+            <p className="text-muted-foreground">Solicite ao administrador para vincular obras ao seu usuário.</p>
           </div>
         )}
       </div>
 
-      {/* Edit Etapas Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              Etapas - {editingObra?.nome}
-            </DialogTitle>
+            <DialogTitle>Etapas - {editingObra?.nome}</DialogTitle>
           </DialogHeader>
           {editingObra && (
             <div className="mt-4">

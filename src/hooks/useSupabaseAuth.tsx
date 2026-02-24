@@ -62,7 +62,7 @@ export function useSupabaseAuth() {
 
       let obras: Obra[] = [];
       
-      if (role === 'admin' || role === 'orcamento') {
+      if (role === 'admin') {
         const { data: obrasData, error: obrasError } = await supabase
           .from('obras')
           .select('*')
