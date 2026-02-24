@@ -479,7 +479,7 @@ export default function AdminUsuarios() {
                       </span>
                     </div>
                   </div>
-                  {user.role === "obra" && user.obras.length > 0 && (
+                  {(user.role === "obra" || user.role === "orcamento") && user.obras.length > 0 && (
                     <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
                       <Building2 className="h-4 w-4" />
                       <span className="truncate">{user.obras.map((o) => o.nome).join(", ")}</span>
