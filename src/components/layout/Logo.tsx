@@ -53,6 +53,9 @@ export function Logo({ variant = 'light', size = 'md', showText = true }: LogoPr
         src={logoSemFundo}
         alt="Grifo Logo"
         className={`${sizeClasses[size]} w-auto object-contain`}
+        loading="eager"
+        fetchPriority="high"
+        decoding="sync"
       />
       {showText && (
         <div className="flex flex-col">
