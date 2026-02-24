@@ -79,7 +79,7 @@ export default function OrcamentoObras() {
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Etapas - {editingObra?.nome}</DialogTitle>
           </DialogHeader>
