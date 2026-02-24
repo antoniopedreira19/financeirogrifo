@@ -18,7 +18,7 @@ interface TituloAsaasData {
   id: string;
   idSienge?: number | null;
   valorTotal: number;
-  dadosBancarios?: string | null;
+  dadosBancarios?: Record<string, unknown> | string | null;
   credor: string;
   obraCodigo: string;
   descricao?: string | null;

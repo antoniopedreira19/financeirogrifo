@@ -59,7 +59,7 @@ export interface Titulo {
   dataEmissao: Date;
   dataVencimento: Date;
   planoFinanceiro: PlanoFinanceiro;
-  dadosBancarios: string;
+  dadosBancarios: Record<string, unknown> | string | null;
   tipoLeituraPagamento?: TipoPagamento;
   arquivoPagamentoUrl?: string;
   documentoUrl?: string;

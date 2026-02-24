@@ -62,9 +62,7 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     dataEmissao: row.data_emissao as unknown as Date,
     dataVencimento: row.data_vencimento as unknown as Date,
     planoFinanceiro: row.plano_financeiro as any,
-    dadosBancarios: typeof row.dados_bancarios === 'string' 
-      ? row.dados_bancarios 
-      : JSON.stringify(row.dados_bancarios || ''),
+    dadosBancarios: row.dados_bancarios ?? null,
     tipoLeituraPagamento: row.tipo_leitura_pagamento as any,
     arquivoPagamentoUrl: row.arquivo_pagamento_url || undefined,
     documentoUrl: row.documento_url || undefined,
@@ -271,7 +269,7 @@ export function useCreateTitulo() {
         data_emissao: titulo.dataEmissao.toISOString().split('T')[0],
         data_vencimento: titulo.dataVencimento.toISOString().split('T')[0],
         plano_financeiro: titulo.planoFinanceiro as 'servicos_terceiros' | 'materiais_aplicados',
-        dados_bancarios: typeof titulo.dadosBancarios === 'string' ? titulo.dadosBancarios : JSON.stringify(titulo.dadosBancarios),
+        dados_bancarios: (titulo.dadosBancarios ?? null) as any,
         tipo_leitura_pagamento: titulo.tipoLeituraPagamento || null,
         created_by: titulo.createdBy,
         criador: titulo.criador,

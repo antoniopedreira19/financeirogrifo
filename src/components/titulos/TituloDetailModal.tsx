@@ -34,6 +34,32 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+
+function formatDadosBancarios(dados: Record<string, unknown>): string {
+  const metodo = dados.metodo_pagamento as string;
+  const parts: string[] = [];
+  
+  if (metodo === 'PIX') {
+    parts.push('PIX');
+    if (dados.tipo_chave_pix) parts.push(`Tipo: ${dados.tipo_chave_pix}`);
+    if (dados.chave_pix) parts.push(`Chave: ${dados.chave_pix}`);
+  } else if (metodo === 'BOLETO') {
+    parts.push('Boleto');
+    if (dados.linha_digitavel) parts.push(`Linha: ${dados.linha_digitavel}`);
+  } else if (metodo === 'TED') {
+    parts.push('TED');
+    if (dados.banco) parts.push(`Banco: ${dados.banco}`);
+    if (dados.agencia) parts.push(`Ag: ${dados.agencia}`);
+    if (dados.conta) parts.push(`Conta: ${dados.conta}`);
+    if (dados.tipo_conta) parts.push(`Tipo: ${dados.tipo_conta}`);
+    if (dados.cpf_cnpj_titular) parts.push(`CPF/CNPJ: ${dados.cpf_cnpj_titular}`);
+  } else {
+    return JSON.stringify(dados, null, 2);
+  }
+  
+  return parts.join(' | ');
+}
+
 interface TituloDetailModalProps {
   titulo: Titulo | null;
   open: boolean;
@@ -426,17 +452,22 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
               </Button>
             )}
 
-            {tituloVisualizado.dadosBancarios && tituloVisualizado.dadosBancarios.trim() && (
+            {tituloVisualizado.dadosBancarios && (
               <div className="space-y-2">
                 <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all">
-                  {tituloVisualizado.dadosBancarios}
+                  {typeof tituloVisualizado.dadosBancarios === 'string'
+                    ? tituloVisualizado.dadosBancarios
+                    : formatDadosBancarios(tituloVisualizado.dadosBancarios)}
                 </div>
                 <Button
                   variant="secondary"
                   size="sm"
                   className="w-full gap-2"
                   onClick={() => {
-                    navigator.clipboard.writeText(tituloVisualizado.dadosBancarios);
+                    const text = typeof tituloVisualizado.dadosBancarios === 'string'
+                      ? tituloVisualizado.dadosBancarios
+                      : JSON.stringify(tituloVisualizado.dadosBancarios, null, 2);
+                    navigator.clipboard.writeText(text);
                     toast.success("Código copiado para a área de transferência");
                   }}
                 >
@@ -447,7 +478,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             )}
 
             {!tituloVisualizado.arquivoPagamentoUrl &&
-              (!tituloVisualizado.dadosBancarios || !tituloVisualizado.dadosBancarios.trim()) && (
+              !tituloVisualizado.dadosBancarios && (
                 <p className="text-sm text-muted-foreground italic">Nenhum dado de pagamento informado</p>
               )}
           </div>
