@@ -69,8 +69,8 @@ export default function ObraDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <StatCard title="Valor Pendente" value={formatCurrency(stats.valorPendente)} subtitle="Aguardando aprovação ou pagamento" icon={<TrendingUp className="h-5 w-5" />} variant="primary" />
-          <StatCard title="Valor Pago" value={formatCurrency(stats.valorPago)} subtitle="Total já quitado" icon={<Wallet className="h-5 w-5" />} variant="accent" />
+          <StatCard title="Valor Pendente" value={formatCurrency(stats.valorPendente)} subtitle="Aguardando aprovação ou pagamento" icon={<TrendingUp className="h-5 w-5" style={{ color: '#021C31' }} />} variant="default" />
+          <StatCard title="Valor Pago" value={formatCurrency(stats.valorPago)} subtitle="Total já quitado" icon={<Wallet className="h-5 w-5" style={{ color: '#021C31' }} />} variant="default" />
         </div>
 
         <div>
