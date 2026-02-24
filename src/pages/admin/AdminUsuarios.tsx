@@ -304,7 +304,7 @@ export default function AdminUsuarios() {
                     </SelectContent>
                   </Select>
                 </div>
-                {newUser.role === "obra" && (
+                {(newUser.role === "obra" || newUser.role === "orcamento") && (
                   <div className="space-y-2">
                     <Label>Obras Vinculadas</Label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -396,7 +396,7 @@ export default function AdminUsuarios() {
                     </SelectContent>
                   </Select>
                 </div>
-                {editUser.role === "obra" && (
+                {(editUser.role === "obra" || editUser.role === "orcamento") && (
                   <div className="space-y-2">
                     <Label>Obras Vinculadas</Label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
