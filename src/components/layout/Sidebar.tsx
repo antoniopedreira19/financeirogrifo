@@ -59,7 +59,7 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="p-6 border-b border-sidebar-border">
-          <Logo variant="dark" size="md" showText={false} />
+          <Logo variant="dark" size="md" />
         </div>
 
         {/* Selected Obra (for obra users) */}

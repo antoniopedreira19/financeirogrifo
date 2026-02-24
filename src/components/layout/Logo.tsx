@@ -1,5 +1,4 @@
-import logoLight from '@/assets/logo.png';
-import logoDark from '@/assets/logo-dark.png';
+import logoSemFundo from '@/assets/logo-sem-fundo.png';
 
 interface LogoProps {
   variant?: 'light' | 'dark' | 'onDark';
@@ -15,9 +14,15 @@ export function Logo({ variant = 'light', size = 'md', showText = true }: LogoPr
   };
 
   const textSizeClasses = {
-    sm: 'text-lg',
-    md: 'text-xl',
-    lg: 'text-2xl',
+    sm: 'text-base',
+    md: 'text-lg',
+    lg: 'text-xl',
+  };
+
+  const subTextSizeClasses = {
+    sm: 'text-[8px]',
+    md: 'text-[9px]',
+    lg: 'text-[10px]',
   };
 
   const getTextColor = () => {
@@ -45,17 +50,23 @@ export function Logo({ variant = 'light', size = 'md', showText = true }: LogoPr
   return (
     <div className="flex items-center gap-3">
       <img
-        src={variant === 'dark' ? logoDark : logoLight}
+        src={logoSemFundo}
         alt="Grifo Logo"
         className={`${sizeClasses[size]} w-auto object-contain`}
       />
       {showText && (
         <div className="flex flex-col">
-          <span className={`font-bold tracking-tight ${textSizeClasses[size]} ${getTextColor()}`}>
+          <span
+            className={`font-bold tracking-tight ${textSizeClasses[size]} ${getTextColor()}`}
+            style={{ fontFamily: "'Disket Mono', monospace" }}
+          >
             GRIFO
           </span>
-          <span className={`text-xs font-medium tracking-widest uppercase ${getSubTextColor()}`}>
-            Financeiro
+          <span
+            className={`font-medium tracking-widest uppercase ${subTextSizeClasses[size]} ${getSubTextColor()}`}
+            style={{ fontFamily: "'Disket Mono', monospace" }}
+          >
+            FINANCEIRO
           </span>
         </div>
       )}
