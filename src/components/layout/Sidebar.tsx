@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Building2, LogOut, ChevronLeft, Menu, CheckSquare } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Building2, LogOut, ChevronLeft, Menu, CheckSquare, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
@@ -12,6 +12,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(true);
 
   const isAdmin = user?.role === "admin";
+  const isOrcamento = user?.role === "orcamento";
 
   const adminNavItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -21,12 +22,16 @@ export function Sidebar() {
     { path: "/admin/obras", label: "Obras", icon: Building2 },
   ];
 
+  const orcamentoNavItems = [
+    { path: "/orcamento/obras", label: "Obras", icon: Building2 },
+  ];
+
   const obraNavItems = [
     { path: "/obra/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/obra/titulos", label: "Meus Títulos", icon: FileText },
   ];
 
-  const navItems = isAdmin ? adminNavItems : obraNavItems;
+  const navItems = isAdmin ? adminNavItems : isOrcamento ? orcamentoNavItems : obraNavItems;
 
   return (
     <>
@@ -56,7 +61,7 @@ export function Sidebar() {
         </div>
 
         {/* Selected Obra (for obra users) */}
-        {!isAdmin && selectedObra && (
+        {!isAdmin && !isOrcamento && selectedObra && (
           <div className="px-4 py-3 bg-sidebar-accent/50 border-b border-sidebar-border">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">

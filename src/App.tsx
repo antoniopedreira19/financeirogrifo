@@ -18,6 +18,7 @@ import AdminAprovacoes from "./pages/admin/AdminAprovacoes";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminObras from "./pages/admin/AdminObras";
 import AdminNovoTitulo from "./pages/admin/AdminNovoTitulo";
+import OrcamentoObras from "./pages/orcamento/OrcamentoObras";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -49,7 +50,9 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={user.role === 'admin' ? '/admin/dashboard' : '/selecionar-obra'} replace />;
+    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+    if (user.role === 'orcamento') return <Navigate to="/orcamento/obras" replace />;
+    return <Navigate to="/selecionar-obra" replace />;
   }
 
   return <>{children}</>;
@@ -72,6 +75,7 @@ function ObraProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (user.role !== 'obra') {
+    if (user.role === 'orcamento') return <Navigate to="/orcamento/obras" replace />;
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -91,7 +95,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/auth" element={user ? <Navigate to={user.role === 'admin' ? '/admin/dashboard' : '/selecionar-obra'} replace /> : <Auth />} />
+      <Route path="/auth" element={user ? <Navigate to={user.role === 'admin' ? '/admin/dashboard' : user.role === 'orcamento' ? '/orcamento/obras' : '/selecionar-obra'} replace /> : <Auth />} />
       <Route path="/login" element={<Navigate to="/auth" replace />} />
       
       {/* Obra selection */}
@@ -147,6 +151,13 @@ function AppRoutes() {
       <Route path="/admin/novo-titulo" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <AdminNovoTitulo />
+        </ProtectedRoute>
+      } />
+      
+      {/* Orcamento routes */}
+      <Route path="/orcamento/obras" element={
+        <ProtectedRoute allowedRoles={['orcamento']}>
+          <OrcamentoObras />
         </ProtectedRoute>
       } />
       
