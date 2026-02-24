@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Upload, X, FileText, Image, Receipt, FileEdit, AlertCircle } from "lucide-react";
+import { CalendarIcon, Loader2, Upload, X, FileText, Image, FileEdit, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +22,7 @@ import { useEtapasByObra } from "@/hooks/useEtapasQuery";
 import { CredorCombobox, type CredorSelection } from "./CredorCombobox";
 import { RateioFinanceiroList, type RateioFinanceiroItem } from "./RateioFinanceiroList";
 import { RateioEngenhariaList, type RateioEngenhariaItem } from "./RateioEngenhariaList";
-
-type TipoPagamento = "manual" | "boleto";
+import { DadosBancariosSection, type DadosBancariosStructured, type MetodoPagamento } from "./DadosBancariosSection";
 
 const tituloSchema = z.object({
   empresa: z.number().min(1, "Código da empresa é obrigatório"),
@@ -37,7 +36,7 @@ const tituloSchema = z.object({
   dataEmissao: z.date(),
   dataVencimento: z.date(),
   planoFinanceiro: z.enum(["servicos_terceiros", "materiais_aplicados"]),
-  dadosBancarios: z.string().optional().default(""),
+  // dadosBancarios now managed outside react-hook-form as structured JSON
   descricao: z.string().max(500, "Descrição muito longa (máx. 500 caracteres)").optional().default(""),
 });
 
@@ -56,14 +55,30 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
-  const [tipoPagamento, setTipoPagamento] = useState<TipoPagamento>(
-    initialData?.tipoLeituraPagamento === "boleto" ? "boleto" : "manual",
-  );
+
+  // Structured payment data
+  const parseInitialDadosBancarios = (): DadosBancariosStructured => {
+    if (initialData?.dadosBancarios) {
+      try {
+        const parsed = typeof initialData.dadosBancarios === 'string' 
+          ? JSON.parse(initialData.dadosBancarios) 
+          : initialData.dadosBancarios;
+        if (parsed?.metodo_pagamento) return parsed;
+      } catch {}
+    }
+    // Default based on tipoLeituraPagamento legacy
+    const leitura = initialData?.tipoLeituraPagamento as string | undefined;
+    const metodo: MetodoPagamento = leitura === "boleto" ? "BOLETO" 
+      : leitura === "ted" ? "TED"
+      : "PIX";
+    return { metodo_pagamento: metodo };
+  };
+  const [dadosBancarios, setDadosBancarios] = useState<DadosBancariosStructured>(parseInitialDadosBancarios());
   const [isUploading, setIsUploading] = useState(false);
   const [obraGrupoId, setObraGrupoId] = useState<string | undefined>();
   const [obraCodigoRemoved, setObraCodigoRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const paymentFileInputRef = useRef<HTMLInputElement>(null);
+  
   const { data: etapas = [] } = useEtapasByObra(selectedObra?.id);
   
   // Credor selection state (managed outside react-hook-form)
@@ -131,22 +146,10 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     if (file) validateAndSetFile(file, setSelectedFile);
   };
 
-  const handlePaymentFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) validateAndSetFile(file, setPaymentFile);
-  };
-
   const removeFile = () => {
     setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
-    }
-  };
-
-  const removePaymentFile = () => {
-    setPaymentFile(null);
-    if (paymentFileInputRef.current) {
-      paymentFileInputRef.current.value = "";
     }
   };
 
@@ -189,7 +192,6 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       etapaApropriada: initialData?.codigoEtapa || "",
       valorTotal: initialData?.valorTotal || undefined,
       numeroDocumento: initialData?.numeroDocumento || "",
-      dadosBancarios: initialData?.dadosBancarios || "",
       descricao: initialData?.descricao || "",
     },
   });
@@ -240,10 +242,21 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     }
     setRateioEngenhariaError(undefined);
 
-    // Validate dadosBancarios only for manual payment type
-    if (tipoPagamento === "manual" && !data.dadosBancarios?.trim()) {
-      toast.error("Dados bancários são obrigatórios para pagamento manual");
+    // Validate dadosBancarios based on payment method
+    const metodo = dadosBancarios.metodo_pagamento;
+    if (metodo === "PIX" && !dadosBancarios.chave_pix?.trim()) {
+      toast.error("A chave PIX é obrigatória");
       return;
+    }
+    if (metodo === "BOLETO" && !dadosBancarios.linha_digitavel?.trim() && !paymentFile) {
+      toast.error("Informe a linha digitável ou anexe o boleto");
+      return;
+    }
+    if (metodo === "TED") {
+      if (!dadosBancarios.banco?.trim() || !dadosBancarios.agencia?.trim() || !dadosBancarios.conta?.trim()) {
+        toast.error("Banco, agência e conta são obrigatórios para TED");
+        return;
+      }
     }
 
     setIsUploading(true);
@@ -258,7 +271,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         if (filePath) documentoUrl = filePath;
       }
 
-      if (paymentFile && tipoPagamento !== "manual") {
+      if (paymentFile && dadosBancarios.metodo_pagamento === "BOLETO") {
         const paymentPath = await uploadFile(paymentFile, "pagamento");
         if (paymentPath) arquivoPagamentoUrl = paymentPath;
       }
@@ -311,8 +324,8 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         dataEmissao: data.dataEmissao,
         dataVencimento: data.dataVencimento,
         planoFinanceiro: data.planoFinanceiro,
-        dadosBancarios: data.dadosBancarios,
-        tipoLeituraPagamento: tipoPagamento,
+        dadosBancarios: JSON.stringify(dadosBancarios),
+        tipoLeituraPagamento: dadosBancarios.metodo_pagamento.toLowerCase(),
         createdBy: user.id,
         criador: user.nome,
         documentoUrl,
@@ -596,103 +609,12 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       </div>
 
       {/* Dados Bancários */}
-      <div className="card-elevated p-6">
-        <h2 className="text-lg font-semibold mb-4">Dados Bancários para Pagamento</h2>
-        <div className="space-y-4">
-          {/* Tipo de Pagamento */}
-          <div className="space-y-2">
-            <Label>Tipo de Leitura para Pagamento</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setTipoPagamento("manual")}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
-                  tipoPagamento === "manual"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50",
-                )}
-              >
-                <FileEdit className="h-6 w-6" />
-                <span className="text-sm font-medium">Manual</span>
-                <span className="text-xs text-muted-foreground">Apenas texto</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTipoPagamento("boleto")}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
-                  tipoPagamento === "boleto"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50",
-                )}
-              >
-                <Receipt className="h-6 w-6" />
-                <span className="text-sm font-medium">Boleto</span>
-                <span className="text-xs text-muted-foreground">Upload</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Upload de arquivo de pagamento (condicional) */}
-          {tipoPagamento !== "manual" && (
-            <div className="space-y-2">
-              <Label>Arquivo do Boleto</Label>
-              <input
-                type="file"
-                ref={paymentFileInputRef}
-                onChange={handlePaymentFileSelect}
-                accept=".pdf,.jpg,.jpeg,.png"
-                className="hidden"
-              />
-              {!paymentFile ? (
-                <div
-                  onClick={() => paymentFileInputRef.current?.click()}
-                  className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
-                >
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Anexe o boleto para facilitar o pagamento</p>
-                  <p className="text-xs text-muted-foreground mt-1">PDF, JPEG ou PNG (máx. 10MB)</p>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
-                  {paymentFile.type === "application/pdf" ? (
-                    <FileText className="h-5 w-5 text-destructive" />
-                  ) : (
-                    <Image className="h-5 w-5 text-primary" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{paymentFile.name}</p>
-                    <p className="text-xs text-muted-foreground">{(paymentFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                  </div>
-                  <Button type="button" variant="ghost" size="icon" onClick={removePaymentFile} className="shrink-0">
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Campo de texto para dados bancários */}
-          <div className="space-y-2">
-            <Label htmlFor="dadosBancarios">
-              {tipoPagamento === "manual" ? "Informações para pagamento" : "Informações adicionais"}
-            </Label>
-            <Textarea
-              id="dadosBancarios"
-              placeholder={
-                tipoPagamento === "manual"
-                  ? "PIX, dados da conta bancária, código de barras..."
-                  : "Cole o código de barras aqui ou adicione informações adicionais..."
-              }
-              rows={4}
-              {...register("dadosBancarios")}
-              className="input-field resize-none"
-            />
-            {errors.dadosBancarios && <p className="text-sm text-destructive">{errors.dadosBancarios.message}</p>}
-          </div>
-        </div>
-      </div>
+      <DadosBancariosSection
+        value={dadosBancarios}
+        onChange={setDadosBancarios}
+        paymentFile={paymentFile}
+        onPaymentFileChange={setPaymentFile}
+      />
 
       {/* Descrição (opcional) */}
       <div className="card-elevated p-6">
