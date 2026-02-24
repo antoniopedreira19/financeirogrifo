@@ -63,7 +63,7 @@ export function Sidebar() {
         </div>
 
         {/* Selected Obra (for obra users) */}
-        {!isAdmin && !isOrcamento && selectedObra && (
+        {!isAdmin && selectedObra && (
           <div className="px-4 py-3 bg-sidebar-accent/50 border-b border-sidebar-border">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
