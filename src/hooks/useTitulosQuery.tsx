@@ -232,7 +232,7 @@ export function useCreateTitulo() {
       dataEmissao: Date;
       dataVencimento: Date;
       planoFinanceiro: string;
-      dadosBancarios: string;
+      dadosBancarios: string | object;
       tipoLeituraPagamento?: string;
       createdBy: string;
       criador: string;
@@ -271,7 +271,7 @@ export function useCreateTitulo() {
         data_emissao: titulo.dataEmissao.toISOString().split('T')[0],
         data_vencimento: titulo.dataVencimento.toISOString().split('T')[0],
         plano_financeiro: titulo.planoFinanceiro as 'servicos_terceiros' | 'materiais_aplicados',
-        dados_bancarios: titulo.dadosBancarios,
+        dados_bancarios: typeof titulo.dadosBancarios === 'string' ? titulo.dadosBancarios : JSON.stringify(titulo.dadosBancarios),
         tipo_leitura_pagamento: titulo.tipoLeituraPagamento || null,
         created_by: titulo.createdBy,
         criador: titulo.criador,
