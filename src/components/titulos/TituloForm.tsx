@@ -324,7 +324,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         dataEmissao: data.dataEmissao,
         dataVencimento: data.dataVencimento,
         planoFinanceiro: data.planoFinanceiro,
-        dadosBancarios: JSON.stringify(dadosBancarios),
+        dadosBancarios: dadosBancarios,
         tipoLeituraPagamento: dadosBancarios.metodo_pagamento.toLowerCase(),
         createdBy: user.id,
         criador: user.nome,
