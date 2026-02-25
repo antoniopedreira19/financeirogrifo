@@ -35,29 +35,39 @@ import {
 } from "lucide-react";
 
 
-function formatDadosBancarios(dados: Record<string, unknown>): string {
+function parseDadosBancarios(data: Record<string, unknown> | string | null): Record<string, unknown> | null {
+  if (!data) return null;
+  if (typeof data === 'object') return data;
+  try { return JSON.parse(data) as Record<string, unknown>; } catch { return null; }
+}
+
+function getCopyText(dados: Record<string, unknown>): string {
   const metodo = dados.metodo_pagamento as string;
-  const parts: string[] = [];
-  
-  if (metodo === 'PIX') {
-    parts.push('PIX');
-    if (dados.tipo_chave_pix) parts.push(`Tipo: ${dados.tipo_chave_pix}`);
-    if (dados.chave_pix) parts.push(`Chave: ${dados.chave_pix}`);
-  } else if (metodo === 'BOLETO') {
-    parts.push('Boleto');
-    if (dados.linha_digitavel) parts.push(`Linha: ${dados.linha_digitavel}`);
-  } else if (metodo === 'TED') {
-    parts.push('TED');
+  if (metodo === 'PIX' && dados.chave_pix) return dados.chave_pix as string;
+  if (metodo === 'TED') {
+    const parts: string[] = [];
     if (dados.banco) parts.push(`Banco: ${dados.banco}`);
-    if (dados.agencia) parts.push(`Ag: ${dados.agencia}`);
+    if (dados.agencia) parts.push(`Agência: ${dados.agencia}`);
     if (dados.conta) parts.push(`Conta: ${dados.conta}`);
     if (dados.tipo_conta) parts.push(`Tipo: ${dados.tipo_conta}`);
     if (dados.cpf_cnpj_titular) parts.push(`CPF/CNPJ: ${dados.cpf_cnpj_titular}`);
-  } else {
-    return JSON.stringify(dados, null, 2);
+    return parts.join('\n');
   }
-  
-  return parts.join(' | ');
+  return JSON.stringify(dados, null, 2);
+}
+
+function getCopyLabel(dados: Record<string, unknown>): string {
+  const metodo = dados.metodo_pagamento as string;
+  if (metodo === 'PIX') return 'Copiar Chave PIX';
+  if (metodo === 'TED') return 'Copiar Dados Bancários';
+  return 'Copiar Dados';
+}
+
+function getMetodoLabel(metodo: string): string {
+  if (metodo === 'PIX') return 'PIX';
+  if (metodo === 'BOLETO') return 'Boleto';
+  if (metodo === 'TED') return 'Transferência (TED)';
+  return metodo;
 }
 
 interface TituloDetailModalProps {
@@ -424,17 +434,6 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
 
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Dados de Pagamento</p>
-            {tituloVisualizado.tipoLeituraPagamento && (
-              <div className="text-xs text-muted-foreground">
-                Tipo:{" "}
-                {tituloVisualizado.tipoLeituraPagamento === "manual"
-                  ? "Manual"
-                  : tituloVisualizado.tipoLeituraPagamento === "boleto"
-                    ? "Boleto"
-                    : "QR Code / Pix"}
-              </div>
-            )}
-
             {tituloVisualizado.arquivoPagamentoUrl && (
               <Button
                 variant="outline"
@@ -448,34 +447,81 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                 }}
               >
                 <ExternalLink className="h-4 w-4" />
-                Visualizar Arquivo Original
+                Visualizar Arquivo de Pagamento
               </Button>
             )}
 
-            {tituloVisualizado.dadosBancarios && (
-              <div className="space-y-2">
-                <div className="bg-muted/50 rounded-lg p-3 font-mono text-sm break-all">
-                  {typeof tituloVisualizado.dadosBancarios === 'string'
-                    ? tituloVisualizado.dadosBancarios
-                    : formatDadosBancarios(tituloVisualizado.dadosBancarios)}
+            {(() => {
+              const bankData = parseDadosBancarios(tituloVisualizado.dadosBancarios);
+              if (!bankData) return null;
+              const metodo = bankData.metodo_pagamento as string;
+              return (
+                <div className="space-y-2">
+                  <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Método</span>
+                      <span className="font-medium">{getMetodoLabel(metodo)}</span>
+                    </div>
+                    {metodo === 'PIX' && bankData.tipo_chave_pix && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tipo de Chave</span>
+                        <span className="font-medium">{bankData.tipo_chave_pix as string}</span>
+                      </div>
+                    )}
+                    {metodo === 'PIX' && bankData.chave_pix && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Chave PIX</span>
+                        <span className="font-medium font-mono text-xs break-all max-w-[200px] text-right">{bankData.chave_pix as string}</span>
+                      </div>
+                    )}
+                    {metodo === 'TED' && bankData.banco && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Banco</span>
+                        <span className="font-medium">{bankData.banco as string}</span>
+                      </div>
+                    )}
+                    {metodo === 'TED' && bankData.agencia && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Agência</span>
+                        <span className="font-medium">{bankData.agencia as string}</span>
+                      </div>
+                    )}
+                    {metodo === 'TED' && bankData.conta && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Conta</span>
+                        <span className="font-medium">{bankData.conta as string}</span>
+                      </div>
+                    )}
+                    {metodo === 'TED' && bankData.tipo_conta && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tipo de Conta</span>
+                        <span className="font-medium">{bankData.tipo_conta === 'corrente' ? 'Conta Corrente' : 'Conta Poupança'}</span>
+                      </div>
+                    )}
+                    {metodo === 'TED' && bankData.cpf_cnpj_titular && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">CPF/CNPJ Titular</span>
+                        <span className="font-medium">{bankData.cpf_cnpj_titular as string}</span>
+                      </div>
+                    )}
+                  </div>
+                  {(metodo === 'PIX' || metodo === 'TED') && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full gap-2"
+                      onClick={() => {
+                        navigator.clipboard.writeText(getCopyText(bankData));
+                        toast.success("Copiado para a área de transferência");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                      {getCopyLabel(bankData)}
+                    </Button>
+                  )}
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="w-full gap-2"
-                  onClick={() => {
-                    const text = typeof tituloVisualizado.dadosBancarios === 'string'
-                      ? tituloVisualizado.dadosBancarios
-                      : JSON.stringify(tituloVisualizado.dadosBancarios, null, 2);
-                    navigator.clipboard.writeText(text);
-                    toast.success("Código copiado para a área de transferência");
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copiar Código
-                </Button>
-              </div>
-            )}
+              );
+            })()}
 
             {!tituloVisualizado.arquivoPagamentoUrl &&
               !tituloVisualizado.dadosBancarios && (

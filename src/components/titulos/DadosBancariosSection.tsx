@@ -20,8 +20,6 @@ export interface DadosBancariosStructured {
   // PIX fields
   tipo_chave_pix?: TipoChavePix;
   chave_pix?: string;
-  // BOLETO fields
-  linha_digitavel?: string;
   // TED fields
   banco?: string;
   agencia?: string;
@@ -178,18 +176,7 @@ export function DadosBancariosSection({
         {metodo === "BOLETO" && (
           <div className="space-y-4 animate-in fade-in-50 duration-200">
             <div className="space-y-2">
-              <Label>Linha Digitável</Label>
-              <Input
-                value={value.linha_digitavel || ""}
-                onChange={(e) => update({ linha_digitavel: e.target.value })}
-                placeholder="Cole a linha digitável do boleto..."
-                className="input-field"
-              />
-            </div>
-
-            {/* Upload de arquivo do boleto */}
-            <div className="space-y-2">
-              <Label>Arquivo do Boleto (opcional)</Label>
+              <Label>Arquivo do Boleto</Label>
               <input
                 type="file"
                 ref={paymentFileInputRef}
@@ -203,7 +190,7 @@ export function DadosBancariosSection({
                   className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Anexe o boleto para facilitar o pagamento</p>
+                  <p className="text-sm text-muted-foreground">Anexe o arquivo do boleto</p>
                   <p className="text-xs text-muted-foreground mt-1">PDF, JPEG ou PNG (máx. 10MB)</p>
                 </div>
               ) : (
