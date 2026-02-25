@@ -183,6 +183,23 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     );
   };
 
+  const handleMarcarComoPago = async () => {
+    if (!user?.id) return;
+    try {
+      const { error } = await supabase
+        .from('titulos')
+        .update({ status: 'pago', pago_por: user.id, pago_em: new Date().toISOString() })
+        .eq('id', titulo.id);
+      if (error) throw error;
+      toast.success('Título marcado como pago.');
+      queryClient.invalidateQueries({ queryKey: ['titulos'] });
+      queryClient.invalidateQueries({ queryKey: ['titulos_pendentes'] });
+      onClose();
+    } catch (err: any) {
+      toast.error(`Erro: ${err?.message ?? 'Erro desconhecido'}`);
+    }
+  };
+
   const handleDeleteTitulo = async () => {
     setIsDeletingTitulo(true);
     try {
@@ -626,6 +643,24 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                   >
                     <Wallet className="h-4 w-4 mr-2" />
                     Registrar Pagamento
+                  </Button>
+                </div>
+              )}
+
+              {tituloVisualizado.status === "processando_pagamento" && (
+                <div className="pt-4 border-t">
+                  <Button
+                    variant="success"
+                    className="w-full"
+                    onClick={handleMarcarComoPago}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                    )}
+                    Marcar como Pago (Manual)
                   </Button>
                 </div>
               )}
