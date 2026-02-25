@@ -224,6 +224,7 @@ export default function AdminTitulos() {
                   <SelectItem value="aprovado">Aprovado</SelectItem>
                   <SelectItem value="reprovado">Reprovado</SelectItem>
                   <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="processando_pagamento">Processando</SelectItem>
                 </SelectContent>
               </Select>
             </div>
