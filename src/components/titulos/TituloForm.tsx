@@ -248,8 +248,8 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       toast.error("A chave PIX é obrigatória");
       return;
     }
-    if (metodo === "BOLETO" && !dadosBancarios.linha_digitavel?.trim() && !paymentFile) {
-      toast.error("Informe a linha digitável ou anexe o boleto");
+    if (metodo === "BOLETO" && !paymentFile) {
+      toast.error("Anexe o arquivo do boleto");
       return;
     }
     if (metodo === "TED") {
