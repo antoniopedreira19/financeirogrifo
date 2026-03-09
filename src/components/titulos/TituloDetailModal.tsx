@@ -118,6 +118,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         ...titulo,
         ...tituloFresco,
         idSienge: tituloFresco.id_sienge,
+        boletoUrl: (tituloFresco as any).boleto_url || undefined,
       }
     : titulo;
 
