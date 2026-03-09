@@ -526,6 +526,25 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             </div>
           )}
 
+          {tituloVisualizado.boletoUrl && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Boleto</p>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  const { data } = supabase.storage
+                    .from("titulo-documentos")
+                    .getPublicUrl(tituloVisualizado.boletoUrl!);
+                  window.open(data.publicUrl, "_blank");
+                }}
+              >
+                <ExternalLink className="h-4 w-4" />
+                Baixar/Visualizar Boleto
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Dados de Pagamento</p>
             {tituloVisualizado.arquivoPagamentoUrl && (
