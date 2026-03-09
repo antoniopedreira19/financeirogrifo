@@ -197,6 +197,7 @@ export type Database = {
           aprovado_em: string | null
           aprovado_por: string | null
           arquivo_pagamento_url: string | null
+          boleto_url: string | null
           centro_custo: string
           codigo_etapa: string | null
           comprovante_asaas: string | null
@@ -240,6 +241,7 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
+          boleto_url?: string | null
           centro_custo: string
           codigo_etapa?: string | null
           comprovante_asaas?: string | null
@@ -283,6 +285,7 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
+          boleto_url?: string | null
           centro_custo?: string
           codigo_etapa?: string | null
           comprovante_asaas?: string | null
@@ -344,6 +347,7 @@ export type Database = {
           aprovado_em: string | null
           aprovado_por: string | null
           arquivo_pagamento_url: string | null
+          boleto_url: string | null
           centro_custo: string
           codigo_etapa: string | null
           created_at: string
@@ -383,6 +387,7 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
+          boleto_url?: string | null
           centro_custo: string
           codigo_etapa?: string | null
           created_at?: string
@@ -422,6 +427,7 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           arquivo_pagamento_url?: string | null
+          boleto_url?: string | null
           centro_custo?: string
           codigo_etapa?: string | null
           created_at?: string

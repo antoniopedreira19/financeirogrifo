@@ -76,6 +76,7 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     motivoReprovacao: row.motivo_reprovacao || undefined,
     idSienge: row.id_sienge || undefined,
     descricao: row.descricao || undefined,
+    boletoUrl: (row as any).boleto_url || undefined,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -379,6 +380,7 @@ export function useUpdateTituloStatus() {
             empresa_id: (pendente as any).empresa_id,
             rateio_financeiro: pendente.rateio_financeiro,
             aprop_obra: pendente.aprop_obra,
+            boleto_url: (pendente as any).boleto_url || null,
           });
 
         if (insertError) throw insertError;

@@ -87,9 +87,11 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSiengeModal, setShowSiengeModal] = useState(false);
   const [isUploadingComprovante, setIsUploadingComprovante] = useState(false);
+  const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeletingTitulo, setIsDeletingTitulo] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
+  const boletoInputRef = useRef<HTMLInputElement>(null);
 
   // --- LÓGICA DE TEMPO REAL NO MODAL ---
   // Mantemos isso para caso você reabra o modal, ele já pegue o dado novo
@@ -116,6 +118,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         ...titulo,
         ...tituloFresco,
         idSienge: tituloFresco.id_sienge,
+        boletoUrl: (tituloFresco as any).boleto_url || undefined,
       }
     : titulo;
 
@@ -321,6 +324,64 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     }
   };
 
+  const handleBoletoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id || !tituloVisualizado) return;
+
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formato não suportado. Use PDF, JPEG ou PNG.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 10MB.");
+      return;
+    }
+
+    setIsUploadingBoleto(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `boleto_${tituloVisualizado.id}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("titulo-documentos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        toast.error("Erro ao enviar boleto.");
+        return;
+      }
+
+      // Determine which table the titulo is in
+      const isPago = tituloVisualizado.status === 'pago' || tituloVisualizado.status === 'processando_pagamento';
+      const table = isPago ? 'titulos' : 'titulos_pendentes';
+
+      const { error: updateError } = await supabase
+        .from(table)
+        .update({ boleto_url: filePath } as any)
+        .eq("id", tituloVisualizado.id);
+
+      if (updateError) {
+        toast.error("Erro ao salvar boleto.");
+        return;
+      }
+
+      toast.success("Boleto importado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["titulos"] });
+      queryClient.invalidateQueries({ queryKey: ["titulos_pendentes"] });
+      queryClient.invalidateQueries({ queryKey: ["titulo_modal", tituloVisualizado.id] });
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Erro ao importar boleto.");
+    } finally {
+      setIsUploadingBoleto(false);
+      if (boletoInputRef.current) {
+        boletoInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <>
     <Dialog open={open} onOpenChange={onClose}>
@@ -353,8 +414,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             accept=".pdf,.jpg,.jpeg,.png"
             className="hidden"
           />
+          <input
+            type="file"
+            ref={boletoInputRef}
+            onChange={handleBoletoUpload}
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+          />
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {tituloVisualizado.idSienge && (
               <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowSiengeModal(true)}>
                 <RefreshCw className="h-4 w-4" />
@@ -369,6 +437,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             >
               {isUploadingComprovante ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               Importar Comprovante
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              onClick={() => boletoInputRef.current?.click()}
+              disabled={isUploadingBoleto}
+            >
+              {isUploadingBoleto ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              Importar Boleto
             </Button>
           </div>
 
@@ -445,6 +522,25 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
               >
                 <ExternalLink className="h-4 w-4" />
                 Baixar/Visualizar Documento Anexo
+              </Button>
+            </div>
+          )}
+
+          {tituloVisualizado.boletoUrl && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Boleto</p>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  const { data } = supabase.storage
+                    .from("titulo-documentos")
+                    .getPublicUrl(tituloVisualizado.boletoUrl!);
+                  window.open(data.publicUrl, "_blank");
+                }}
+              >
+                <ExternalLink className="h-4 w-4" />
+                Baixar/Visualizar Boleto
               </Button>
             </div>
           )}

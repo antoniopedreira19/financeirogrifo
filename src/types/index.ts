@@ -73,6 +73,7 @@ export interface Titulo {
   motivoReprovacao?: string;
   idSienge?: number;
   descricao?: string;
+  boletoUrl?: string;
   empresaId?: string;
   createdAt: Date;
   updatedAt: Date;
