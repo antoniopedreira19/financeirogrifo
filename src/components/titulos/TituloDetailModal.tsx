@@ -34,24 +34,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-          {tituloVisualizado.boletoUrl && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Boleto</p>
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-2"
-                onClick={() => {
-                  const { data } = supabase.storage
-                    .from("titulo-documentos")
-                    .getPublicUrl(tituloVisualizado.boletoUrl!);
-                  window.open(data.publicUrl, "_blank");
-                }}
-              >
-                <ExternalLink className="h-4 w-4" />
-                Baixar/Visualizar Boleto
-              </Button>
-            </div>
-          )}
 
 function parseDadosBancarios(data: Record<string, unknown> | string | null): Record<string, unknown> | null {
   if (!data) return null;
