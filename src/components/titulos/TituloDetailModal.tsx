@@ -414,8 +414,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             accept=".pdf,.jpg,.jpeg,.png"
             className="hidden"
           />
+          <input
+            type="file"
+            ref={boletoInputRef}
+            onChange={handleBoletoUpload}
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+          />
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {tituloVisualizado.idSienge && (
               <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowSiengeModal(true)}>
                 <RefreshCw className="h-4 w-4" />
@@ -430,6 +437,15 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             >
               {isUploadingComprovante ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               Importar Comprovante
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              onClick={() => boletoInputRef.current?.click()}
+              disabled={isUploadingBoleto}
+            >
+              {isUploadingBoleto ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              Importar Boleto
             </Button>
           </div>
 
