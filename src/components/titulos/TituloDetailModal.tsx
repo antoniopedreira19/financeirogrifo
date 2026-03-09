@@ -324,6 +324,64 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     }
   };
 
+  const handleBoletoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id || !tituloVisualizado) return;
+
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formato não suportado. Use PDF, JPEG ou PNG.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 10MB.");
+      return;
+    }
+
+    setIsUploadingBoleto(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `boleto_${tituloVisualizado.id}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("titulo-documentos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        toast.error("Erro ao enviar boleto.");
+        return;
+      }
+
+      // Determine which table the titulo is in
+      const isPago = tituloVisualizado.status === 'pago' || tituloVisualizado.status === 'processando_pagamento';
+      const table = isPago ? 'titulos' : 'titulos_pendentes';
+
+      const { error: updateError } = await supabase
+        .from(table)
+        .update({ boleto_url: filePath } as any)
+        .eq("id", tituloVisualizado.id);
+
+      if (updateError) {
+        toast.error("Erro ao salvar boleto.");
+        return;
+      }
+
+      toast.success("Boleto importado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["titulos"] });
+      queryClient.invalidateQueries({ queryKey: ["titulos_pendentes"] });
+      queryClient.invalidateQueries({ queryKey: ["titulo_modal", tituloVisualizado.id] });
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Erro ao importar boleto.");
+    } finally {
+      setIsUploadingBoleto(false);
+      if (boletoInputRef.current) {
+        boletoInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <>
     <Dialog open={open} onOpenChange={onClose}>
