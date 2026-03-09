@@ -76,6 +76,7 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     motivoReprovacao: row.motivo_reprovacao || undefined,
     idSienge: row.id_sienge || undefined,
     descricao: row.descricao || undefined,
+    boletoUrl: (row as any).boleto_url || undefined,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };

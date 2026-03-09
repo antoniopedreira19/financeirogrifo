@@ -87,9 +87,11 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSiengeModal, setShowSiengeModal] = useState(false);
   const [isUploadingComprovante, setIsUploadingComprovante] = useState(false);
+  const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeletingTitulo, setIsDeletingTitulo] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
+  const boletoInputRef = useRef<HTMLInputElement>(null);
 
   // --- LÓGICA DE TEMPO REAL NO MODAL ---
   // Mantemos isso para caso você reabra o modal, ele já pegue o dado novo
