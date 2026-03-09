@@ -380,6 +380,7 @@ export function useUpdateTituloStatus() {
             empresa_id: (pendente as any).empresa_id,
             rateio_financeiro: pendente.rateio_financeiro,
             aprop_obra: pendente.aprop_obra,
+            boleto_url: (pendente as any).boleto_url || null,
           });
 
         if (insertError) throw insertError;
