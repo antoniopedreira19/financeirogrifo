@@ -250,6 +250,14 @@ export function useCreateTitulo() {
 
       if (!profile?.empresa_id) throw new Error("Empresa não encontrada");
 
+      // Format date in local timezone to avoid UTC shift
+      const formatLocalDate = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+
       const insertData = {
         empresa: titulo.empresa,
         credor: titulo.credor,
@@ -267,8 +275,8 @@ export function useCreateTitulo() {
         parcelas: titulo.parcelas,
         tipo_documento: titulo.tipoDocumento as any,
         numero_documento: titulo.numeroDocumento,
-        data_emissao: titulo.dataEmissao.toISOString().split('T')[0],
-        data_vencimento: titulo.dataVencimento.toISOString().split('T')[0],
+        data_emissao: formatLocalDate(titulo.dataEmissao),
+        data_vencimento: formatLocalDate(titulo.dataVencimento),
         plano_financeiro: titulo.planoFinanceiro as 'servicos_terceiros' | 'materiais_aplicados',
         dados_bancarios: (titulo.dadosBancarios ?? null) as any,
         tipo_leitura_pagamento: titulo.tipoLeituraPagamento || null,
