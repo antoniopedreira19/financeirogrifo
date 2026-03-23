@@ -509,7 +509,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
               }
             >
               <SelectTrigger className="input-field">
-                <SelectValue />
+                <SelectValue placeholder="Selecione o plano" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="servicos_terceiros">Serviços de Terceiros</SelectItem>
