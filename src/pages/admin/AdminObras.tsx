@@ -386,6 +386,11 @@ export default function AdminObras() {
                 <EtapasManager obraId={editingObra.id} />
               </div>
 
+              {/* Centros de Custo Manager */}
+              <div className="border-t border-border pt-4">
+                <CentrosCustoManager obraId={editingObra.id} />
+              </div>
+
               <Button
                 variant="gold"
                 className="w-full"
