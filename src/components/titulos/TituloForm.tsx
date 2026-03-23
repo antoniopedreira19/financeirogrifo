@@ -36,7 +36,7 @@ const tituloSchema = z.object({
   numeroDocumento: z.string().min(1, "Número do documento é obrigatório"),
   dataEmissao: z.date(),
   dataVencimento: z.date(),
-  planoFinanceiro: z.enum(["servicos_terceiros", "materiais_aplicados"]),
+  planoFinanceiro: z.enum(["servicos_terceiros", "materiais_aplicados"], { required_error: "Selecione o plano financeiro" }),
   // dadosBancarios now managed outside react-hook-form as structured JSON
   descricao: z.string().max(500, "Descrição muito longa (máx. 500 caracteres)").optional().default(""),
 });
@@ -188,7 +188,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       parcelas: initialData?.parcelas || 1,
       descontos: initialData?.descontos || 0,
       tipoDocumentoFiscal: (initialData?.tipoDocumentoFiscal as "NF" | "BOL" | "REC" | "PRV" | "FAT") || "NF",
-      planoFinanceiro: initialData?.planoFinanceiro || "servicos_terceiros",
+      planoFinanceiro: initialData?.planoFinanceiro || undefined,
       empresa: initialData?.empresa ? Number(initialData.empresa) : undefined,
       centroCusto: initialData?.centroCusto || "",
       etapaApropriada: initialData?.codigoEtapa || "",
@@ -509,7 +509,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
               }
             >
               <SelectTrigger className="input-field">
-                <SelectValue />
+                <SelectValue placeholder="Selecione o plano" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="servicos_terceiros">Serviços de Terceiros</SelectItem>
