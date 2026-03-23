@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Obra } from "@/types";
 import { EtapasManager } from "@/components/admin/EtapasManager";
+import { CentrosCustoManager } from "@/components/admin/CentrosCustoManager";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
 
 export default function AdminObras() {
