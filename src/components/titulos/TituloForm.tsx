@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
+import { useCentrosCustoByObra } from "@/hooks/useCentrosCustoQuery";
 import { CredorCombobox, type CredorSelection } from "./CredorCombobox";
 import { RateioFinanceiroList, type RateioFinanceiroItem } from "./RateioFinanceiroList";
 import { RateioEngenhariaList, type RateioEngenhariaItem } from "./RateioEngenhariaList";
@@ -80,6 +81,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { data: etapas = [] } = useEtapasByObra(selectedObra?.id);
+  const { data: centrosCusto = [] } = useCentrosCustoByObra(selectedObra?.id);
   
   // Credor selection state (managed outside react-hook-form)
   const [credorSelection, setCredorSelection] = useState<CredorSelection>({
@@ -439,6 +441,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
               items={rateioFinanceiro}
               onChange={setRateioFinanceiro}
               error={rateioFinanceiroError}
+              centrosCusto={centrosCusto}
             />
           </div>
 

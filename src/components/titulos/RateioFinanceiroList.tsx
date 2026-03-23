@@ -2,6 +2,8 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ObraCentroCusto } from "@/hooks/useCentrosCustoQuery";
 
 export interface RateioFinanceiroItem {
   centro_custo_id: string;
@@ -12,10 +14,12 @@ interface RateioFinanceiroListProps {
   items: RateioFinanceiroItem[];
   onChange: (items: RateioFinanceiroItem[]) => void;
   error?: string;
+  centrosCusto?: ObraCentroCusto[];
 }
 
-export function RateioFinanceiroList({ items, onChange, error }: RateioFinanceiroListProps) {
+export function RateioFinanceiroList({ items, onChange, error, centrosCusto = [] }: RateioFinanceiroListProps) {
   const total = items.reduce((sum, item) => sum + (item.percentual || 0), 0);
+  const useDropdown = centrosCusto.length > 0;
 
   const addItem = () => {
     onChange([...items, { centro_custo_id: "", percentual: 0 }]);
@@ -45,12 +49,30 @@ export function RateioFinanceiroList({ items, onChange, error }: RateioFinanceir
       <div className="space-y-2">
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            <Input
-              placeholder="Ex: 21101"
-              value={item.centro_custo_id}
-              onChange={(e) => updateItem(index, "centro_custo_id", e.target.value)}
-              className="input-field flex-1 min-w-0"
-            />
+            {useDropdown ? (
+              <Select
+                value={item.centro_custo_id}
+                onValueChange={(val) => updateItem(index, "centro_custo_id", val)}
+              >
+                <SelectTrigger className="flex-1 min-w-0">
+                  <SelectValue placeholder="Selecione o centro de custo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {centrosCusto.map((cc) => (
+                    <SelectItem key={cc.id} value={cc.codigo}>
+                      {cc.codigo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                placeholder="Ex: 21101"
+                value={item.centro_custo_id}
+                onChange={(e) => updateItem(index, "centro_custo_id", e.target.value)}
+                className="input-field flex-1 min-w-0"
+              />
+            )}
             <div className="flex items-center gap-1 shrink-0">
               <Input
                 type="number"
