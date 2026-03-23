@@ -35,6 +35,35 @@ export type Database = {
         }
         Relationships: []
       }
+      obra_centros_custo: {
+        Row: {
+          codigo: string
+          created_at: string
+          id: string
+          obra_id: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          id?: string
+          obra_id: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          id?: string
+          obra_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obra_centros_custo_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obra_etapas: {
         Row: {
           codigo: string
