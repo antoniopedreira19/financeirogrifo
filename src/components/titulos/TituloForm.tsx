@@ -81,6 +81,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { data: etapas = [] } = useEtapasByObra(selectedObra?.id);
+  const { data: centrosCusto = [] } = useCentrosCustoByObra(selectedObra?.id);
   
   // Credor selection state (managed outside react-hook-form)
   const [credorSelection, setCredorSelection] = useState<CredorSelection>({
