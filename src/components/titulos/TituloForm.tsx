@@ -36,7 +36,7 @@ const tituloSchema = z.object({
   numeroDocumento: z.string().min(1, "Número do documento é obrigatório"),
   dataEmissao: z.date(),
   dataVencimento: z.date(),
-  planoFinanceiro: z.enum(["servicos_terceiros", "materiais_aplicados"]),
+  planoFinanceiro: z.enum(["servicos_terceiros", "materiais_aplicados"], { required_error: "Selecione o plano financeiro" }),
   // dadosBancarios now managed outside react-hook-form as structured JSON
   descricao: z.string().max(500, "Descrição muito longa (máx. 500 caracteres)").optional().default(""),
 });
