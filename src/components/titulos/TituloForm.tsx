@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
+import { useCentrosCustoByObra } from "@/hooks/useCentrosCustoQuery";
 import { CredorCombobox, type CredorSelection } from "./CredorCombobox";
 import { RateioFinanceiroList, type RateioFinanceiroItem } from "./RateioFinanceiroList";
 import { RateioEngenhariaList, type RateioEngenhariaItem } from "./RateioEngenhariaList";
