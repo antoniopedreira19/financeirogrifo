@@ -441,6 +441,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
               items={rateioFinanceiro}
               onChange={setRateioFinanceiro}
               error={rateioFinanceiroError}
+              centrosCusto={centrosCusto}
             />
           </div>
 
