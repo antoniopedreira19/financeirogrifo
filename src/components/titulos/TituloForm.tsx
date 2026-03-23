@@ -188,7 +188,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       parcelas: initialData?.parcelas || 1,
       descontos: initialData?.descontos || 0,
       tipoDocumentoFiscal: (initialData?.tipoDocumentoFiscal as "NF" | "BOL" | "REC" | "PRV" | "FAT") || "NF",
-      planoFinanceiro: initialData?.planoFinanceiro || "servicos_terceiros",
+      planoFinanceiro: initialData?.planoFinanceiro || undefined,
       empresa: initialData?.empresa ? Number(initialData.empresa) : undefined,
       centroCusto: initialData?.centroCusto || "",
       etapaApropriada: initialData?.codigoEtapa || "",
