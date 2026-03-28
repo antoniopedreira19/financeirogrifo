@@ -23,46 +23,39 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+  // Parse optional limit from body (default 20 per run)
+  let limit = 20;
+  try {
+    const body = await req.json();
+    if (body?.limit) limit = Math.min(body.limit, 100);
+  } catch {}
+
   const bucket = "titulo-documentos";
   const moves: FileMove[] = [];
   const errors: string[] = [];
   let movedCount = 0;
 
-  // Helper to determine new path
-  function getNewPath(
-    oldPath: string,
-    obraCodigo: string,
-    column: string
-  ): string | null {
+  function getNewPath(oldPath: string, obraCodigo: string, column: string): string | null {
     const fileName = oldPath.split("/").pop();
     if (!fileName) return null;
 
-    let folder: string;
-    if (column === "documento_url") {
-      folder = "comprovantes";
-    } else if (column === "boleto_url") {
-      folder = "boletos";
-    } else if (column === "arquivo_pagamento_url") {
-      folder = "boletos";
-    } else {
+    // Already in new structure (contains subfolder like "documentos/", "comprovantes/", "boletos/")
+    if (oldPath.includes("/documentos/") || oldPath.includes("/comprovantes/") || oldPath.includes("/boletos/")) {
       return null;
     }
 
-    // Check prefix to refine folder
-    if (fileName.startsWith("doc_")) {
-      folder = "documentos";
-    } else if (fileName.startsWith("comprovante_")) {
-      folder = "comprovantes";
-    } else if (fileName.startsWith("boleto_")) {
-      folder = "boletos";
-    } else if (fileName.startsWith("pagamento_")) {
-      folder = "boletos";
-    }
+    let folder: string;
+    if (column === "documento_url") folder = "comprovantes";
+    else if (column === "boleto_url") folder = "boletos";
+    else if (column === "arquivo_pagamento_url") folder = "boletos";
+    else return null;
 
-    const newPath = `${obraCodigo}/${folder}/${fileName}`;
-    // Skip if already in new structure
-    if (oldPath === newPath) return null;
-    return newPath;
+    if (fileName.startsWith("doc_")) folder = "documentos";
+    else if (fileName.startsWith("comprovante_")) folder = "comprovantes";
+    else if (fileName.startsWith("boleto_")) folder = "boletos";
+    else if (fileName.startsWith("pagamento_")) folder = "boletos";
+
+    return `${obraCodigo}/${folder}/${fileName}`;
   }
 
   // Collect moves from both tables
@@ -76,7 +69,7 @@ Deno.serve(async (req) => {
         .not(column, "is", null);
 
       if (error) {
-        errors.push(`Error querying ${table}.${column}: ${error.message}`);
+        errors.push(`Query error ${table}.${column}: ${error.message}`);
         continue;
       }
 
@@ -87,79 +80,60 @@ Deno.serve(async (req) => {
         const newPath = getNewPath(oldPath, row.obra_codigo, column);
         if (!newPath) continue;
 
-        moves.push({
-          table,
-          tituloId: row.id,
-          column,
-          oldPath,
-          newPath,
-        });
+        moves.push({ table, tituloId: row.id, column, oldPath, newPath });
       }
     }
   }
 
-  // Execute moves
-  for (const move of moves) {
+  // Process only up to `limit` moves
+  const batch = moves.slice(0, limit);
+
+  for (const move of batch) {
     try {
-      // Download file
       const { data: fileData, error: downloadError } = await supabase.storage
         .from(bucket)
         .download(move.oldPath);
 
       if (downloadError) {
-        errors.push(
-          `Download failed [${move.oldPath}]: ${downloadError.message}`
-        );
+        errors.push(`Download [${move.oldPath}]: ${downloadError.message}`);
         continue;
       }
 
-      // Upload to new path
       const { error: uploadError } = await supabase.storage
         .from(bucket)
         .upload(move.newPath, fileData, { upsert: true });
 
       if (uploadError) {
-        errors.push(
-          `Upload failed [${move.newPath}]: ${uploadError.message}`
-        );
+        errors.push(`Upload [${move.newPath}]: ${uploadError.message}`);
         continue;
       }
 
-      // Update DB record
       const { error: updateError } = await supabase
         .from(move.table)
         .update({ [move.column]: move.newPath })
         .eq("id", move.tituloId);
 
       if (updateError) {
-        errors.push(
-          `DB update failed [${move.table}/${move.tituloId}]: ${updateError.message}`
-        );
+        errors.push(`DB update [${move.table}/${move.tituloId}]: ${updateError.message}`);
         continue;
       }
 
-      // Remove old file
-      const { error: removeError } = await supabase.storage
-        .from(bucket)
-        .remove([move.oldPath]);
-
-      if (removeError) {
-        errors.push(
-          `Remove failed [${move.oldPath}]: ${removeError.message}`
-        );
-      }
-
+      await supabase.storage.from(bucket).remove([move.oldPath]);
       movedCount++;
     } catch (e) {
-      errors.push(`Unexpected error [${move.oldPath}]: ${(e as Error).message}`);
+      errors.push(`Error [${move.oldPath}]: ${(e as Error).message}`);
     }
   }
 
   const report = {
-    total_found: moves.length,
-    moved: movedCount,
+    total_pending: moves.length,
+    processed_this_run: movedCount,
+    remaining: moves.length - movedCount,
     errors_count: errors.length,
-    errors: errors.slice(0, 50),
+    errors: errors.slice(0, 30),
+    note: moves.length > limit
+      ? `Processados ${limit} de ${moves.length}. Execute novamente para continuar.`
+      : "Migração completa!",
   };
 
   return new Response(JSON.stringify(report, null, 2), {
