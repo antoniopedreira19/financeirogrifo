@@ -343,7 +343,8 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `boleto_${tituloVisualizado.id}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const obraCodigo = tituloVisualizado.obraCodigo || "sem-obra";
+      const filePath = `${obraCodigo}/boletos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("titulo-documentos")

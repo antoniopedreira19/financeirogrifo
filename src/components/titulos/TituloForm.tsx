@@ -156,12 +156,13 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   };
 
   const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
-    if (!file || !user) return null;
+    if (!file || !user || !selectedObra) return null;
 
     const uniqueId = crypto.randomUUID();
     const fileExt = file.name.split(".").pop();
+    const folder = prefix === "doc" ? "documentos" : "boletos";
     const fileName = `${prefix}_${uniqueId}.${fileExt}`;
-    const filePath = `${user.id}/${fileName}`;
+    const filePath = `${selectedObra.codigo}/${folder}/${fileName}`;
 
     const { error } = await supabase.storage.from("titulo-documentos").upload(filePath, file, { upsert: true });
 
