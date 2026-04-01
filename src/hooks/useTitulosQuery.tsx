@@ -36,9 +36,20 @@ interface TituloRow {
   motivo_reprovacao: string | null;
   id_sienge?: number | null;
   descricao?: string | null;
+  rateio_financeiro?: any;
+  aprop_obra?: any;
   created_at: string;
   updated_at: string;
   obras?: { nome: string } | null;
+}
+
+function parseJsonArray(val: any): any[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch { return []; }
+  }
+  return [];
 }
 
 function mapTituloFromDB(row: TituloRow): Titulo {
