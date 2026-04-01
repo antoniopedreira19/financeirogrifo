@@ -834,6 +834,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
         credor: tituloVisualizado.credor,
         obraCodigo: tituloVisualizado.obraCodigo ?? '',
         descricao: tituloVisualizado.descricao,
+        parcelas: tituloVisualizado.parcelas,
       }}
     />
 
