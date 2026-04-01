@@ -22,6 +22,7 @@ interface TituloAsaasData {
   credor: string;
   obraCodigo: string;
   descricao?: string | null;
+  parcelas?: number;
 }
 
 interface PaymentModalProps {
