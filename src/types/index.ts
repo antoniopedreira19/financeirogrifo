@@ -75,6 +75,8 @@ export interface Titulo {
   descricao?: string;
   boletoUrl?: string;
   empresaId?: string;
+  rateioFinanceiro?: Array<{ centro_custo_id: string; percentual: number }>;
+  apropObra?: Array<{ etapa_id: string; etapa_nome?: string; percentual: number }>;
   createdAt: Date;
   updatedAt: Date;
 }
