@@ -90,6 +90,7 @@ export function PaymentModal({
             credor: titulo.credor,
             obra_codigo: titulo.obraCodigo,
             descricao: titulo.descricao ?? null,
+            parcelas: titulo.parcelas ?? 1,
           }),
         }
       );
