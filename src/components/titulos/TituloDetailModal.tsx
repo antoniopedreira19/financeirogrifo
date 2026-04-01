@@ -497,10 +497,37 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
             </div>
           )}
 
+          {/* Etapas Apropriadas */}
           <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Etapa Apropriada</p>
-            <p className="text-foreground">{tituloVisualizado.etapaApropriada}</p>
+            <p className="text-sm font-medium text-muted-foreground">Etapas Apropriadas</p>
+            {(tituloVisualizado.apropObra && tituloVisualizado.apropObra.length > 0) ? (
+              <div className="space-y-1">
+                {tituloVisualizado.apropObra.map((item: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between text-sm bg-muted/50 rounded-lg px-3 py-2">
+                    <span className="text-foreground">{item.etapa_nome || item.etapa_id}</span>
+                    <span className="text-muted-foreground font-mono">{item.percentual}%</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-foreground">{tituloVisualizado.etapaApropriada}</p>
+            )}
           </div>
+
+          {/* Centros de Custo Apropriados */}
+          {(tituloVisualizado.rateioFinanceiro && tituloVisualizado.rateioFinanceiro.length > 0) && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Centros de Custo Apropriados</p>
+              <div className="space-y-1">
+                {tituloVisualizado.rateioFinanceiro.map((item: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between text-sm bg-muted/50 rounded-lg px-3 py-2">
+                    <span className="text-foreground">{item.centro_custo_id}</span>
+                    <span className="text-muted-foreground font-mono">{item.percentual}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Tipo de Documento</p>
