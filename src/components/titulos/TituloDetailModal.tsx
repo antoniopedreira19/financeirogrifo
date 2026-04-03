@@ -504,7 +504,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
               <div className="space-y-1">
                 {tituloVisualizado.apropObra.map((item: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between text-sm bg-muted/50 rounded-lg px-3 py-2">
-                    <span className="text-foreground">{item.etapa_nome || item.etapa_id}</span>
+                    <span className="text-foreground">{item.etapa_nome ? `${item.etapa} - ${item.etapa_nome}` : item.etapa}</span>
                     <span className="text-muted-foreground font-mono">{item.percentual}%</span>
                   </div>
                 ))}
