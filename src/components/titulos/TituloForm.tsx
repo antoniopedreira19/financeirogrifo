@@ -292,10 +292,14 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
 
     // Build aprop_obra array
     const apropObraPayload = hasRateioEngenharia
-      ? rateioEngenharia.filter(item => item.etapa.trim()).map(item => ({
-          etapa: item.etapa,
-          percentual: item.percentual,
-        }))
+      ? rateioEngenharia.filter(item => item.etapa.trim()).map(item => {
+          const etapaObj = etapas.find(e => e.codigo === item.etapa);
+          return {
+            etapa: item.etapa,
+            etapa_nome: etapaObj?.nome || '',
+            percentual: item.percentual,
+          };
+        })
       : [];
 
     // Find the etapa name for legacy field (first item)
