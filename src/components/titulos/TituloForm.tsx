@@ -394,6 +394,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Informações Básicas */}
       <div className="card-elevated p-6">
