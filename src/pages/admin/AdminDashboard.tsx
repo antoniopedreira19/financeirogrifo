@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   }), [filteredTitulos]);
 
   const pendingTitulos = useMemo(() => filteredTitulos.filter((t) => t.status === "enviado"), [filteredTitulos]);
-  const awaitingPayment = useMemo(() => filteredTitulos.filter((t) => t.status === "aprovado"), [filteredTitulos]);
+  
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -162,33 +162,14 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Lista: Aguardando Pagamento */}
-        {awaitingPayment.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold">Aguardando Pagamento</h2>
-                <span className="bg-success/20 text-success text-xs font-semibold px-2 py-1 rounded-full">
-                  {awaitingPayment.length}
-                </span>
-              </div>
-              <Button variant="ghost" onClick={() => navigate("/admin/titulos")}>Ver todos</Button>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {awaitingPayment.slice(0, 4).map((titulo) => (
-                <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Estado Vazio */}
-        {pendingTitulos.length === 0 && awaitingPayment.length === 0 && (
+        {pendingTitulos.length === 0 && (
           <div className="card-elevated p-8 text-center">
             <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Tudo em dia!</h3>
             <p className="text-muted-foreground">
-              Não há títulos pendentes de aprovação ou pagamento
+              Não há títulos pendentes de aprovação
               {obraFilter !== "all" ? " para esta obra." : "."}
             </p>
           </div>
