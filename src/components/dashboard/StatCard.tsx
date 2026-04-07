@@ -68,7 +68,7 @@ export function StatCard({ title, value, subtitle, icon, variant = 'default', tr
         </p>
         <div className="flex items-center gap-2 mt-1">
           <p className={cn(
-            "text-2xl lg:text-3xl font-bold",
+            "text-lg sm:text-xl lg:text-2xl font-bold truncate",
             variant === 'default' ? 'text-foreground' : 'text-foreground'
           )}>
             {value}
