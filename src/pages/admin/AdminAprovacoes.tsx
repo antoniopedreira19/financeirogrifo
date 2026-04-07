@@ -127,56 +127,57 @@ export default function AdminAprovacoes() {
           <p className="text-muted-foreground mt-1">Gerencie aprovações e pagamentos</p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Select value={filterObra} onValueChange={setFilterObra}>
-            <SelectTrigger className="input-field w-full sm:w-[240px]">
-              <SelectValue placeholder="Filtrar por obra" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as obras</SelectItem>
-              {obrasInUse.map((obra) => (
-                <SelectItem key={obra.id} value={obra.id}>
-                  {obra.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
-            <SelectTrigger className="input-field w-full sm:w-[220px]">
-              <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Vencimento mais recente</SelectItem>
-              <SelectItem value="oldest">Vencimento mais antigo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Tabs */}
+        {/* Tabs + Filters */}
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="pending" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Aguardando
-              {filteredPending.length > 0 && (
-                <span className="bg-warning/20 text-warning text-xs font-semibold px-2 py-0.5 rounded-full">
-                  {filteredPending.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              Pagar
-              {filteredApproved.length > 0 && (
-                <span className="bg-success/20 text-success text-xs font-semibold px-2 py-0.5 rounded-full">
-                  {filteredApproved.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="pending" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Aguardando
+                {filteredPending.length > 0 && (
+                  <span className="bg-warning/20 text-warning text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {filteredPending.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="approved" className="flex items-center gap-2">
+                <Wallet className="h-4 w-4" />
+                Pagar
+                {filteredApproved.length > 0 && (
+                  <span className="bg-success/20 text-success text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {filteredApproved.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex gap-3 sm:ml-auto">
+              <Select value={filterObra} onValueChange={setFilterObra}>
+                <SelectTrigger className="input-field w-[180px]">
+                  <SelectValue placeholder="Todas as obras" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as obras</SelectItem>
+                  {obrasInUse.map((obra) => (
+                    <SelectItem key={obra.id} value={obra.id}>
+                      {obra.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
+                <SelectTrigger className="input-field w-[170px]">
+                  <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Mais recente</SelectItem>
+                  <SelectItem value="oldest">Mais antigo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <TabsContent value="pending" className="mt-6">
             {filteredPending.length > 0 ? (
