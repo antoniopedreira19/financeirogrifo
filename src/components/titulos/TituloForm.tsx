@@ -274,6 +274,14 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       }
     }
 
+    // PIX confirmation gate
+    if (metodo === "PIX" && !pendingFormData.current) {
+      pendingFormData.current = data;
+      setShowPixConfirm(true);
+      return;
+    }
+    pendingFormData.current = null;
+
     setIsUploading(true);
 
     // Upload files FIRST before creating titulo
