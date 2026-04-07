@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ROLE_LABELS } from "@/constants/aprovacao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -301,10 +302,14 @@ export default function AdminUsuarios() {
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="obra">Equipe de Obra</SelectItem>
                       <SelectItem value="orcamento">Orçamento</SelectItem>
+                      <SelectItem value="engenheiro_assistente">Eng. Assistente</SelectItem>
+                      <SelectItem value="engenheiro">Engenheiro</SelectItem>
+                      <SelectItem value="diretor_obra">Diretor de Obra</SelectItem>
+                      <SelectItem value="diretor">Diretor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                {(newUser.role === "obra" || newUser.role === "orcamento") && (
+                {newUser.role !== "admin" && (
                   <div className="space-y-2">
                     <Label>Obras Vinculadas</Label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -393,10 +398,14 @@ export default function AdminUsuarios() {
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="obra">Equipe de Obra</SelectItem>
                       <SelectItem value="orcamento">Orçamento</SelectItem>
+                      <SelectItem value="engenheiro_assistente">Eng. Assistente</SelectItem>
+                      <SelectItem value="engenheiro">Engenheiro</SelectItem>
+                      <SelectItem value="diretor_obra">Diretor de Obra</SelectItem>
+                      <SelectItem value="diretor">Diretor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                {(editUser.role === "obra" || editUser.role === "orcamento") && (
+                {editUser.role !== "admin" && (
                   <div className="space-y-2">
                     <Label>Obras Vinculadas</Label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -475,11 +484,11 @@ export default function AdminUsuarios() {
                         }`}
                       >
                         <Shield className="h-3 w-3" />
-                        {user.role === "admin" ? "Admin" : user.role === "orcamento" ? "Orçamento" : "Obra"}
+                        {ROLE_LABELS[user.role] || user.role}
                       </span>
                     </div>
                   </div>
-                  {(user.role === "obra" || user.role === "orcamento") && user.obras.length > 0 && (
+                  {user.role !== "admin" && user.obras.length > 0 && (
                     <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
                       <Building2 className="h-4 w-4" />
                       <span className="truncate">{user.obras.map((o) => o.nome).join(", ")}</span>
