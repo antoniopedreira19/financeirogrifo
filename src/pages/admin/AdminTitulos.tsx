@@ -285,13 +285,14 @@ export default function AdminTitulos() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
-                      "w-full justify-start text-left font-normal input-field",
+                      "w-full h-10 justify-start text-left font-normal input-field gap-2 px-3",
                       !startDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "dd/MM", { locale: ptBR }) : "dd/mm"}
+                    <CalendarIcon className="h-4 w-4 shrink-0 opacity-60" />
+                    <span className="truncate">{startDate ? format(startDate, "dd/MM") : "dd/mm"}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -315,13 +316,14 @@ export default function AdminTitulos() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
-                      "w-full justify-start text-left font-normal input-field",
+                      "w-full h-10 justify-start text-left font-normal input-field gap-2 px-3",
                       !endDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "dd/MM", { locale: ptBR }) : "dd/mm"}
+                    <CalendarIcon className="h-4 w-4 shrink-0 opacity-60" />
+                    <span className="truncate">{endDate ? format(endDate, "dd/MM") : "dd/mm"}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
