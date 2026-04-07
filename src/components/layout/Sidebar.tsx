@@ -27,6 +27,8 @@ export function Sidebar() {
 
   const isAdmin = user?.role === "admin";
   const isOrcamento = user?.role === "orcamento";
+  const isDirector = user?.role === "diretor" || user?.role === "diretor_obra";
+  const isEngenheiro = user?.role === "engenheiro" || user?.role === "engenheiro_assistente";
 
   const adminNavItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
