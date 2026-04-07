@@ -10,9 +10,10 @@ import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
 import { useTitulosQuery } from "@/hooks/useTitulosQuery";
 import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { Titulo } from "@/types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FileText, Clock, CheckCircle, XCircle, Wallet, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminDashboard() {
   
@@ -21,11 +22,34 @@ export default function AdminDashboard() {
 
   const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
   const [obraFilter, setObraFilter] = useState<string>("all");
+  const [userFilter, setUserFilter] = useState<string>("all");
+  const [users, setUsers] = useState<{ id: string; nome: string }[]>([]);
+
+  // Fetch users who created titulos
+  const creatorIds = useMemo(() => {
+    const ids = new Set<string>();
+    allTitulos.forEach((t) => { if (t.criadoPor) ids.add(t.criadoPor); });
+    return Array.from(ids);
+  }, [allTitulos]);
+
+  useEffect(() => {
+    if (creatorIds.length === 0) return;
+    supabase
+      .from('profiles')
+      .select('id, nome')
+      .in('id', creatorIds)
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setUsers(data);
+      });
+  }, [creatorIds]);
 
   const filteredTitulos = useMemo(() => {
-    if (obraFilter === "all") return allTitulos;
-    return allTitulos.filter((t) => t.obraId === obraFilter);
-  }, [allTitulos, obraFilter]);
+    let result = allTitulos;
+    if (obraFilter !== "all") result = result.filter((t) => t.obraId === obraFilter);
+    if (userFilter !== "all") result = result.filter((t) => t.criadoPor === userFilter);
+    return result;
+  }, [allTitulos, obraFilter, userFilter]);
 
   const stats = useMemo(() => ({
     total: filteredTitulos.length,
@@ -70,9 +94,9 @@ export default function AdminDashboard() {
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard Financeiro</h1>
             <p className="text-muted-foreground mt-1">Visão geral de todos os títulos</p>
           </div>
-          <div className="w-full md:w-[250px]">
+           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <Select value={obraFilter} onValueChange={setObraFilter}>
-              <SelectTrigger className="w-full input-field">
+              <SelectTrigger className="w-full sm:w-[220px] input-field">
                 <SelectValue placeholder="Filtrar por Obra" />
               </SelectTrigger>
               <SelectContent>
@@ -80,6 +104,19 @@ export default function AdminDashboard() {
                 {obras.map((obra) => (
                   <SelectItem key={obra.id} value={obra.id}>
                     {obra.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={userFilter} onValueChange={setUserFilter}>
+              <SelectTrigger className="w-full sm:w-[220px] input-field">
+                <SelectValue placeholder="Filtrar por Usuário" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Usuários</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
