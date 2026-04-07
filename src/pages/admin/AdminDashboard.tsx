@@ -142,38 +142,6 @@ export default function AdminDashboard() {
           <ApproverRankingTable titulos={filteredTitulos} />
         </div>
 
-        {/* Lista: Aguardando Aprovação */}
-        {pendingTitulos.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold">Aguardando Aprovação</h2>
-                <span className="bg-warning/20 text-warning text-xs font-semibold px-2 py-1 rounded-full">
-                  {pendingTitulos.length}
-                </span>
-              </div>
-              <Button variant="ghost" onClick={() => navigate("/admin/aprovacoes")}>Ver todos</Button>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {pendingTitulos.slice(0, 4).map((titulo) => (
-                <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
-              ))}
-            </div>
-          </div>
-        )}
-
-
-        {/* Estado Vazio */}
-        {pendingTitulos.length === 0 && (
-          <div className="card-elevated p-8 text-center">
-            <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Tudo em dia!</h3>
-            <p className="text-muted-foreground">
-              Não há títulos pendentes de aprovação
-              {obraFilter !== "all" ? " para esta obra." : "."}
-            </p>
-          </div>
-        )}
       </div>
 
       <TituloDetailModal
