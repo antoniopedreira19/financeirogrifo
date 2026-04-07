@@ -34,8 +34,11 @@ export default function AdminDashboard() {
     reprovados: filteredTitulos.filter((t) => t.status === "reprovado").length,
     pagos: filteredTitulos.filter((t) => t.status === "pago").length,
     valorTotal: filteredTitulos.reduce((acc, t) => acc + Number(t.valorTotal), 0),
-    valorPendente: filteredTitulos
-      .filter((t) => ["enviado", "aprovado"].includes(t.status))
+    valorAguardandoAprovacao: filteredTitulos
+      .filter((t) => t.status === "enviado")
+      .reduce((acc, t) => acc + Number(t.valorTotal), 0),
+    valorAguardandoPagamento: filteredTitulos
+      .filter((t) => t.status === "aprovado")
       .reduce((acc, t) => acc + Number(t.valorTotal), 0),
     valorPago: filteredTitulos.filter((t) => t.status === "pago").reduce((acc, t) => acc + Number(t.valorTotal), 0),
   }), [filteredTitulos]);
