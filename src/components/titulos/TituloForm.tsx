@@ -16,7 +16,17 @@ import { useCreateTitulo } from "@/hooks/useTitulosQuery";
 import { useNavigate } from "react-router-dom";
 import { DocumentoTipo, Titulo } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
 import { useCentrosCustoByObra } from "@/hooks/useCentrosCustoQuery";
