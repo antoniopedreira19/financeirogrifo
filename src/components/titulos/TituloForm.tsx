@@ -373,6 +373,18 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     );
   };
 
+  const handlePixConfirm = () => {
+    setShowPixConfirm(false);
+    if (pendingFormData.current) {
+      onSubmit(pendingFormData.current);
+    }
+  };
+
+  const handlePixCancel = () => {
+    setShowPixConfirm(false);
+    pendingFormData.current = null;
+  };
+
   const isSubmitting = createTituloMutation.isPending || isUploading;
 
   const getFileIcon = () => {
