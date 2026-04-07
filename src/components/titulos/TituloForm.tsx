@@ -741,5 +741,21 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         </Button>
       </div>
     </form>
+
+      <AlertDialog open={showPixConfirm} onOpenChange={setShowPixConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmação PIX</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você confirma que o PIX está associado ao mesmo CNPJ da NF?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handlePixCancel}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePixConfirm}>Confirmo</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
