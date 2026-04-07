@@ -44,8 +44,8 @@ export default function AdminAprovacoes() {
       filtered = filtered.filter((t) => t.obraId === filterObra);
     }
     return [...filtered].sort((a, b) => {
-      const dateA = new Date(a.dataVencimento).getTime();
-      const dateB = new Date(b.dataVencimento).getTime();
+      const dateA = parseDate(a.dataVencimento).getTime();
+      const dateB = parseDate(b.dataVencimento).getTime();
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
   };
