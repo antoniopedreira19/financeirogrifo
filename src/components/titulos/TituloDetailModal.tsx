@@ -389,7 +389,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 pr-8">
             <DialogTitle className="text-xl">{tituloVisualizado.credor}</DialogTitle>
             <div className="flex items-center gap-3">
               {(tituloVisualizado.status === "aprovado" || tituloVisualizado.status === "pago") &&
