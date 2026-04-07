@@ -7,9 +7,14 @@ import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { TituloStatus } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileText, Loader2, Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, FileText, Loader2, Plus, X, ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -28,8 +33,8 @@ export default function AdminTitulos() {
   const [obraFilter, setObraFilter] = useState<string>("all");
 
   // NOVOS ESTADOS PARA DATA
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   // FILTRO AD
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
@@ -62,15 +67,18 @@ export default function AdminTitulos() {
       // 4. Filtro de Data (Considerando Data de Vencimento)
       let matchesDate = true;
       if (startDate || endDate) {
-        const tituloDate = new Date(titulo.dataVencimento);
+        const dateStr = String(titulo.dataVencimento);
+        const tituloDate = dateStr.length === 10 ? new Date(dateStr + "T12:00:00") : new Date(dateStr);
 
         if (startDate) {
           const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
           if (tituloDate < start) matchesDate = false;
         }
 
         if (endDate && matchesDate) {
           const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
           if (tituloDate > end) matchesDate = false;
         }
       }
@@ -110,8 +118,8 @@ export default function AdminTitulos() {
     setSearchTerm("");
     setStatusFilter("all");
     setObraFilter("all");
-    setStartDate("");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     setAdFilter("all");
     setAnexoFilter("all");
     setCurrentPage(1);
@@ -270,30 +278,64 @@ export default function AdminTitulos() {
               </Select>
             </div>
 
-            {/* Filtro de Datas (2 colunas divididas em 2 inputs - quebram linha se preciso) */}
+            {/* Filtro de Data Início */}
             <div className="lg:col-span-1 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Início</label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  handleFilterChange();
-                }}
-                className="input-field w-full"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal input-field",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "dd/MM", { locale: ptBR }) : "dd/mm"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => { setStartDate(date); handleFilterChange(); }}
+                    defaultMonth={startDate || new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
+
+            {/* Filtro de Data Fim */}
             <div className="lg:col-span-1 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Fim</label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  handleFilterChange();
-                }}
-                className="input-field w-full"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal input-field",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "dd/MM", { locale: ptBR }) : "dd/mm"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={(date) => { setEndDate(date); handleFilterChange(); }}
+                    defaultMonth={endDate || new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
