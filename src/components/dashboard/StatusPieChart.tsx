@@ -10,21 +10,56 @@ const STATUS_CONFIG = {
   processando_pagamento: { label: 'Processando', color: 'hsl(37, 62%, 40%)' },
 };
 
+const formatCurrency = (v: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
+
 interface Props {
   titulos: Titulo[];
 }
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-card border border-border rounded-xl shadow-lg px-4 py-3 min-w-[180px]">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
+        <span className="text-sm font-semibold text-foreground">{data.name}</span>
+      </div>
+      <div className="space-y-1">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Quantidade</span>
+          <span className="font-medium text-foreground">{data.value}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Percentual</span>
+          <span className="font-medium text-foreground">{data.percent}%</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Valor</span>
+          <span className="font-medium text-foreground">{formatCurrency(data.valor)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export function StatusPieChart({ titulos }: Props) {
   const data = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, { qty: number; valor: number }> = {};
     titulos.forEach((t) => {
-      counts[t.status] = (counts[t.status] || 0) + 1;
+      if (!counts[t.status]) counts[t.status] = { qty: 0, valor: 0 };
+      counts[t.status].qty += 1;
+      counts[t.status].valor += Number(t.valorTotal);
     });
+    const total = titulos.length;
     return Object.entries(counts)
-      .filter(([, v]) => v > 0)
-      .map(([status, value]) => ({
+      .filter(([, v]) => v.qty > 0)
+      .map(([status, v]) => ({
         name: STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label || status,
-        value,
+        value: v.qty,
+        valor: v.valor,
+        percent: total > 0 ? ((v.qty / total) * 100).toFixed(1) : '0',
         color: STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color || '#888',
       }));
   }, [titulos]);
@@ -35,15 +70,28 @@ export function StatusPieChart({ titulos }: Props) {
     <div className="card-elevated p-6">
       <h3 className="text-lg font-semibold text-foreground mb-1">Títulos por Status</h3>
       <p className="text-sm text-muted-foreground mb-4">Distribuição dos títulos por situação atual</p>
-      <div className="h-[280px]">
+
+      {/* Summary list */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        {data.map((entry) => (
+          <div key={entry.name} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40">
+            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+            <span className="text-xs text-muted-foreground truncate">{entry.name}</span>
+            <span className="text-xs font-semibold text-foreground ml-auto">{entry.value}</span>
+            <span className="text-xs text-muted-foreground">({entry.percent}%)</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={100}
+              innerRadius={55}
+              outerRadius={95}
               paddingAngle={3}
               dataKey="value"
               stroke="none"
@@ -52,21 +100,7 @@ export function StatusPieChart({ titulos }: Props) {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(0 0% 100%)',
-                border: '1px solid hsl(40 20% 85%)',
-                borderRadius: '0.75rem',
-                fontSize: '0.875rem',
-              }}
-              formatter={(value: number) => [`${value} títulos`, '']}
-            />
-            <Legend
-              verticalAlign="bottom"
-              iconType="circle"
-              iconSize={10}
-              wrapperStyle={{ fontSize: '0.8rem' }}
-            />
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
       </div>
