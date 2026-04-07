@@ -16,7 +16,17 @@ import { useCreateTitulo } from "@/hooks/useTitulosQuery";
 import { useNavigate } from "react-router-dom";
 import { DocumentoTipo, Titulo } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useEtapasByObra } from "@/hooks/useEtapasQuery";
 import { useCentrosCustoByObra } from "@/hooks/useCentrosCustoQuery";
@@ -76,6 +86,8 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   };
   const [dadosBancarios, setDadosBancarios] = useState<DadosBancariosStructured>(parseInitialDadosBancarios());
   const [isUploading, setIsUploading] = useState(false);
+  const [showPixConfirm, setShowPixConfirm] = useState(false);
+  const pendingFormData = useRef<TituloFormData | null>(null);
   const [obraGrupoId, setObraGrupoId] = useState<string | undefined>();
   const [obraCodigoRemoved, setObraCodigoRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -262,6 +274,14 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
       }
     }
 
+    // PIX confirmation gate
+    if (metodo === "PIX" && !pendingFormData.current) {
+      pendingFormData.current = data;
+      setShowPixConfirm(true);
+      return;
+    }
+    pendingFormData.current = null;
+
     setIsUploading(true);
 
     // Upload files FIRST before creating titulo
@@ -353,6 +373,18 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
     );
   };
 
+  const handlePixConfirm = () => {
+    setShowPixConfirm(false);
+    if (pendingFormData.current) {
+      onSubmit(pendingFormData.current);
+    }
+  };
+
+  const handlePixCancel = () => {
+    setShowPixConfirm(false);
+    pendingFormData.current = null;
+  };
+
   const isSubmitting = createTituloMutation.isPending || isUploading;
 
   const getFileIcon = () => {
@@ -362,6 +394,7 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Informações Básicas */}
       <div className="card-elevated p-6">
@@ -708,5 +741,21 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
         </Button>
       </div>
     </form>
+
+      <AlertDialog open={showPixConfirm} onOpenChange={setShowPixConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmação PIX</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você confirma que o PIX está associado ao mesmo CNPJ da NF?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handlePixCancel}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePixConfirm}>Confirmo</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
