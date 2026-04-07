@@ -92,11 +92,11 @@ export function Sidebar() {
       )}
     >
       {/* Logo + Toggle */}
-      <div className={cn("relative flex items-center border-b border-sidebar-border", collapsed ? "justify-center py-5 px-2" : "justify-center py-5 px-6")}>
+      <div className={cn("relative flex items-center border-b border-sidebar-border", collapsed ? "justify-center py-6 px-2" : "justify-center py-6 px-6")}>
         <img
           src={logoSemFundo}
           alt="Grifo Logo"
-          className={cn("object-contain transition-all duration-300", collapsed ? "h-8" : "h-10")}
+          className={cn("object-contain transition-all duration-300", collapsed ? "h-10" : "h-14")}
           loading="eager"
           fetchPriority="high"
         />
