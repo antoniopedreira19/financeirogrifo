@@ -94,9 +94,9 @@ export default function AdminDashboard() {
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard Financeiro</h1>
             <p className="text-muted-foreground mt-1">Visão geral de todos os títulos</p>
           </div>
-          <div className="w-full md:w-[250px]">
+           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <Select value={obraFilter} onValueChange={setObraFilter}>
-              <SelectTrigger className="w-full input-field">
+              <SelectTrigger className="w-full sm:w-[220px] input-field">
                 <SelectValue placeholder="Filtrar por Obra" />
               </SelectTrigger>
               <SelectContent>
@@ -104,6 +104,19 @@ export default function AdminDashboard() {
                 {obras.map((obra) => (
                   <SelectItem key={obra.id} value={obra.id}>
                     {obra.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={userFilter} onValueChange={setUserFilter}>
+              <SelectTrigger className="w-full sm:w-[220px] input-field">
+                <SelectValue placeholder="Filtrar por Usuário" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Usuários</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
