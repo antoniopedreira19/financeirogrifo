@@ -6,19 +6,16 @@ import { AlcadaBarChart } from "@/components/dashboard/AlcadaBarChart";
 import { MonthlyEvolutionChart } from "@/components/dashboard/MonthlyEvolutionChart";
 import { ApproverRankingTable } from "@/components/dashboard/ApproverRankingTable";
 import { ObraBreakdownChart } from "@/components/dashboard/ObraBreakdownChart";
-import { TituloCard } from "@/components/titulos/TituloCard";
 import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
 import { useTitulosQuery } from "@/hooks/useTitulosQuery";
 import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { Titulo } from "@/types";
 import { useState, useMemo } from "react";
 import { FileText, Clock, CheckCircle, XCircle, Wallet, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
+  
   const { data: allTitulos = [], isLoading: loadingTitulos } = useTitulosQuery();
   const { data: obras = [], isLoading: loadingObras } = useObrasQuery();
 
@@ -43,7 +40,7 @@ export default function AdminDashboard() {
     valorPago: filteredTitulos.filter((t) => t.status === "pago").reduce((acc, t) => acc + Number(t.valorTotal), 0),
   }), [filteredTitulos]);
 
-  const pendingTitulos = useMemo(() => filteredTitulos.filter((t) => t.status === "enviado"), [filteredTitulos]);
+  
   
 
   const formatCurrency = (value: number) =>
@@ -142,38 +139,6 @@ export default function AdminDashboard() {
           <ApproverRankingTable titulos={filteredTitulos} />
         </div>
 
-        {/* Lista: Aguardando Aprovação */}
-        {pendingTitulos.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold">Aguardando Aprovação</h2>
-                <span className="bg-warning/20 text-warning text-xs font-semibold px-2 py-1 rounded-full">
-                  {pendingTitulos.length}
-                </span>
-              </div>
-              <Button variant="ghost" onClick={() => navigate("/admin/aprovacoes")}>Ver todos</Button>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {pendingTitulos.slice(0, 4).map((titulo) => (
-                <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
-              ))}
-            </div>
-          </div>
-        )}
-
-
-        {/* Estado Vazio */}
-        {pendingTitulos.length === 0 && (
-          <div className="card-elevated p-8 text-center">
-            <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Tudo em dia!</h3>
-            <p className="text-muted-foreground">
-              Não há títulos pendentes de aprovação
-              {obraFilter !== "all" ? " para esta obra." : "."}
-            </p>
-          </div>
-        )}
       </div>
 
       <TituloDetailModal
