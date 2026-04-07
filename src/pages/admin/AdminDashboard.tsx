@@ -162,25 +162,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Lista: Aguardando Pagamento */}
-        {awaitingPayment.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold">Aguardando Pagamento</h2>
-                <span className="bg-success/20 text-success text-xs font-semibold px-2 py-1 rounded-full">
-                  {awaitingPayment.length}
-                </span>
-              </div>
-              <Button variant="ghost" onClick={() => navigate("/admin/titulos")}>Ver todos</Button>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {awaitingPayment.slice(0, 4).map((titulo) => (
-                <TituloCard key={titulo.id} titulo={titulo} showObra onClick={() => setSelectedTitulo(titulo)} />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Estado Vazio */}
         {pendingTitulos.length === 0 && awaitingPayment.length === 0 && (
