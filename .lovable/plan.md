@@ -1,56 +1,79 @@
-
-
-## Reorganizar Storage do Supabase por Obra e Tipo
+## Hierarquia de Aprovação por Valor com Roles em Cadeia
 
 ### Resumo
-Mudar a estrutura de pastas no bucket `titulo-documentos` para organizar por código da obra e tipo de arquivo. Também criar uma Edge Function para migrar os arquivos existentes.
+Implementar hierarquias de aprovação baseadas no valor do título, com novas roles e aprovação em cadeia. Admin é super-role (pode tudo).
 
-### Nova estrutura de pastas
-```text
-titulo-documentos/
-  {obra_codigo}/
-    documentos/
-      doc_{titulo_id}.pdf
-    comprovantes/
-      comprovante_{titulo_id}.pdf
-    boletos/
-      boleto_{titulo_id}.pdf
+### Níveis de Aprovação
+| Nível | Faixa de Valor | Roles necessárias (em cadeia) |
+|-------|---------------|-------------------------------|
+| 1 | Até R$ 1.000 | engenheiro_assistente |
+| 2 | R$ 1k - R$ 10k | engenheiro |
+| 3 | R$ 10k - R$ 50k | admin → diretor_obra |
+| 4 | Acima de R$ 50k | admin → diretor_obra → diretor |
+
+Admin pode aprovar em QUALQUER nível (super-role).
+
+### Etapas de Implementação
+
+#### 1. Migração: Novas roles no enum `app_role`
+```sql
+ALTER TYPE app_role ADD VALUE 'engenheiro_assistente';
+ALTER TYPE app_role ADD VALUE 'engenheiro';
+ALTER TYPE app_role ADD VALUE 'diretor_obra';
+ALTER TYPE app_role ADD VALUE 'diretor';
 ```
 
-### Alterações
+#### 2. Migração: Tabela `titulo_aprovacoes`
+Rastreia cada aprovação individual na cadeia:
+```sql
+CREATE TABLE titulo_aprovacoes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  titulo_id uuid NOT NULL,
+  tabela_origem text NOT NULL CHECK (tabela_origem IN ('titulos_pendentes', 'titulos')),
+  aprovado_por uuid NOT NULL,
+  role_aprovador app_role NOT NULL,
+  nivel int NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+```
 
-#### 1. Atualizar uploads no `TituloForm.tsx`
-A função `uploadFile` atualmente salva em `{user_id}/{prefix}_{uuid}.{ext}`.
-Mudar para `{obraCodigo}/{tipo}/{prefix}_{uuid}.{ext}`:
-- Documento anexo (prefix `doc`) → `{obraCodigo}/documentos/doc_{uuid}.{ext}`
-- Arquivo de pagamento (prefix `pagamento`) → `{obraCodigo}/boletos/pagamento_{uuid}.{ext}`
+#### 3. Migração: Funções SQL helpers
+- `get_nivel_aprovacao(valor numeric)` → retorna nível (1-4)
+- `get_roles_necessarias(valor numeric)` → retorna array de roles em ordem da cadeia
+- `check_aprovacao_completa(titulo_id uuid, tabela text, valor numeric)` → verifica se todas as etapas da cadeia foram concluídas
 
-O `obraCodigo` já está disponível no componente via `selectedObra.codigo`.
+#### 4. RLS: Políticas para `titulo_aprovacoes`
+- SELECT: usuários autenticados da mesma empresa
+- INSERT: usuários autenticados com role adequada para o nível
 
-#### 2. Atualizar uploads no `TituloDetailModal.tsx`
-- `handleComprovanteUpload`: mudar path de `{user_id}/comprovante_{id}.{ext}` para `{obraCodigo}/comprovantes/comprovante_{id}.{ext}`
-- `handleBoletoUpload`: mudar path de `{user_id}/boleto_{id}.{ext}` para `{obraCodigo}/boletos/boleto_{id}.{ext}`
+#### 5. Frontend: Tipos e constantes
+- `src/types/index.ts`: Adicionar novas roles ao `UserRole`
+- Labels e mapeamentos para UI
 
-O `obraCodigo` já está disponível via `tituloVisualizado.obraCodigo`.
+#### 6. Frontend: create-user Edge Function + AdminUsuarios
+- Aceitar novas roles na criação de usuário
+- Dropdown com todas as roles no formulário
 
-#### 3. Leitura/download — sem alteração necessária
-Os paths salvos no banco (`documento_url`, `boleto_url`, `arquivo_pagamento_url`) já são usados diretamente no `getPublicUrl`. Como atualizamos o path salvo, a leitura funciona automaticamente.
+#### 7. Frontend: Auth e Navegação
+- `useSupabaseAuth.tsx`: Reconhecer novas roles
+- `App.tsx`: Rotas para novas roles (acesso como obra)
+- `Sidebar.tsx`: Menu adaptado por role
+- `AuthContext.tsx`: Ajustar lógica de redirecionamento
 
-#### 4. Edge Function `reorganize-storage` — migração dos arquivos existentes
-Criar uma Edge Function que:
-1. Busca todos os títulos de `titulos` e `titulos_pendentes` que têm `documento_url`, `boleto_url` ou `arquivo_pagamento_url` preenchidos
-2. Para cada arquivo encontrado:
-   - Identifica o tipo pelo prefixo (`doc_`, `comprovante_`, `boleto_`, `pagamento_`)
-   - Usa `obra_codigo` do título para montar o novo path
-   - Copia o arquivo para o novo path (`download` + `upload`)
-   - Atualiza a coluna correspondente no banco com o novo path
-   - Remove o arquivo antigo
-3. Retorna um relatório de quantos arquivos foram migrados
-
-Será executada uma única vez, manualmente via Supabase Dashboard.
+#### 8. Frontend: TituloDetailModal — Cadeia de Aprovação
+- Exibir progresso visual da cadeia (steps/timeline)
+- Mostrar quem já aprovou e com qual role
+- Botão "Aprovar" condicional: aparece se o user tem a role do próximo passo
+- Admin sempre pode aprovar qualquer etapa
+- Ao completar toda a cadeia, status muda para `aprovado`
 
 ### Arquivos alterados
-1. `src/components/titulos/TituloForm.tsx` — atualizar `uploadFile` para usar novo path
-2. `src/components/titulos/TituloDetailModal.tsx` — atualizar `handleComprovanteUpload` e `handleBoletoUpload`
-3. `supabase/functions/reorganize-storage/index.ts` — nova Edge Function de migração
-
+1. Migrações SQL (enum, tabela, funções, RLS)
+2. `src/types/index.ts`
+3. `supabase/functions/create-user/index.ts`
+4. `src/pages/admin/AdminUsuarios.tsx`
+5. `src/hooks/useSupabaseAuth.tsx`
+6. `src/contexts/AuthContext.tsx`
+7. `src/App.tsx`
+8. `src/components/layout/Sidebar.tsx`
+9. `src/components/titulos/TituloDetailModal.tsx`
