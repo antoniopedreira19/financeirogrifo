@@ -10,9 +10,10 @@ import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
 import { useTitulosQuery } from "@/hooks/useTitulosQuery";
 import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { Titulo } from "@/types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FileText, Clock, CheckCircle, XCircle, Wallet, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminDashboard() {
   
@@ -21,11 +22,34 @@ export default function AdminDashboard() {
 
   const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
   const [obraFilter, setObraFilter] = useState<string>("all");
+  const [userFilter, setUserFilter] = useState<string>("all");
+  const [users, setUsers] = useState<{ id: string; nome: string }[]>([]);
+
+  // Fetch users who created titulos
+  const creatorIds = useMemo(() => {
+    const ids = new Set<string>();
+    allTitulos.forEach((t) => { if (t.criadoPor) ids.add(t.criadoPor); });
+    return Array.from(ids);
+  }, [allTitulos]);
+
+  useEffect(() => {
+    if (creatorIds.length === 0) return;
+    supabase
+      .from('profiles')
+      .select('id, nome')
+      .in('id', creatorIds)
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setUsers(data);
+      });
+  }, [creatorIds]);
 
   const filteredTitulos = useMemo(() => {
-    if (obraFilter === "all") return allTitulos;
-    return allTitulos.filter((t) => t.obraId === obraFilter);
-  }, [allTitulos, obraFilter]);
+    let result = allTitulos;
+    if (obraFilter !== "all") result = result.filter((t) => t.obraId === obraFilter);
+    if (userFilter !== "all") result = result.filter((t) => t.criadoPor === userFilter);
+    return result;
+  }, [allTitulos, obraFilter, userFilter]);
 
   const stats = useMemo(() => ({
     total: filteredTitulos.length,
