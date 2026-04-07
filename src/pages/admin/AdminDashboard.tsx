@@ -6,7 +6,6 @@ import { AlcadaBarChart } from "@/components/dashboard/AlcadaBarChart";
 import { MonthlyEvolutionChart } from "@/components/dashboard/MonthlyEvolutionChart";
 import { ApproverRankingTable } from "@/components/dashboard/ApproverRankingTable";
 import { ObraBreakdownChart } from "@/components/dashboard/ObraBreakdownChart";
-import { TituloCard } from "@/components/titulos/TituloCard";
 import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
 import { useTitulosQuery } from "@/hooks/useTitulosQuery";
 import { useObrasQuery } from "@/hooks/useObrasQuery";
