@@ -33,6 +33,13 @@ const queryClient = new QueryClient({
   },
 });
 
+// Roles that behave like "obra" (need obra selection, see obra routes)
+const OBRA_LIKE_ROLES = ['obra', 'orcamento', 'engenheiro_assistente', 'engenheiro', 'diretor_obra', 'diretor'];
+
+function isObraLikeRole(role: string) {
+  return OBRA_LIKE_ROLES.includes(role);
+}
+
 // Protected route component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, isLoading } = useAuth();
@@ -57,7 +64,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   return <>{children}</>;
 }
 
-// Obra protected route - requires obra selection
+// Obra protected route - requires obra selection (for all obra-like roles)
 function ObraProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, selectedObra, isLoading } = useAuth();
 
@@ -73,7 +80,7 @@ function ObraProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (user.role !== 'obra' && user.role !== 'orcamento') {
+  if (!isObraLikeRole(user.role)) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -98,7 +105,7 @@ function AppRoutes() {
       
       {/* Obra selection */}
       <Route path="/selecionar-obra" element={
-        <ProtectedRoute allowedRoles={['obra', 'orcamento']}>
+        <ProtectedRoute allowedRoles={OBRA_LIKE_ROLES}>
           <SelecionarObra />
         </ProtectedRoute>
       } />
