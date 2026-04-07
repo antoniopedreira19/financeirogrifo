@@ -15,7 +15,7 @@ import { FileText, Clock, CheckCircle, XCircle, Wallet, TrendingUp, AlertCircle,
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
+  
   const { data: allTitulos = [], isLoading: loadingTitulos } = useTitulosQuery();
   const { data: obras = [], isLoading: loadingObras } = useObrasQuery();
 
