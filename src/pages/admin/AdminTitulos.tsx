@@ -33,8 +33,8 @@ export default function AdminTitulos() {
   const [obraFilter, setObraFilter] = useState<string>("all");
 
   // NOVOS ESTADOS PARA DATA
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   // FILTRO AD
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
@@ -67,15 +67,18 @@ export default function AdminTitulos() {
       // 4. Filtro de Data (Considerando Data de Vencimento)
       let matchesDate = true;
       if (startDate || endDate) {
-        const tituloDate = new Date(titulo.dataVencimento);
+        const dateStr = String(titulo.dataVencimento);
+        const tituloDate = dateStr.length === 10 ? new Date(dateStr + "T12:00:00") : new Date(dateStr);
 
         if (startDate) {
           const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
           if (tituloDate < start) matchesDate = false;
         }
 
         if (endDate && matchesDate) {
           const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
           if (tituloDate > end) matchesDate = false;
         }
       }
@@ -115,8 +118,8 @@ export default function AdminTitulos() {
     setSearchTerm("");
     setStatusFilter("all");
     setObraFilter("all");
-    setStartDate("");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     setAdFilter("all");
     setAnexoFilter("all");
     setCurrentPage(1);
