@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { Titulo } from '@/types';
 import { useMemo } from 'react';
 
@@ -15,6 +15,35 @@ interface Props {
 
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
+
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-card border border-border rounded-xl shadow-lg px-4 py-3 min-w-[200px]">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
+        <span className="text-sm font-semibold text-foreground">{data.name}</span>
+      </div>
+      <div className="space-y-1">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Quantidade</span>
+          <span className="font-medium text-foreground">{data.quantidade}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Valor Total</span>
+          <span className="font-medium text-foreground">{formatCurrency(data.valor)}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Ticket Médio</span>
+          <span className="font-medium text-foreground">
+            {data.quantidade > 0 ? formatCurrency(data.valor / data.quantidade) : 'R$ 0'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export function AlcadaBarChart({ titulos }: Props) {
   const data = useMemo(() => {
@@ -37,34 +66,38 @@ export function AlcadaBarChart({ titulos }: Props) {
       <p className="text-sm text-muted-foreground mb-4">
         Quantidade de títulos por faixa de valor (alçada de aprovação)
       </p>
-      <div className="h-[280px]">
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        {data.map((entry) => (
+          <div key={entry.name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/40">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+              <span className="text-xs text-muted-foreground truncate">{entry.name}</span>
+            </div>
+            <span className="text-xs font-semibold text-foreground ml-2">{entry.quantidade}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ left: 20, right: 20 }}>
-            <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} />
+          <BarChart data={data} layout="vertical" margin={{ left: 10, right: 50 }}>
+            <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} />
             <YAxis
               type="category"
               dataKey="name"
-              width={130}
-              fontSize={12}
+              width={120}
+              fontSize={11}
               tickLine={false}
               axisLine={false}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(0 0% 100%)',
-                border: '1px solid hsl(40 20% 85%)',
-                borderRadius: '0.75rem',
-                fontSize: '0.875rem',
-              }}
-              formatter={(value: number, name: string) => {
-                if (name === 'valor') return [formatCurrency(value), 'Valor Total'];
-                return [value, 'Quantidade'];
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
             <Bar dataKey="quantidade" radius={[0, 6, 6, 0]} barSize={28}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
+              <LabelList dataKey="quantidade" position="right" fontSize={12} fontWeight={600} fill="hsl(var(--foreground))" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
