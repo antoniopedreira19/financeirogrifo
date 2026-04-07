@@ -1,57 +1,53 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { KpiCards } from "@/components/dashboard/KpiCards";
+import { StatusPieChart } from "@/components/dashboard/StatusPieChart";
+import { AlcadaBarChart } from "@/components/dashboard/AlcadaBarChart";
+import { MonthlyEvolutionChart } from "@/components/dashboard/MonthlyEvolutionChart";
+import { ApproverRankingTable } from "@/components/dashboard/ApproverRankingTable";
+import { ObraBreakdownChart } from "@/components/dashboard/ObraBreakdownChart";
 import { TituloCard } from "@/components/titulos/TituloCard";
 import { TituloDetailModal } from "@/components/titulos/TituloDetailModal";
 import { useTitulosQuery } from "@/hooks/useTitulosQuery";
-import { useObrasQuery } from "@/hooks/useObrasQuery"; // Importado hook de obras
+import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { Titulo } from "@/types";
 import { useState, useMemo } from "react";
 import { FileText, Clock, CheckCircle, XCircle, Wallet, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importado Select
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-
-  // 1. Buscando dados
   const { data: allTitulos = [], isLoading: loadingTitulos } = useTitulosQuery();
   const { data: obras = [], isLoading: loadingObras } = useObrasQuery();
 
   const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
-  const [obraFilter, setObraFilter] = useState<string>("all"); // Estado do filtro
+  const [obraFilter, setObraFilter] = useState<string>("all");
 
-  // 2. Filtrando Títulos com base na Obra selecionada
   const filteredTitulos = useMemo(() => {
     if (obraFilter === "all") return allTitulos;
     return allTitulos.filter((t) => t.obraId === obraFilter);
   }, [allTitulos, obraFilter]);
 
-  // 3. Recalculando Estatísticas com base nos títulos filtrados
-  const stats = useMemo(() => {
-    return {
-      total: filteredTitulos.length,
-      enviados: filteredTitulos.filter((t) => t.status === "enviado").length,
-      aprovados: filteredTitulos.filter((t) => t.status === "aprovado").length,
-      reprovados: filteredTitulos.filter((t) => t.status === "reprovado").length,
-      pagos: filteredTitulos.filter((t) => t.status === "pago").length,
-      // Cálculos financeiros
-      valorTotal: filteredTitulos.reduce((acc, t) => acc + Number(t.valorTotal), 0),
-      valorPendente: filteredTitulos
-        .filter((t) => ["enviado", "aprovado"].includes(t.status))
-        .reduce((acc, t) => acc + Number(t.valorTotal), 0),
-      valorPago: filteredTitulos.filter((t) => t.status === "pago").reduce((acc, t) => acc + Number(t.valorTotal), 0),
-    };
-  }, [filteredTitulos]);
+  const stats = useMemo(() => ({
+    total: filteredTitulos.length,
+    enviados: filteredTitulos.filter((t) => t.status === "enviado").length,
+    aprovados: filteredTitulos.filter((t) => t.status === "aprovado").length,
+    reprovados: filteredTitulos.filter((t) => t.status === "reprovado").length,
+    pagos: filteredTitulos.filter((t) => t.status === "pago").length,
+    valorTotal: filteredTitulos.reduce((acc, t) => acc + Number(t.valorTotal), 0),
+    valorPendente: filteredTitulos
+      .filter((t) => ["enviado", "aprovado"].includes(t.status))
+      .reduce((acc, t) => acc + Number(t.valorTotal), 0),
+    valorPago: filteredTitulos.filter((t) => t.status === "pago").reduce((acc, t) => acc + Number(t.valorTotal), 0),
+  }), [filteredTitulos]);
 
-  // 4. Listas específicas derivadas do filtro
   const pendingTitulos = useMemo(() => filteredTitulos.filter((t) => t.status === "enviado"), [filteredTitulos]);
-
   const awaitingPayment = useMemo(() => filteredTitulos.filter((t) => t.status === "aprovado"), [filteredTitulos]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
   const isLoading = loadingTitulos || loadingObras;
 
@@ -68,14 +64,12 @@ export default function AdminDashboard() {
   return (
     <AppLayout>
       <div className="space-y-6 lg:space-y-8">
-        {/* Header com Filtro */}
+        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard Financeiro</h1>
             <p className="text-muted-foreground mt-1">Visão geral de todos os títulos</p>
           </div>
-
-          {/* Dropdown de Filtro de Obra */}
           <div className="w-full md:w-[250px]">
             <Select value={obraFilter} onValueChange={setObraFilter}>
               <SelectTrigger className="w-full input-field">
@@ -97,18 +91,8 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard title="Total" value={stats.total} icon={<FileText className="h-5 w-5" />} variant="default" />
           <StatCard title="Aguardando" value={stats.enviados} icon={<Clock className="h-5 w-5" />} variant="warning" />
-          <StatCard
-            title="Aprovados"
-            value={stats.aprovados}
-            icon={<CheckCircle className="h-5 w-5" />}
-            variant="success"
-          />
-          <StatCard
-            title="Reprovados"
-            value={stats.reprovados}
-            icon={<XCircle className="h-5 w-5" />}
-            variant="destructive"
-          />
+          <StatCard title="Aprovados" value={stats.aprovados} icon={<CheckCircle className="h-5 w-5" />} variant="success" />
+          <StatCard title="Reprovados" value={stats.reprovados} icon={<XCircle className="h-5 w-5" />} variant="destructive" />
           <StatCard title="Pagos" value={stats.pagos} icon={<Wallet className="h-5 w-5" />} variant="success" />
         </div>
 
@@ -137,6 +121,27 @@ export default function AdminDashboard() {
           />
         </div>
 
+        {/* KPIs Operacionais */}
+        <div>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Indicadores Operacionais</h2>
+          <KpiCards titulos={filteredTitulos} />
+        </div>
+
+        {/* Gráficos - Linha 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <StatusPieChart titulos={filteredTitulos} />
+          <AlcadaBarChart titulos={filteredTitulos} />
+        </div>
+
+        {/* Gráfico Evolução Mensal */}
+        <MonthlyEvolutionChart titulos={filteredTitulos} />
+
+        {/* Gráficos - Linha 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ObraBreakdownChart titulos={filteredTitulos} />
+          <ApproverRankingTable titulos={filteredTitulos} />
+        </div>
+
         {/* Lista: Aguardando Aprovação */}
         {pendingTitulos.length > 0 && (
           <div>
@@ -147,9 +152,7 @@ export default function AdminDashboard() {
                   {pendingTitulos.length}
                 </span>
               </div>
-              <Button variant="ghost" onClick={() => navigate("/admin/aprovacoes")}>
-                Ver todos
-              </Button>
+              <Button variant="ghost" onClick={() => navigate("/admin/aprovacoes")}>Ver todos</Button>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {pendingTitulos.slice(0, 4).map((titulo) => (
@@ -169,9 +172,7 @@ export default function AdminDashboard() {
                   {awaitingPayment.length}
                 </span>
               </div>
-              <Button variant="ghost" onClick={() => navigate("/admin/titulos")}>
-                Ver todos
-              </Button>
+              <Button variant="ghost" onClick={() => navigate("/admin/titulos")}>Ver todos</Button>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {awaitingPayment.slice(0, 4).map((titulo) => (
