@@ -71,17 +71,6 @@ export function StatusPieChart({ titulos }: Props) {
       <h3 className="text-lg font-semibold text-foreground mb-1">Títulos por Status</h3>
       <p className="text-sm text-muted-foreground mb-4">Distribuição dos títulos por situação atual</p>
 
-      {/* Summary list */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {data.map((entry) => (
-          <div key={entry.name} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40">
-            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
-            <span className="text-xs text-muted-foreground truncate">{entry.name}</span>
-            <span className="text-xs font-semibold text-foreground ml-auto">{entry.value}</span>
-            <span className="text-xs text-muted-foreground">({entry.percent}%)</span>
-          </div>
-        ))}
-      </div>
 
       <div className="h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
