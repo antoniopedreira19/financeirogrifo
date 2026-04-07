@@ -147,12 +147,15 @@ export function Sidebar() {
         <div className="px-2 py-3 border-b border-sidebar-border flex justify-center">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <div className="p-2 rounded-xl bg-sidebar-accent/50">
+              <button
+                onClick={clearSelectedObra}
+                className="p-2 rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
+              >
                 <Building2 className="h-4 w-4 text-accent" />
-              </div>
+              </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={12}>
-              {selectedObra.nome}
+              {selectedObra.nome} — Trocar obra
             </TooltipContent>
           </Tooltip>
         </div>
