@@ -67,18 +67,6 @@ export function AlcadaBarChart({ titulos }: Props) {
         Quantidade de títulos por faixa de valor (alçada de aprovação)
       </p>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {data.map((entry) => (
-          <div key={entry.name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/40">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
-              <span className="text-xs text-muted-foreground truncate">{entry.name}</span>
-            </div>
-            <span className="text-xs font-semibold text-foreground ml-2">{entry.quantidade}</span>
-          </div>
-        ))}
-      </div>
 
       <div className="h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
