@@ -90,10 +90,17 @@ export default function AdminAprovacoes() {
                 <StatusBadge status={titulo.status} size="sm" />
               </td>
               <td className="p-4 text-center">
-                <Button variant="ghost" size="sm" onClick={() => setSelectedTitulo(titulo)}>
-                  <Eye className="h-4 w-4 mr-1" />
-                  {showPayButton ? 'Pagar' : 'Analisar'}
-                </Button>
+                {showPayButton ? (
+                  <Button variant="success" size="sm" onClick={() => setSelectedTitulo(titulo)} className="gap-1.5">
+                    <Wallet className="h-4 w-4" />
+                    Pagar
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setSelectedTitulo(titulo)} className="gap-1.5">
+                    <Eye className="h-4 w-4" />
+                    Analisar
+                  </Button>
+                )}
               </td>
             </tr>
           ))}
