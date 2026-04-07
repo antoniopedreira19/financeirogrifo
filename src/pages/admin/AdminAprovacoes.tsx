@@ -30,14 +30,22 @@ export default function AdminAprovacoes() {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+  const parseDate = (dateValue: Date | string) => {
+    if (!dateValue) return new Date();
+    if (dateValue instanceof Date) return dateValue;
+    const dateStr = String(dateValue);
+    if (dateStr.length === 10) return new Date(dateStr + 'T12:00:00');
+    return new Date(dateStr);
+  };
+
   const filterAndSort = (titulos: Titulo[]) => {
     let filtered = titulos;
     if (filterObra !== 'all') {
       filtered = filtered.filter((t) => t.obraId === filterObra);
     }
     return [...filtered].sort((a, b) => {
-      const dateA = new Date(a.dataVencimento).getTime();
-      const dateB = new Date(b.dataVencimento).getTime();
+      const dateA = parseDate(a.dataVencimento).getTime();
+      const dateB = parseDate(b.dataVencimento).getTime();
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
   };
@@ -80,7 +88,7 @@ export default function AdminAprovacoes() {
               </td>
               <td className="p-4 hidden lg:table-cell">
                 <p className="text-sm">
-                  {format(new Date(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}
+                  {format(parseDate(titulo.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}
                 </p>
               </td>
               <td className="p-4 text-right">
