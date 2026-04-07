@@ -40,7 +40,7 @@ export default function AdminDashboard() {
     valorPago: filteredTitulos.filter((t) => t.status === "pago").reduce((acc, t) => acc + Number(t.valorTotal), 0),
   }), [filteredTitulos]);
 
-  const pendingTitulos = useMemo(() => filteredTitulos.filter((t) => t.status === "enviado"), [filteredTitulos]);
+  
   
 
   const formatCurrency = (value: number) =>
