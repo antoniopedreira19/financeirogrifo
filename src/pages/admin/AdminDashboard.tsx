@@ -12,9 +12,7 @@ import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { Titulo } from "@/types";
 import { useState, useMemo } from "react";
 import { FileText, Clock, CheckCircle, XCircle, Wallet, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
