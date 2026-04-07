@@ -46,9 +46,10 @@ export function Sidebar() {
 
   // Roles that can approve/pay get the Aprovações tab
   const canApprove = ['engenheiro_assistente', 'engenheiro', 'diretor_obra', 'diretor'].includes(user?.role || '');
+  const canSeeDashboard = ['admin', 'diretor', 'diretor_obra'].includes(user?.role || '');
 
   const obraNavItems = [
-    { path: "/obra/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    ...(canSeeDashboard ? [{ path: "/obra/dashboard", label: "Dashboard", icon: LayoutDashboard }] : []),
     { path: "/obra/titulos", label: "Meus Títulos", icon: FileText },
     ...(canApprove ? [{ path: "/obra/aprovacoes", label: "Aprovações", icon: CheckSquare }] : []),
   ];
