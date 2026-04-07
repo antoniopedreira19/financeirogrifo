@@ -87,7 +87,7 @@ export function Sidebar() {
   const sidebarContent = (
     <aside
       className={cn(
-        "flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
+        "flex flex-col h-screen sticky top-0 bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
         sidebarWidth
       )}
     >
