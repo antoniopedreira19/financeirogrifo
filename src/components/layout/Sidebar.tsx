@@ -44,9 +44,13 @@ export function Sidebar() {
     { path: "/orcamento/obras", label: "Obras", icon: Building2 },
   ];
 
+  // Roles that can approve/pay get the Aprovações tab
+  const canApprove = ['engenheiro_assistente', 'engenheiro', 'diretor_obra', 'diretor'].includes(user?.role || '');
+
   const obraNavItems = [
     { path: "/obra/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/obra/titulos", label: "Meus Títulos", icon: FileText },
+    ...(canApprove ? [{ path: "/obra/aprovacoes", label: "Aprovações", icon: CheckSquare }] : []),
   ];
 
   const navItems = isAdmin ? adminNavItems : isOrcamento ? orcamentoNavItems : obraNavItems;
