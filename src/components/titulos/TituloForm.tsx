@@ -86,6 +86,8 @@ export function TituloForm({ selectedObraOverride, redirectPath = "/obra/titulos
   };
   const [dadosBancarios, setDadosBancarios] = useState<DadosBancariosStructured>(parseInitialDadosBancarios());
   const [isUploading, setIsUploading] = useState(false);
+  const [showPixConfirm, setShowPixConfirm] = useState(false);
+  const pendingFormData = useRef<TituloFormData | null>(null);
   const [obraGrupoId, setObraGrupoId] = useState<string | undefined>();
   const [obraCodigoRemoved, setObraCodigoRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
