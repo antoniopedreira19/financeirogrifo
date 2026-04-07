@@ -278,30 +278,64 @@ export default function AdminTitulos() {
               </Select>
             </div>
 
-            {/* Filtro de Datas (2 colunas divididas em 2 inputs - quebram linha se preciso) */}
+            {/* Filtro de Data Início */}
             <div className="lg:col-span-1 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Início</label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  handleFilterChange();
-                }}
-                className="input-field w-full"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal input-field",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "dd/MM", { locale: ptBR }) : "dd/mm"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => { setStartDate(date); handleFilterChange(); }}
+                    defaultMonth={startDate || new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
+
+            {/* Filtro de Data Fim */}
             <div className="lg:col-span-1 space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1">Fim</label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  handleFilterChange();
-                }}
-                className="input-field w-full"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal input-field",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "dd/MM", { locale: ptBR }) : "dd/mm"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={(date) => { setEndDate(date); handleFilterChange(); }}
+                    defaultMonth={endDate || new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
