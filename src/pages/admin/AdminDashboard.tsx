@@ -106,9 +106,16 @@ export default function AdminDashboard() {
             variant="default"
           />
           <StatCard
-            title="Valor Pendente"
-            value={formatCurrency(stats.valorPendente)}
-            subtitle="Aguardando aprovação/pagamento"
+            title="Aguardando Aprovação"
+            value={formatCurrency(stats.valorAguardandoAprovacao)}
+            subtitle="Títulos enviados"
+            icon={<Clock className="h-5 w-5" />}
+            variant="default"
+          />
+          <StatCard
+            title="Aguardando Pagamento"
+            value={formatCurrency(stats.valorAguardandoPagamento)}
+            subtitle="Títulos aprovados"
             icon={<AlertCircle className="h-5 w-5" />}
             variant="default"
           />
