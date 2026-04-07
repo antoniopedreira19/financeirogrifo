@@ -124,17 +124,9 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Cards de Quantidade */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatCard title="Total" value={stats.total} icon={<FileText className="h-5 w-5" />} variant="default" />
-          <StatCard title="Aguardando" value={stats.enviados} icon={<Clock className="h-5 w-5" />} variant="warning" />
-          <StatCard title="Aprovados" value={stats.aprovados} icon={<CheckCircle className="h-5 w-5" />} variant="success" />
-          <StatCard title="Reprovados" value={stats.reprovados} icon={<XCircle className="h-5 w-5" />} variant="destructive" />
-          <StatCard title="Pagos" value={stats.pagos} icon={<Wallet className="h-5 w-5" />} variant="success" />
-        </div>
-
-        {/* Cards Financeiros */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Cards Financeiros + Total */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <StatCard title="Total de Títulos" value={stats.total} icon={<FileText className="h-5 w-5" />} variant="default" />
           <StatCard
             title="Valor Total"
             value={formatCurrency(stats.valorTotal)}
