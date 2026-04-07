@@ -7,9 +7,14 @@ import { useObrasQuery } from "@/hooks/useObrasQuery";
 import { TituloStatus } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileText, Loader2, Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, FileText, Loader2, Plus, X, ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
