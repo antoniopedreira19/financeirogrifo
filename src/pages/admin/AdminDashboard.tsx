@@ -34,8 +34,11 @@ export default function AdminDashboard() {
     reprovados: filteredTitulos.filter((t) => t.status === "reprovado").length,
     pagos: filteredTitulos.filter((t) => t.status === "pago").length,
     valorTotal: filteredTitulos.reduce((acc, t) => acc + Number(t.valorTotal), 0),
-    valorPendente: filteredTitulos
-      .filter((t) => ["enviado", "aprovado"].includes(t.status))
+    valorAguardandoAprovacao: filteredTitulos
+      .filter((t) => t.status === "enviado")
+      .reduce((acc, t) => acc + Number(t.valorTotal), 0),
+    valorAguardandoPagamento: filteredTitulos
+      .filter((t) => t.status === "aprovado")
       .reduce((acc, t) => acc + Number(t.valorTotal), 0),
     valorPago: filteredTitulos.filter((t) => t.status === "pago").reduce((acc, t) => acc + Number(t.valorTotal), 0),
   }), [filteredTitulos]);
@@ -94,7 +97,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Cards Financeiros */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Valor Total"
             value={formatCurrency(stats.valorTotal)}
@@ -103,9 +106,16 @@ export default function AdminDashboard() {
             variant="default"
           />
           <StatCard
-            title="Valor Pendente"
-            value={formatCurrency(stats.valorPendente)}
-            subtitle="Aguardando aprovação/pagamento"
+            title="Aguardando Aprovação"
+            value={formatCurrency(stats.valorAguardandoAprovacao)}
+            subtitle="Títulos enviados"
+            icon={<Clock className="h-5 w-5" />}
+            variant="default"
+          />
+          <StatCard
+            title="Aguardando Pagamento"
+            value={formatCurrency(stats.valorAguardandoPagamento)}
+            subtitle="Títulos aprovados"
             icon={<AlertCircle className="h-5 w-5" />}
             variant="default"
           />
