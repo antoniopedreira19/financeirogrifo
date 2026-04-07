@@ -12,9 +12,11 @@ export default function SelecionarObra() {
   // User's obras come from the auth context
   const userObras = user?.obras || [];
 
+  const canSeeDashboard = ['diretor', 'diretor_obra'].includes(user?.role || '');
+
   const handleSelectObra = (obra: Obra) => {
     selectObra(obra);
-    navigate('/obra/dashboard');
+    navigate(canSeeDashboard ? '/obra/dashboard' : '/obra/titulos');
   };
 
   if (isLoading) {
