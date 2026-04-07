@@ -12,6 +12,7 @@ import SelecionarObra from "./pages/SelecionarObra";
 import ObraDashboard from "./pages/obra/ObraDashboard";
 import ObraTitulos from "./pages/obra/ObraTitulos";
 import NovoTitulo from "./pages/obra/NovoTitulo";
+import ObraAprovacoes from "./pages/obra/ObraAprovacoes";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminTitulos from "./pages/admin/AdminTitulos";
 import AdminAprovacoes from "./pages/admin/AdminAprovacoes";
@@ -124,6 +125,11 @@ function AppRoutes() {
       <Route path="/obra/novo-titulo" element={
         <ObraProtectedRoute>
           <NovoTitulo />
+        </ObraProtectedRoute>
+      } />
+      <Route path="/obra/aprovacoes" element={
+        <ObraProtectedRoute>
+          <ObraAprovacoes />
         </ObraProtectedRoute>
       } />
       
