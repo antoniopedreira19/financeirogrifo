@@ -22,7 +22,7 @@ import logoSemFundo from "@/assets/logo-sem-fundo.png";
 export function Sidebar() {
   const { user, selectedObra, logout, clearSelectedObra } = useAuth();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdmin = user?.role === "admin";
