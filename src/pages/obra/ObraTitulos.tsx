@@ -167,6 +167,7 @@ export default function ObraTitulos() {
               Novo Título
             </Button>
           </div>
+        </div>
 
         {/* Filtros */}
         <div className="card-elevated p-4">
