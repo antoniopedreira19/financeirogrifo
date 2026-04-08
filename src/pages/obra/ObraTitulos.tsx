@@ -54,7 +54,7 @@ export default function ObraTitulos() {
   // Resetar para página 1 quando qualquer filtro mudar
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, startDate, endDate, adFilter, anexoFilter]);
+  }, [searchTerm, statusFilter, startDate, endDate, adFilter, anexoFilter, onlyMine]);
 
   const filteredTitulos = titulos.filter((titulo) => {
     // 1. Filtro de Texto
