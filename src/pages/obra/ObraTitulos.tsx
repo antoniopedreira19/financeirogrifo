@@ -97,7 +97,10 @@ export default function ObraTitulos() {
     const matchesAnexo =
       anexoFilter === "all" ? true : anexoFilter === "with" ? !!titulo.documentoUrl : !titulo.documentoUrl;
 
-    return matchesSearch && matchesStatus && matchesDate && matchesAd && matchesAnexo;
+    // 6. Filtro "Meus Títulos"
+    const matchesMine = !onlyMine || titulo.criadoPor === user?.id;
+
+    return matchesSearch && matchesStatus && matchesDate && matchesAd && matchesAnexo && matchesMine;
   });
 
   const clearFilters = () => {
