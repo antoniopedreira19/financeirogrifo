@@ -152,11 +152,21 @@ export default function ObraTitulos() {
               )}
             </div>
           </div>
-          <Button variant="gold" onClick={() => navigate("/obra/novo-titulo")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Título
-          </Button>
-        </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={onlyMine ? "default" : "outline"}
+              size="sm"
+              onClick={() => setOnlyMine(!onlyMine)}
+              className="gap-1.5"
+            >
+              <User className="h-4 w-4" />
+              Meus Títulos
+            </Button>
+            <Button variant="gold" onClick={() => navigate("/obra/novo-titulo")}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Título
+            </Button>
+          </div>
 
         {/* Filtros */}
         <div className="card-elevated p-4">
