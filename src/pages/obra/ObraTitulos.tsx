@@ -17,7 +17,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, Search, FileText, Loader2, X } from "lucide-react";
+import { Plus, Search, FileText, Loader2, X, User } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 type StatusFilterType = TituloStatus | "all" | "pendente";
@@ -25,7 +25,7 @@ type StatusFilterType = TituloStatus | "all" | "pendente";
 const ITEMS_PER_PAGE = 20;
 
 export default function ObraTitulos() {
-  const { selectedObra } = useAuth();
+  const { selectedObra, user } = useAuth();
   const { data: titulos = [], isLoading } = useTitulosQuery(selectedObra?.id);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -38,6 +38,7 @@ export default function ObraTitulos() {
   const [endDate, setEndDate] = useState("");
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
   const [anexoFilter, setAnexoFilter] = useState<"all" | "with" | "without">("all");
+  const [onlyMine, setOnlyMine] = useState(false);
 
   // Estado da Paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +54,7 @@ export default function ObraTitulos() {
   // Resetar para página 1 quando qualquer filtro mudar
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, startDate, endDate, adFilter, anexoFilter]);
+  }, [searchTerm, statusFilter, startDate, endDate, adFilter, anexoFilter, onlyMine]);
 
   const filteredTitulos = titulos.filter((titulo) => {
     // 1. Filtro de Texto
@@ -96,7 +97,10 @@ export default function ObraTitulos() {
     const matchesAnexo =
       anexoFilter === "all" ? true : anexoFilter === "with" ? !!titulo.documentoUrl : !titulo.documentoUrl;
 
-    return matchesSearch && matchesStatus && matchesDate && matchesAd && matchesAnexo;
+    // 6. Filtro "Meus Títulos"
+    const matchesMine = !onlyMine || titulo.criadoPor === user?.id;
+
+    return matchesSearch && matchesStatus && matchesDate && matchesAd && matchesAnexo && matchesMine;
   });
 
   const clearFilters = () => {
@@ -106,6 +110,7 @@ export default function ObraTitulos() {
     setEndDate("");
     setAdFilter("all");
     setAnexoFilter("all");
+    setOnlyMine(false);
     setSearchParams({});
     setCurrentPage(1);
   };
@@ -117,7 +122,7 @@ export default function ObraTitulos() {
   const currentTitulos = filteredTitulos.slice(startIndex, endIndex);
 
   const hasActiveFilters =
-    searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all" || anexoFilter !== "all";
+    searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all" || anexoFilter !== "all" || onlyMine;
 
   if (isLoading) {
     return (
@@ -147,10 +152,21 @@ export default function ObraTitulos() {
               )}
             </div>
           </div>
-          <Button variant="gold" onClick={() => navigate("/obra/novo-titulo")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Título
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={onlyMine ? "default" : "outline"}
+              size="sm"
+              onClick={() => setOnlyMine(!onlyMine)}
+              className="gap-1.5"
+            >
+              <User className="h-4 w-4" />
+              Meus Títulos
+            </Button>
+            <Button variant="gold" onClick={() => navigate("/obra/novo-titulo")}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Título
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}
