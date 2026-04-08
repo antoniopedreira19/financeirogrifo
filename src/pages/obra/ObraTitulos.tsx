@@ -17,7 +17,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, Search, FileText, Loader2, X } from "lucide-react";
+import { Plus, Search, FileText, Loader2, X, User } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 type StatusFilterType = TituloStatus | "all" | "pendente";
