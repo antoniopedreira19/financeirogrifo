@@ -122,7 +122,7 @@ export default function ObraTitulos() {
   const currentTitulos = filteredTitulos.slice(startIndex, endIndex);
 
   const hasActiveFilters =
-    searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all" || anexoFilter !== "all";
+    searchTerm || statusFilter !== "all" || startDate || endDate || adFilter !== "all" || anexoFilter !== "all" || onlyMine;
 
   if (isLoading) {
     return (
