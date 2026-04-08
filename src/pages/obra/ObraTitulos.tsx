@@ -25,7 +25,7 @@ type StatusFilterType = TituloStatus | "all" | "pendente";
 const ITEMS_PER_PAGE = 20;
 
 export default function ObraTitulos() {
-  const { selectedObra } = useAuth();
+  const { selectedObra, user } = useAuth();
   const { data: titulos = [], isLoading } = useTitulosQuery(selectedObra?.id);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
