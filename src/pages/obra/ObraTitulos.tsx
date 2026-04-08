@@ -110,6 +110,7 @@ export default function ObraTitulos() {
     setEndDate("");
     setAdFilter("all");
     setAnexoFilter("all");
+    setOnlyMine(false);
     setSearchParams({});
     setCurrentPage(1);
   };
