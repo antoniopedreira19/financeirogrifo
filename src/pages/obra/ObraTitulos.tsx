@@ -38,6 +38,7 @@ export default function ObraTitulos() {
   const [endDate, setEndDate] = useState("");
   const [adFilter, setAdFilter] = useState<"all" | "ad">("all");
   const [anexoFilter, setAnexoFilter] = useState<"all" | "with" | "without">("all");
+  const [onlyMine, setOnlyMine] = useState(false);
 
   // Estado da Paginação
   const [currentPage, setCurrentPage] = useState(1);
