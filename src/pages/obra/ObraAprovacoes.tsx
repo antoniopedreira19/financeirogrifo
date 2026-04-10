@@ -8,19 +8,19 @@ import { podeAprovar, podePagar, getLimiteFormatado, ROLE_LABELS } from '@/const
 import { Titulo } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Eye, CheckCircle, Clock, Wallet, Loader2, ArrowUpDown, ShieldCheck } from 'lucide-react';
+import { Eye, CheckCircle, Clock, Wallet, Loader2, ShieldCheck, CalendarDays } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-type SortOrder = 'newest' | 'oldest';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export default function ObraAprovacoes() {
   const { user, selectedObra } = useAuth();
   const { data: pendingTitulos = [], isLoading: loadingPending, refetch: refetchPending } = useTitulosByStatus('enviado');
   const { data: approvedTitulos = [], isLoading: loadingApproved, refetch: refetchApproved } = useTitulosByStatus('aprovado');
   const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
-  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const [filterToday, setFilterToday] = useState(false);
 
   useState(() => {
     refetchPending();
@@ -50,16 +50,19 @@ export default function ObraAprovacoes() {
   };
 
   const filterAndSort = (titulos: Titulo[], tipo: 'aprovacao' | 'pagamento' = 'aprovacao') => {
-    const filtered = filterByObraAndAlcada(titulos, tipo);
+    let filtered = filterByObraAndAlcada(titulos, tipo);
+    if (filterToday) {
+      filtered = filtered.filter((t) => isToday(parseDate(t.dataVencimento)));
+    }
     return [...filtered].sort((a, b) => {
       const dateA = parseDate(a.dataVencimento).getTime();
       const dateB = parseDate(b.dataVencimento).getTime();
-      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+      return dateB - dateA;
     });
   };
 
-  const filteredPending = useMemo(() => filterAndSort(pendingTitulos, 'aprovacao'), [pendingTitulos, selectedObra, userRole, sortOrder]);
-  const filteredApproved = useMemo(() => filterAndSort(approvedTitulos, 'pagamento'), [approvedTitulos, selectedObra, userRole, sortOrder]);
+  const filteredPending = useMemo(() => filterAndSort(pendingTitulos, 'aprovacao'), [pendingTitulos, selectedObra, userRole, filterToday]);
+  const filteredApproved = useMemo(() => filterAndSort(approvedTitulos, 'pagamento'), [approvedTitulos, selectedObra, userRole, filterToday]);
 
   const isLoading = loadingPending || loadingApproved;
 
@@ -179,16 +182,13 @@ export default function ObraAprovacoes() {
             </TabsList>
 
             <div className="sm:ml-auto">
-              <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
-                <SelectTrigger className="input-field w-[170px]">
-                  <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Mais recente</SelectItem>
-                  <SelectItem value="oldest">Mais antigo</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Switch id="filter-today-obra" checked={filterToday} onCheckedChange={setFilterToday} />
+                <Label htmlFor="filter-today-obra" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  Títulos do dia
+                </Label>
+              </div>
             </div>
           </div>
 

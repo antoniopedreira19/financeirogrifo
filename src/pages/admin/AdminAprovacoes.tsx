@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Eye, CheckCircle, Clock, Wallet, Loader2, ArrowUpDown } from 'lucide-react';
+import { Eye, CheckCircle, Clock, Wallet, Loader2, CalendarDays } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-type SortOrder = 'newest' | 'oldest';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { isToday } from 'date-fns';
 
 export default function AdminAprovacoes() {
   const { data: pendingTitulos = [], isLoading: loadingPending, refetch: refetchPending } = useTitulosByStatus('enviado');
@@ -20,7 +21,7 @@ export default function AdminAprovacoes() {
   const { data: obras = [] } = useObrasQuery();
   const [selectedTitulo, setSelectedTitulo] = useState<Titulo | null>(null);
   const [filterObra, setFilterObra] = useState<string>('all');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const [filterToday, setFilterToday] = useState(false);
 
   useState(() => {
     refetchPending();
@@ -43,15 +44,18 @@ export default function AdminAprovacoes() {
     if (filterObra !== 'all') {
       filtered = filtered.filter((t) => t.obraId === filterObra);
     }
+    if (filterToday) {
+      filtered = filtered.filter((t) => isToday(parseDate(t.dataVencimento)));
+    }
     return [...filtered].sort((a, b) => {
       const dateA = parseDate(a.dataVencimento).getTime();
       const dateB = parseDate(b.dataVencimento).getTime();
-      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+      return dateB - dateA;
     });
   };
 
-  const filteredPending = useMemo(() => filterAndSort(pendingTitulos), [pendingTitulos, filterObra, sortOrder]);
-  const filteredApproved = useMemo(() => filterAndSort(approvedTitulos), [approvedTitulos, filterObra, sortOrder]);
+  const filteredPending = useMemo(() => filterAndSort(pendingTitulos), [pendingTitulos, filterObra, filterToday]);
+  const filteredApproved = useMemo(() => filterAndSort(approvedTitulos), [approvedTitulos, filterObra, filterToday]);
 
   // Obras that appear in either list for the filter
   const obrasInUse = useMemo(() => {
@@ -163,7 +167,15 @@ export default function AdminAprovacoes() {
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex gap-3 sm:ml-auto">
+            <div className="flex items-center gap-3 sm:ml-auto flex-wrap">
+              <div className="flex items-center gap-2">
+                <Switch id="filter-today" checked={filterToday} onCheckedChange={setFilterToday} />
+                <Label htmlFor="filter-today" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  Títulos do dia
+                </Label>
+              </div>
+
               <Select value={filterObra} onValueChange={setFilterObra}>
                 <SelectTrigger className="input-field w-[180px]">
                   <SelectValue placeholder="Todas as obras" />
@@ -175,17 +187,6 @@ export default function AdminAprovacoes() {
                       {obra.nome}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
-                <SelectTrigger className="input-field w-[170px]">
-                  <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Mais recente</SelectItem>
-                  <SelectItem value="oldest">Mais antigo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
