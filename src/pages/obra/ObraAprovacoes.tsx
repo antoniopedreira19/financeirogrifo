@@ -4,7 +4,7 @@ import { TituloDetailModal } from '@/components/titulos/TituloDetailModal';
 import { StatusBadge } from '@/components/titulos/StatusBadge';
 import { useTitulosByStatus } from '@/hooks/useTitulosQuery';
 import { useAuth } from '@/contexts/AuthContext';
-import { podeAprovar, getLimiteFormatado, ROLE_LABELS } from '@/constants/aprovacao';
+import { podeAprovar, podePagar, getLimiteFormatado, ROLE_LABELS } from '@/constants/aprovacao';
 import { Titulo } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,15 +41,16 @@ export default function ObraAprovacoes() {
   };
 
   // Filter by selected obra AND value threshold for the user's role
-  const filterByObraAndAlcada = (titulos: Titulo[]) => {
+  const filterByObraAndAlcada = (titulos: Titulo[], tipo: 'aprovacao' | 'pagamento' = 'aprovacao') => {
     if (!selectedObra || !userRole) return [];
+    const checkFn = tipo === 'pagamento' ? podePagar : podeAprovar;
     return titulos
       .filter((t) => t.obraId === selectedObra.id)
-      .filter((t) => podeAprovar(userRole, t.valorTotal));
+      .filter((t) => checkFn(userRole, t.valorTotal));
   };
 
-  const filterAndSort = (titulos: Titulo[]) => {
-    const filtered = filterByObraAndAlcada(titulos);
+  const filterAndSort = (titulos: Titulo[], tipo: 'aprovacao' | 'pagamento' = 'aprovacao') => {
+    const filtered = filterByObraAndAlcada(titulos, tipo);
     return [...filtered].sort((a, b) => {
       const dateA = parseDate(a.dataVencimento).getTime();
       const dateB = parseDate(b.dataVencimento).getTime();
@@ -57,8 +58,8 @@ export default function ObraAprovacoes() {
     });
   };
 
-  const filteredPending = useMemo(() => filterAndSort(pendingTitulos), [pendingTitulos, selectedObra, userRole, sortOrder]);
-  const filteredApproved = useMemo(() => filterAndSort(approvedTitulos), [approvedTitulos, selectedObra, userRole, sortOrder]);
+  const filteredPending = useMemo(() => filterAndSort(pendingTitulos, 'aprovacao'), [pendingTitulos, selectedObra, userRole, sortOrder]);
+  const filteredApproved = useMemo(() => filterAndSort(approvedTitulos, 'pagamento'), [approvedTitulos, selectedObra, userRole, sortOrder]);
 
   const isLoading = loadingPending || loadingApproved;
 
