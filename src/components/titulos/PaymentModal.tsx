@@ -229,16 +229,18 @@ export function PaymentModal({
         ) : (
           /* Tela inicial com as duas opções */
           <div className="space-y-4 mt-4">
-            {/* Botão principal: Pagar Automaticamente */}
-            <Button
-              variant="success"
-              className="w-full gap-2"
-              onClick={() => setConfirmingAsaas(true)}
-              disabled={isLoading || isProcessingAsaas}
-            >
-              <Zap className="h-4 w-4" />
-              Pagar Automaticamente (via Asaas)
-            </Button>
+            {/* Botão principal: Pagar Automaticamente — só até R$ 10.000 */}
+            {valorTotal <= 10_000 && (
+              <Button
+                variant="success"
+                className="w-full gap-2"
+                onClick={() => setConfirmingAsaas(true)}
+                disabled={isLoading || isProcessingAsaas}
+              >
+                <Zap className="h-4 w-4" />
+                Pagar Automaticamente (via Asaas)
+              </Button>
+            )}
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
