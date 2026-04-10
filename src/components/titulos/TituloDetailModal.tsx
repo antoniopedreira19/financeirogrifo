@@ -463,6 +463,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InfoItem icon={Building2} label="Obra" value={tituloVisualizado.obraNome || "-"} />
             <InfoItem icon={User} label="Credor" value={tituloVisualizado.credor} />
+            <InfoItem icon={User} label="Solicitante" value={tituloVisualizado.criadoPorNome || "-"} />
             <InfoItem
               icon={FileText}
               label={tituloVisualizado.tipoDocumento.toUpperCase()}

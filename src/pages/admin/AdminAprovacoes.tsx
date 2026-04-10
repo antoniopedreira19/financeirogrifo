@@ -68,6 +68,7 @@ export default function AdminAprovacoes() {
           <tr className="table-header">
             <th className="text-left p-4">Credor</th>
             <th className="text-left p-4 hidden md:table-cell">Obra</th>
+            <th className="text-left p-4 hidden lg:table-cell">Solicitante</th>
             <th className="text-left p-4 hidden lg:table-cell">Vencimento</th>
             <th className="text-right p-4">Valor</th>
             <th className="text-center p-4">Status</th>
@@ -85,6 +86,9 @@ export default function AdminAprovacoes() {
               </td>
               <td className="p-4 hidden md:table-cell">
                 <p className="text-sm">{titulo.obraNome}</p>
+              </td>
+              <td className="p-4 hidden lg:table-cell">
+                <p className="text-sm">{titulo.criadoPorNome || '-'}</p>
               </td>
               <td className="p-4 hidden lg:table-cell">
                 <p className="text-sm">

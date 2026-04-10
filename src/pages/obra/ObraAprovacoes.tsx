@@ -69,6 +69,7 @@ export default function ObraAprovacoes() {
         <thead>
           <tr className="table-header">
             <th className="text-left p-4">Credor</th>
+            <th className="text-left p-4 hidden lg:table-cell">Solicitante</th>
             <th className="text-left p-4 hidden lg:table-cell">Vencimento</th>
             <th className="text-right p-4">Valor</th>
             <th className="text-center p-4">Status</th>
@@ -83,6 +84,9 @@ export default function ObraAprovacoes() {
                   <p className="font-medium">{titulo.credor}</p>
                   <p className="text-sm text-muted-foreground">{titulo.numeroDocumento}</p>
                 </div>
+              </td>
+              <td className="p-4 hidden lg:table-cell">
+                <p className="text-sm">{titulo.criadoPorNome || '-'}</p>
               </td>
               <td className="p-4 hidden lg:table-cell">
                 <p className="text-sm">
