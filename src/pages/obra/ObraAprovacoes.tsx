@@ -57,7 +57,7 @@ export default function ObraAprovacoes() {
     return [...filtered].sort((a, b) => {
       const dateA = parseDate(a.dataVencimento).getTime();
       const dateB = parseDate(b.dataVencimento).getTime();
-      return dateB - dateA;
+      return dateA - dateB;
     });
   };
 
