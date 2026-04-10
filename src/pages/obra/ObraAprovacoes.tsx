@@ -135,10 +135,19 @@ export default function ObraAprovacoes() {
               {selectedObra?.nome} — {userRole ? ROLE_LABELS[userRole] : ''}
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 text-sm">
-            <ShieldCheck className="h-4 w-4 text-accent" />
-            <span className="text-muted-foreground">Alçada até</span>
-            <span className="font-semibold text-foreground">{userRole ? getLimiteFormatado(userRole) : '-'}</span>
+          <div className="flex flex-col items-end gap-1 px-3 py-2 rounded-xl bg-muted/50 text-sm">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-accent" />
+              <span className="text-muted-foreground">Aprovação:</span>
+              <span className="font-semibold text-foreground">{userRole ? getLimiteFormatado(userRole, 'aprovacao') : '-'}</span>
+            </div>
+            {userRole && getLimiteFormatado(userRole, 'aprovacao') !== getLimiteFormatado(userRole, 'pagamento') && (
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-accent" />
+                <span className="text-muted-foreground">Pagamento:</span>
+                <span className="font-semibold text-foreground">{getLimiteFormatado(userRole, 'pagamento')}</span>
+              </div>
+            )}
           </div>
         </div>
 
