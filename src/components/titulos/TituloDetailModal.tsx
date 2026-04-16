@@ -90,6 +90,8 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeletingTitulo, setIsDeletingTitulo] = useState(false);
+  const [confirmingExcluirSolicitacao, setConfirmingExcluirSolicitacao] = useState(false);
+  const [isExcluindoSolicitacao, setIsExcluindoSolicitacao] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
   const boletoInputRef = useRef<HTMLInputElement>(null);
 
