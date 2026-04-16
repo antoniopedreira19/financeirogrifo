@@ -809,15 +809,17 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                       Reprovar
                     </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => setConfirmingExcluirSolicitacao(true)}
-                    disabled={isLoading || isExcluindoSolicitacao}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Excluir Solicitação
-                  </Button>
+                  {canExcluirSolicitacao && (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setConfirmingExcluirSolicitacao(true)}
+                      disabled={isLoading || isExcluindoSolicitacao}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir Solicitação
+                    </Button>
+                  )}
                 </div>
               )}
 
