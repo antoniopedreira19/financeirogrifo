@@ -235,6 +235,87 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     }
   };
 
+  const handleExcluirSolicitacao = async () => {
+    if (!user?.id) return;
+    setIsExcluindoSolicitacao(true);
+    try {
+      // Dispara webhook com os mesmos dados de aprovar/reprovar + quem apertou em excluir
+      const payload = {
+        id: titulo.id,
+        empresa: titulo.empresa,
+        empresa_id: titulo.empresaId,
+        credor: titulo.credor,
+        documento: titulo.documento,
+        tipo_documento: titulo.tipoDocumento,
+        obra_id: titulo.obraId,
+        obra_codigo: titulo.obraCodigo,
+        obra_nome: titulo.obraNome,
+        centro_custo: titulo.centroCusto,
+        etapa: titulo.etapaApropriada,
+        codigo_etapa: titulo.codigoEtapa,
+        valor_total: titulo.valorTotal,
+        descontos: titulo.descontos,
+        parcelas: titulo.parcelas,
+        tipo_documento_fiscal: titulo.tipoDocumentoFiscal,
+        numero_documento: titulo.numeroDocumento,
+        data_emissao: titulo.dataEmissao,
+        data_vencimento: titulo.dataVencimento,
+        plano_financeiro: titulo.planoFinanceiro,
+        dados_bancarios: titulo.dadosBancarios,
+        tipo_leitura_pagamento: titulo.tipoLeituraPagamento,
+        arquivo_pagamento_url: titulo.arquivoPagamentoUrl,
+        documento_url: titulo.documentoUrl,
+        descricao: titulo.descricao,
+        id_sienge: titulo.idSienge,
+        status: titulo.status,
+        criador: titulo.criadoPor,
+        criador_nome: titulo.criadoPorNome,
+        rateio_financeiro: titulo.rateioFinanceiro,
+        aprop_obra: titulo.apropObra,
+        // Quem apertou em excluir
+        excluido_por: user.id,
+        excluido_por_nome: user.nome,
+        excluido_por_email: user.email,
+        excluido_em: new Date().toISOString(),
+      };
+
+      try {
+        await fetch('https://grifoworkspace.app.n8n.cloud/webhook/excluir-lancamento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } catch (webhookError) {
+        console.error('Erro ao chamar webhook excluir-lancamento:', webhookError);
+      }
+
+      // Após o webhook, exclui o título do banco
+      const { error: errorPendente } = await supabase
+        .from('titulos_pendentes')
+        .delete()
+        .eq('id', titulo.id);
+
+      if (errorPendente) {
+        const { error: errorTitulo } = await supabase
+          .from('titulos')
+          .delete()
+          .eq('id', titulo.id);
+        if (errorTitulo) throw errorTitulo;
+      }
+
+      toast.success('Solicitação excluída com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['titulos'] });
+      queryClient.invalidateQueries({ queryKey: ['titulos_pendentes'] });
+      onClose();
+    } catch (err: any) {
+      console.error('Erro ao excluir solicitação:', err);
+      toast.error(`Erro ao excluir solicitação: ${err?.message ?? 'Erro desconhecido'}`);
+    } finally {
+      setIsExcluindoSolicitacao(false);
+      setConfirmingExcluirSolicitacao(false);
+    }
+  };
+
   const planoFinanceiroLabels = {
     servicos_terceiros: "Serviços de Terceiros",
     materiais_aplicados: "Materiais Aplicados",
