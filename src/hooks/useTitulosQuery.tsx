@@ -88,6 +88,7 @@ function mapTituloFromDB(row: TituloRow): Titulo {
     idSienge: row.id_sienge || undefined,
     descricao: row.descricao || undefined,
     boletoUrl: (row as any).boleto_url || undefined,
+    grupoId: (row as any).grupo_id || undefined,
     rateioFinanceiro: parseJsonArray(row.rateio_financeiro),
     apropObra: parseJsonArray(row.aprop_obra),
     createdAt: new Date(row.created_at),
