@@ -90,6 +90,8 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeletingTitulo, setIsDeletingTitulo] = useState(false);
+  const [confirmingExcluirSolicitacao, setConfirmingExcluirSolicitacao] = useState(false);
+  const [isExcluindoSolicitacao, setIsExcluindoSolicitacao] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement>(null);
   const boletoInputRef = useRef<HTMLInputElement>(null);
 
@@ -230,6 +232,87 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
     } finally {
       setIsDeletingTitulo(false);
       setConfirmingDelete(false);
+    }
+  };
+
+  const handleExcluirSolicitacao = async () => {
+    if (!user?.id) return;
+    setIsExcluindoSolicitacao(true);
+    try {
+      // Dispara webhook com os mesmos dados de aprovar/reprovar + quem apertou em excluir
+      const payload = {
+        id: titulo.id,
+        empresa: titulo.empresa,
+        empresa_id: titulo.empresaId,
+        credor: titulo.credor,
+        documento: titulo.documento,
+        tipo_documento: titulo.tipoDocumento,
+        obra_id: titulo.obraId,
+        obra_codigo: titulo.obraCodigo,
+        obra_nome: titulo.obraNome,
+        centro_custo: titulo.centroCusto,
+        etapa: titulo.etapaApropriada,
+        codigo_etapa: titulo.codigoEtapa,
+        valor_total: titulo.valorTotal,
+        descontos: titulo.descontos,
+        parcelas: titulo.parcelas,
+        tipo_documento_fiscal: titulo.tipoDocumentoFiscal,
+        numero_documento: titulo.numeroDocumento,
+        data_emissao: titulo.dataEmissao,
+        data_vencimento: titulo.dataVencimento,
+        plano_financeiro: titulo.planoFinanceiro,
+        dados_bancarios: titulo.dadosBancarios,
+        tipo_leitura_pagamento: titulo.tipoLeituraPagamento,
+        arquivo_pagamento_url: titulo.arquivoPagamentoUrl,
+        documento_url: titulo.documentoUrl,
+        descricao: titulo.descricao,
+        id_sienge: titulo.idSienge,
+        status: titulo.status,
+        criador: titulo.criadoPor,
+        criador_nome: titulo.criadoPorNome,
+        rateio_financeiro: titulo.rateioFinanceiro,
+        aprop_obra: titulo.apropObra,
+        // Quem apertou em excluir
+        excluido_por: user.id,
+        excluido_por_nome: user.nome,
+        excluido_por_email: user.email,
+        excluido_em: new Date().toISOString(),
+      };
+
+      try {
+        await fetch('https://grifoworkspace.app.n8n.cloud/webhook/excluir-lancamento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } catch (webhookError) {
+        console.error('Erro ao chamar webhook excluir-lancamento:', webhookError);
+      }
+
+      // Após o webhook, exclui o título do banco
+      const { error: errorPendente } = await supabase
+        .from('titulos_pendentes')
+        .delete()
+        .eq('id', titulo.id);
+
+      if (errorPendente) {
+        const { error: errorTitulo } = await supabase
+          .from('titulos')
+          .delete()
+          .eq('id', titulo.id);
+        if (errorTitulo) throw errorTitulo;
+      }
+
+      toast.success('Solicitação excluída com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['titulos'] });
+      queryClient.invalidateQueries({ queryKey: ['titulos_pendentes'] });
+      onClose();
+    } catch (err: any) {
+      console.error('Erro ao excluir solicitação:', err);
+      toast.error(`Erro ao excluir solicitação: ${err?.message ?? 'Erro desconhecido'}`);
+    } finally {
+      setIsExcluindoSolicitacao(false);
+      setConfirmingExcluirSolicitacao(false);
     }
   };
 
@@ -699,25 +782,73 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
 
           {showActions && (
             <>
-              {tituloVisualizado.status === "enviado" && !showRejectForm && (
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button variant="gold" className="flex-1" onClick={handleAprovar} disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                    )}
-                    Aprovar
-                  </Button>
+              {tituloVisualizado.status === "enviado" && !showRejectForm && !confirmingExcluirSolicitacao && (
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex gap-3">
+                    <Button variant="gold" className="flex-1" onClick={handleAprovar} disabled={isLoading}>
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      )}
+                      Aprovar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={() => setShowRejectForm(true)}
+                      disabled={isLoading}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reprovar
+                    </Button>
+                  </div>
                   <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={() => setShowRejectForm(true)}
-                    disabled={isLoading}
+                    variant="outline"
+                    className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setConfirmingExcluirSolicitacao(true)}
+                    disabled={isLoading || isExcluindoSolicitacao}
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reprovar
+                    <Trash2 className="h-4 w-4" />
+                    Excluir Solicitação
                   </Button>
+                </div>
+              )}
+
+              {confirmingExcluirSolicitacao && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-destructive">Confirmar exclusão da solicitação?</p>
+                      <p className="text-sm text-muted-foreground">
+                        A solicitação de <strong>{tituloVisualizado.credor}</strong> será excluída e o webhook de exclusão será disparado. Esta ação é irreversível.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setConfirmingExcluirSolicitacao(false)}
+                      disabled={isExcluindoSolicitacao}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1 gap-2"
+                      onClick={handleExcluirSolicitacao}
+                      disabled={isExcluindoSolicitacao}
+                    >
+                      {isExcluindoSolicitacao ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      {isExcluindoSolicitacao ? 'Excluindo...' : 'Confirmar Exclusão'}
+                    </Button>
+                  </div>
                 </div>
               )}
 
