@@ -929,56 +929,6 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                   </Button>
                 </div>
               )}
-
-              {/* Botão Excluir — sempre visível para admins com showActions */}
-              {!confirmingDelete ? (
-                <div className="pt-4 border-t">
-                  <Button
-                    variant="ghost"
-                    className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => setConfirmingDelete(true)}
-                    disabled={isLoading || isDeletingTitulo}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Excluir Título
-                  </Button>
-                </div>
-              ) : (
-                <div className="pt-4 border-t space-y-3">
-                  <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
-                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-destructive">Confirmar exclusão?</p>
-                      <p className="text-sm text-muted-foreground">
-                        Esta ação é irreversível. O título de <strong>{tituloVisualizado.credor}</strong> será excluído permanentemente.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setConfirmingDelete(false)}
-                      disabled={isDeletingTitulo}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      className="flex-1 gap-2"
-                      onClick={handleDeleteTitulo}
-                      disabled={isDeletingTitulo}
-                    >
-                      {isDeletingTitulo ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                      {isDeletingTitulo ? 'Excluindo...' : 'Excluir Permanentemente'}
-                    </Button>
-                  </div>
-                </div>
-              )}
             </>
           )}
 
