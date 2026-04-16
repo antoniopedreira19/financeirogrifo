@@ -12,6 +12,7 @@ import { useState, useRef } from "react";
 import { useUpdateTituloStatus } from "@/hooks/useTitulosQuery";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { podeAprovar } from "@/constants/aprovacao";
 import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
@@ -331,6 +332,11 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
   };
 
   const isLoading = updateStatusMutation.isPending;
+
+  // Botão "Excluir Solicitação" respeita a alçada de aprovação do usuário.
+  // Admin sempre pode; demais roles só se o valor estiver dentro do limite.
+  const canExcluirSolicitacao =
+    !!user?.role && (user.role === 'admin' || podeAprovar(user.role, tituloVisualizado.valorTotal));
 
   const handleComprovanteUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -803,15 +809,17 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                       Reprovar
                     </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => setConfirmingExcluirSolicitacao(true)}
-                    disabled={isLoading || isExcluindoSolicitacao}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Excluir Solicitação
-                  </Button>
+                  {canExcluirSolicitacao && (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setConfirmingExcluirSolicitacao(true)}
+                      disabled={isLoading || isExcluindoSolicitacao}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir Solicitação
+                    </Button>
+                  )}
                 </div>
               )}
 
