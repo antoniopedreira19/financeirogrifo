@@ -830,7 +830,7 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-destructive">Confirmar exclusão da solicitação?</p>
                       <p className="text-sm text-muted-foreground">
-                        A solicitação de <strong>{tituloVisualizado.credor}</strong> será excluída e o webhook de exclusão será disparado. Esta ação é irreversível.
+                        A solicitação de <strong>{tituloVisualizado.credor}</strong> será excluída. Esta ação é irreversível.
                       </p>
                     </div>
                   </div>
