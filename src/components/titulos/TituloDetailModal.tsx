@@ -782,25 +782,73 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
 
           {showActions && (
             <>
-              {tituloVisualizado.status === "enviado" && !showRejectForm && (
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button variant="gold" className="flex-1" onClick={handleAprovar} disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                    )}
-                    Aprovar
-                  </Button>
+              {tituloVisualizado.status === "enviado" && !showRejectForm && !confirmingExcluirSolicitacao && (
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex gap-3">
+                    <Button variant="gold" className="flex-1" onClick={handleAprovar} disabled={isLoading}>
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      )}
+                      Aprovar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={() => setShowRejectForm(true)}
+                      disabled={isLoading}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reprovar
+                    </Button>
+                  </div>
                   <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={() => setShowRejectForm(true)}
-                    disabled={isLoading}
+                    variant="outline"
+                    className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setConfirmingExcluirSolicitacao(true)}
+                    disabled={isLoading || isExcluindoSolicitacao}
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reprovar
+                    <Trash2 className="h-4 w-4" />
+                    Excluir Solicitação
                   </Button>
+                </div>
+              )}
+
+              {confirmingExcluirSolicitacao && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-destructive">Confirmar exclusão da solicitação?</p>
+                      <p className="text-sm text-muted-foreground">
+                        A solicitação de <strong>{tituloVisualizado.credor}</strong> será excluída e o webhook de exclusão será disparado. Esta ação é irreversível.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setConfirmingExcluirSolicitacao(false)}
+                      disabled={isExcluindoSolicitacao}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1 gap-2"
+                      onClick={handleExcluirSolicitacao}
+                      disabled={isExcluindoSolicitacao}
+                    >
+                      {isExcluindoSolicitacao ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      {isExcluindoSolicitacao ? 'Excluindo...' : 'Confirmar Exclusão'}
+                    </Button>
+                  </div>
                 </div>
               )}
 
