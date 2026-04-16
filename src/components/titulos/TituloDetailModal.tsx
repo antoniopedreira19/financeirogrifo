@@ -12,6 +12,7 @@ import { useState, useRef } from "react";
 import { useUpdateTituloStatus } from "@/hooks/useTitulosQuery";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { podeAprovar } from "@/constants/aprovacao";
 import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
