@@ -334,10 +334,9 @@ export function TituloDetailModal({ titulo, open, onClose, showActions = false, 
 
   const isLoading = updateStatusMutation.isPending;
 
-  // Botão "Excluir Solicitação" respeita a alçada de aprovação do usuário.
-  // Admin sempre pode; demais roles só se o valor estiver dentro do limite.
-  const canExcluirSolicitacao =
-    !!user?.role && (user.role === 'admin' || podeAprovar(user.role, tituloVisualizado.valorTotal));
+  // Botão "Excluir Solicitação" disponível para qualquer usuário autenticado,
+  // independentemente de alçada.
+  const canExcluirSolicitacao = !!user?.id;
 
   const handleComprovanteUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
