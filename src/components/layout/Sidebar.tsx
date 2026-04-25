@@ -237,13 +237,20 @@ export function Sidebar() {
 
                 {!isAdmin && selectedObra && (
                   <div className="px-4 py-3 border-b border-sidebar-border">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-sidebar-accent/50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearSelectedObra();
+                        setMobileOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors text-left"
+                    >
                       <Building2 className="h-4 w-4 text-accent shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider">Obra Ativa</p>
                         <p className="text-sm font-medium truncate">{selectedObra.nome}</p>
                       </div>
-                    </div>
+                    </button>
                   </div>
                 )}
 
